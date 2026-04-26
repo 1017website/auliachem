@@ -1,0 +1,177 @@
+/* ── Auliachem CRM – Custom Filament Styles ── */
+
+/* Login page */
+.fi-simple-layout {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%) !important;
+}
+
+.fi-simple-main {
+    background: rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5) !important;
+}
+
+.fi-simple-main .fi-logo {
+    filter: brightness(0) invert(1);
+}
+
+/* Sidebar */
+.fi-sidebar {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+    border-right: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.fi-sidebar-nav-groups {
+    padding: 0.5rem 0.75rem;
+}
+
+.fi-sidebar-item-button {
+    border-radius: 0.625rem !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+}
+
+.fi-sidebar-item-button:hover {
+    background: rgba(99, 102, 241, 0.18) !important;
+    color: #a5b4fc !important;
+}
+
+.fi-sidebar-item-button.fi-active {
+    background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.25)) !important;
+    color: #c7d2fe !important;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.25) !important;
+}
+
+.fi-sidebar-group-label {
+    color: rgba(148,163,184,0.7) !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    padding: 1rem 0.75rem 0.25rem !important;
+}
+
+/* Brand / logo area */
+.fi-sidebar-header {
+    border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+    padding: 1.25rem 1rem !important;
+}
+
+.fi-logo-text {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #818cf8, #c084fc) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* Topbar */
+.fi-topbar {
+    background: rgba(255,255,255,0.97) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(0,0,0,0.06) !important;
+    box-shadow: 0 1px 12px rgba(0,0,0,0.04) !important;
+}
+
+.dark .fi-topbar {
+    background: rgba(15,23,42,0.97) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+/* Main content cards */
+.fi-ta-ctn,
+.fi-fo-ctn {
+    border-radius: 1rem !important;
+    border: 1px solid rgba(0,0,0,0.06) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+/* Widgets / stat cards */
+.fi-wi-stats-overview-stat {
+    border-radius: 1rem !important;
+    border: 1px solid rgba(0,0,0,0.06) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10) !important;
+}
+
+/* Buttons */
+.fi-btn-primary {
+    border-radius: 0.625rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    box-shadow: 0 2px 10px rgba(99,102,241,0.35) !important;
+    transition: all 0.15s ease !important;
+    border: none !important;
+}
+
+.fi-btn-primary:hover {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.45) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Tables */
+.fi-ta-header-cell {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.07em !important;
+    text-transform: uppercase !important;
+    color: #64748b !important;
+}
+
+.fi-ta-row:hover td {
+    background: rgba(99,102,241,0.04) !important;
+}
+
+/* Badges */
+.fi-badge {
+    border-radius: 9999px !important;
+    font-weight: 600 !important;
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.6rem !important;
+}
+
+/* Form inputs */
+.fi-input, .fi-select-input {
+    border-radius: 0.625rem !important;
+    border-color: rgba(0,0,0,0.12) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.fi-input:focus, .fi-select-input:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+}
+
+/* Section headings */
+.fi-section-header {
+    border-bottom: 1px solid rgba(0,0,0,0.06) !important;
+    padding-bottom: 0.75rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Page header */
+.fi-page-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+    padding: 1.25rem 1.5rem !important;
+}
+
+.dark .fi-page-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.5); }
