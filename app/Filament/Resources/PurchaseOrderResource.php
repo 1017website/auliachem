@@ -14,14 +14,16 @@ use Filament\Tables\Table;
 class PurchaseOrderResource extends Resource
 {
     protected static ?string $model = PurchaseOrder::class;
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?string $navigationLabel = 'Purchase Orders';
     protected static ?string $navigationGroup = 'Transaksi';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('po_number')->required()->maxLength(100)->unique(ignoreRecord: true),
+            Forms\Components\TextInput::make('po_number')
+                ->required()->maxLength(100)->unique(ignoreRecord: true),
             Forms\Components\DatePicker::make('po_date')->required(),
             Forms\Components\Select::make('customer_id')
                 ->relationship('customer', 'company_name')->required()->searchable()->preload(),
@@ -37,7 +39,12 @@ class PurchaseOrderResource extends Resource
             Forms\Components\TextInput::make('cogs')->label('COGS')->numeric()->required()->prefix('Rp'),
             Forms\Components\TextInput::make('gross_profit')->numeric()->required()->prefix('Rp'),
             Forms\Components\Select::make('status')
-                ->options(['pending' => 'Pending', 'confirmed' => 'Confirmed', 'delivered' => 'Delivered', 'invoiced' => 'Invoiced'])
+                ->options([
+                    'pending'   => 'Pending',
+                    'confirmed' => 'Confirmed',
+                    'delivered' => 'Delivered',
+                    'invoiced'  => 'Invoiced',
+                ])
                 ->default('pending')->required(),
         ]);
     }
@@ -46,24 +53,57 @@ class PurchaseOrderResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('po_number')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('po_date')->date('d M Y')->sortable(),
-                Tables\Columns\TextColumn::make('customer.company_name')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('po_number')
+                    ->searchable()->sortable()->weight('semibold')->copyable(),
+                Tables\Columns\TextColumn::make('po_date')
+                    ->date('d M Y')->sortable()->icon('heroicon-m-calendar'),
+                Tables\Columns\TextColumn::make('customer.company_name')
+                    ->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('supplier.company_name')->searchable(),
-                Tables\Columns\TextColumn::make('productCategory.name')->label('Kategori'),
+                Tables\Columns\TextColumn::make('productCategory.name')->label('Kategori')->badge()->color('gray'),
                 Tables\Columns\TextColumn::make('total_amount')->money('IDR')->sortable(),
-                Tables\Columns\TextColumn::make('gross_profit')->money('IDR'),
+                Tables\Columns\TextColumn::make('gross_profit')->money('IDR')->color('success'),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->colors(['gray' => 'pending', 'info' => 'confirmed', 'warning' => 'delivered', 'success' => 'invoiced']),
+                    ->colors([
+                        'gray'    => 'pending',
+                        'info'    => 'confirmed',
+                        'warning' => 'delivered',
+                        'success' => 'invoiced',
+                    ]),
             ])
             ->defaultSort('po_date', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
-                    ->options(['pending' => 'Pending', 'confirmed' => 'Confirmed', 'delivered' => 'Delivered', 'invoiced' => 'Invoiced']),
+                    ->options([
+                        'pending'   => 'Pending',
+                        'confirmed' => 'Confirmed',
+                        'delivered' => 'Delivered',
+                        'invoiced'  => 'Invoiced',
+                    ]),
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->iconButton(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->iconButton(),
+                Tables\Actions\RestoreAction::make()
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->iconButton(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelationManagers(): array
@@ -85,6 +125,7 @@ class PurchaseOrderResource extends Resource
         return [
             'index'  => Pages\ListPurchaseOrders::route('/'),
             'create' => Pages\CreatePurchaseOrder::route('/create'),
+            'view'   => Pages\ViewPurchaseOrder::route('/{record}'),
             'edit'   => Pages\EditPurchaseOrder::route('/{record}/edit'),
         ];
     }

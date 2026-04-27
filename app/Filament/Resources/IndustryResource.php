@@ -13,7 +13,8 @@ use Filament\Tables\Table;
 class IndustryResource extends Resource
 {
     protected static ?string $model = Industry::class;
-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static ?string $navigationLabel = 'Industries';
     protected static ?string $navigationGroup = 'Master Data';
     protected static ?int $navigationSort = 1;
 
@@ -28,21 +29,45 @@ class IndustryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('customers_count')->counts('customers')->label('Customers'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime('d M Y')->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()->sortable()->weight('semibold'),
+                Tables\Columns\TextColumn::make('customers_count')
+                    ->counts('customers')->label('Customers')->badge()->color('info'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime('d M Y')->sortable()->color('gray'),
             ])
             ->filters([Tables\Filters\TrashedFilter::make()])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->iconButton(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->iconButton(),
+                Tables\Actions\RestoreAction::make()
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->iconButton(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListIndustries::route('/'),
+            'index'  => Pages\ListIndustries::route('/'),
             'create' => Pages\CreateIndustry::route('/create'),
-            'edit' => Pages\EditIndustry::route('/{record}/edit'),
+            'view'   => Pages\ViewIndustry::route('/{record}'),
+            'edit'   => Pages\EditIndustry::route('/{record}/edit'),
         ];
     }
 

@@ -14,6 +14,7 @@ class SupplierResource extends Resource
 {
     protected static ?string $model = Supplier::class;
     protected static ?string $navigationIcon = 'heroicon-o-truck';
+    protected static ?string $navigationLabel = 'Suppliers';
     protected static ?string $navigationGroup = 'CRM';
     protected static ?int $navigationSort = 2;
 
@@ -34,7 +35,8 @@ class SupplierResource extends Resource
                 ->relationship('productCategory', 'name')->required()->searchable()->preload(),
             Forms\Components\TextInput::make('lead_time_days')->numeric()->nullable()->suffix('hari'),
             Forms\Components\Select::make('currency')
-                ->options(['IDR' => 'IDR', 'USD' => 'USD', 'EUR' => 'EUR'])->default('IDR')->required(),
+                ->options(['IDR' => 'IDR', 'USD' => 'USD', 'EUR' => 'EUR'])
+                ->default('IDR')->required(),
         ]);
     }
 
@@ -42,16 +44,21 @@ class SupplierResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('company_name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('pic_name')->searchable(),
-                Tables\Columns\TextColumn::make('country'),
+                Tables\Columns\TextColumn::make('company_name')
+                    ->searchable()->sortable()->weight('semibold'),
+                Tables\Columns\TextColumn::make('pic_name')->searchable()->label('PIC'),
+                Tables\Columns\TextColumn::make('country')
+                    ->icon('heroicon-m-globe-alt')->color('gray'),
                 Tables\Columns\BadgeColumn::make('type')
                     ->colors(['warning' => 'potential', 'success' => 'existing']),
                 Tables\Columns\BadgeColumn::make('source')
                     ->colors(['info' => 'local', 'primary' => 'import']),
-                Tables\Columns\TextColumn::make('productCategory.name')->label('Kategori'),
-                Tables\Columns\TextColumn::make('currency')->badge(),
-                Tables\Columns\TextColumn::make('lead_time_days')->suffix(' hari')->label('Lead Time'),
+                Tables\Columns\TextColumn::make('productCategory.name')
+                    ->label('Kategori')->badge()->color('gray'),
+                Tables\Columns\BadgeColumn::make('currency')
+                    ->colors(['success' => 'IDR', 'warning' => 'USD', 'info' => 'EUR']),
+                Tables\Columns\TextColumn::make('lead_time_days')
+                    ->suffix(' hari')->label('Lead Time')->color('gray'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
@@ -60,8 +67,28 @@ class SupplierResource extends Resource
                     ->options(['local' => 'Local', 'import' => 'Import']),
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->iconButton(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->iconButton(),
+                Tables\Actions\RestoreAction::make()
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->iconButton(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
@@ -74,9 +101,10 @@ class SupplierResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSuppliers::route('/'),
+            'index'  => Pages\ListSuppliers::route('/'),
             'create' => Pages\CreateSupplier::route('/create'),
-            'edit' => Pages\EditSupplier::route('/{record}/edit'),
+            'view'   => Pages\ViewSupplier::route('/{record}'),
+            'edit'   => Pages\EditSupplier::route('/{record}/edit'),
         ];
     }
 }

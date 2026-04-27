@@ -13,7 +13,8 @@ use Filament\Tables\Table;
 class ProductCategoryResource extends Resource
 {
     protected static ?string $model = ProductCategory::class;
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+    protected static ?string $navigationLabel = 'Kategori Produk';
     protected static ?string $navigationGroup = 'Master Data';
     protected static ?int $navigationSort = 2;
 
@@ -28,21 +29,45 @@ class ProductCategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('suppliers_count')->counts('suppliers')->label('Suppliers'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime('d M Y')->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()->sortable()->weight('semibold'),
+                Tables\Columns\TextColumn::make('suppliers_count')
+                    ->counts('suppliers')->label('Suppliers')->badge()->color('info'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime('d M Y')->sortable()->color('gray'),
             ])
             ->filters([Tables\Filters\TrashedFilter::make()])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->iconButton(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->iconButton(),
+                Tables\Actions\RestoreAction::make()
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->iconButton(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProductCategories::route('/'),
+            'index'  => Pages\ListProductCategories::route('/'),
             'create' => Pages\CreateProductCategory::route('/create'),
-            'edit' => Pages\EditProductCategory::route('/{record}/edit'),
+            'view'   => Pages\ViewProductCategory::route('/{record}'),
+            'edit'   => Pages\EditProductCategory::route('/{record}/edit'),
         ];
     }
 

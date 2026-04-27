@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\Auth;
 class SalesLeadResource extends Resource
 {
     protected static ?string $model = SalesLead::class;
-    protected static ?string $navigationIcon = 'heroicon-o-funnel';
+    protected static ?string $navigationIcon = 'heroicon-o-arrow-trending-up';
+    protected static ?string $navigationLabel = 'Sales Leads';
     protected static ?string $navigationGroup = 'CRM';
     protected static ?int $navigationSort = 3;
 
@@ -47,7 +48,8 @@ class SalesLeadResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('customer.company_name')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('customer.company_name')
+                    ->searchable()->sortable()->weight('semibold'),
                 Tables\Columns\BadgeColumn::make('stage')
                     ->colors([
                         'gray'    => 'identifying',
@@ -58,22 +60,48 @@ class SalesLeadResource extends Resource
                     ]),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors(['warning' => 'open', 'success' => 'won', 'danger' => 'lost']),
-                Tables\Columns\TextColumn::make('assignedTo.name')->label('Assigned To'),
-                Tables\Columns\TextColumn::make('activities_count')->counts('activities')->label('Activities'),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime('d M Y')->sortable()->label('Updated'),
+                Tables\Columns\TextColumn::make('assignedTo.name')
+                    ->label('Assigned To')->badge()->color('primary'),
+                Tables\Columns\TextColumn::make('activities_count')
+                    ->counts('activities')->label('Activities')->badge()->color('gray'),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime('d M Y')->sortable()->label('Updated')->color('gray'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('stage')
                     ->options([
-                        'identifying' => 'Identifying', 'approaching' => 'Approaching',
-                        'following_up' => 'Following Up', 'closing' => 'Closing', 'maintaining' => 'Maintaining',
+                        'identifying'  => 'Identifying',
+                        'approaching'  => 'Approaching',
+                        'following_up' => 'Following Up',
+                        'closing'      => 'Closing',
+                        'maintaining'  => 'Maintaining',
                     ]),
                 Tables\Filters\SelectFilter::make('status')
                     ->options(['open' => 'Open', 'won' => 'Won', 'lost' => 'Lost']),
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->iconButton(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->iconButton(),
+                Tables\Actions\RestoreAction::make()
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->iconButton(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelationManagers(): array
@@ -103,6 +131,7 @@ class SalesLeadResource extends Resource
         return [
             'index'  => Pages\ListSalesLeads::route('/'),
             'create' => Pages\CreateSalesLead::route('/create'),
+            'view'   => Pages\ViewSalesLead::route('/{record}'),
             'edit'   => Pages\EditSalesLead::route('/{record}/edit'),
         ];
     }

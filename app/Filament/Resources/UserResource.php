@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Hash;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationLabel = 'Users';
     protected static ?string $navigationGroup = 'Manajemen';
     protected static ?int $navigationSort = 1;
 
@@ -26,7 +27,8 @@ class UserResource extends Resource
             Forms\Components\TextInput::make('email')
                 ->email()->required()->unique(ignoreRecord: true),
             Forms\Components\TextInput::make('password')
-                ->password()->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                ->password()
+                ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                 ->dehydrated(fn ($state) => filled($state))
                 ->required(fn (string $context) => $context === 'create'),
             Forms\Components\Select::make('roles')
@@ -39,22 +41,48 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('email')->searchable(),
-                Tables\Columns\TextColumn::make('roles.name')->badge()->searchable(),
-                Tables\Columns\TextColumn::make('created_at')->dateTime('d M Y')->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()->sortable()->weight('semibold')
+                    ->icon('heroicon-m-user'),
+                Tables\Columns\TextColumn::make('email')
+                    ->searchable()->icon('heroicon-m-envelope')->color('gray'),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->badge()->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime('d M Y')->sortable()->color('gray'),
             ])
             ->filters([Tables\Filters\TrashedFilter::make()])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->iconButton(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->iconButton(),
+                Tables\Actions\RestoreAction::make()
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->iconButton(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),
+            'index'  => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'view'   => Pages\ViewUser::route('/{record}'),
+            'edit'   => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 
