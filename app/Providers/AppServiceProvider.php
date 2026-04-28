@@ -9,7 +9,6 @@ use App\Models\Principal;
 use App\Models\ProductCategory;
 use App\Models\PurchaseOrder;
 use App\Models\SalesActivity;
-use App\Models\SalesLead;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Observers\AssignmentObserver;
@@ -29,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
             Principal::class,
             Customer::class,
             Supplier::class,
-            SalesLead::class,
             SalesActivity::class,
             PurchaseOrder::class,
             Expense::class,
@@ -40,6 +38,5 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Customer::observe(AssignmentObserver::class);
-        SalesLead::observe(AssignmentObserver::class);
     }
 }

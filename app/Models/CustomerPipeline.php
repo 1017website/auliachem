@@ -2,21 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SalesActivity extends Model
+class CustomerPipeline extends Model
 {
-    use HasFactory, SoftDeletes;
-
     protected $fillable = [
-        'customer_id', 'stage', 'type', 'activity_date', 'notes',
-        'created_by', 'updated_by', 'deleted_by',
+        'customer_id', 'stage', 'contact_type', 'contact_date', 'notes',
+        'created_by', 'updated_by',
     ];
 
     protected $casts = [
-        'activity_date' => 'date',
+        'contact_date' => 'date',
     ];
 
     public function customer()
@@ -26,5 +22,4 @@ class SalesActivity extends Model
 
     public function createdBy() { return $this->belongsTo(User::class, 'created_by'); }
     public function updatedBy() { return $this->belongsTo(User::class, 'updated_by'); }
-    public function deletedBy() { return $this->belongsTo(User::class, 'deleted_by'); }
 }

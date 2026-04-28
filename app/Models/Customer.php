@@ -12,7 +12,7 @@ class Customer extends Model
 
     protected $fillable = [
         'company_name', 'pic_name', 'phone', 'email', 'address', 'city',
-        'industry_id', 'type', 'assigned_to',
+        'industry_id', 'type', 'status', 'assigned_to',
         'created_by', 'updated_by', 'deleted_by',
     ];
 
@@ -26,9 +26,19 @@ class Customer extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    public function salesLeads()
+    public function activities()
     {
-        return $this->hasMany(SalesLead::class);
+        return $this->hasMany(SalesActivity::class);
+    }
+
+    public function latestActivity()
+    {
+        return $this->hasOne(SalesActivity::class)->latestOfMany('activity_date');
+    }
+
+    public function productCategories()
+    {
+        return $this->belongsToMany(ProductCategory::class, 'customer_product_categories');
     }
 
     public function purchaseOrders()

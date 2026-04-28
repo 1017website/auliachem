@@ -5,7 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\PurchaseOrder;
-use App\Models\SalesLead;
+use App\Models\SalesActivity;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -21,10 +21,15 @@ class StatsOverviewWidget extends BaseWidget
         $totalExpenses = Expense::sum('amount');
         $nettProfit    = $grossProfit - $totalExpenses;
 
-        $openLeads     = SalesLead::where('status', 'open')->count();
-        $wonLeads      = SalesLead::where('status', 'won')->count();
-        $customers     = Customer::count();
-        $poThisMonth   = PurchaseOrder::whereMonth('po_date', now()->month)->count();
+        $prospects   = Customer::where('status', 'prospect')->count();
+        $active      = Customer::where('status', 'active')->count();
+        $closing     = SalesActivity::where('stage', 'closing')
+                         ->whereIn('id', SalesActivity::query()
+                             ->selectRaw('MAX(id)')
+                             ->groupBy('customer_id'))
+                         ->count();
+        $customers   = Customer::count();
+        $poThisMonth = PurchaseOrder::whereMonth('po_date', now()->month)->count();
 
         return [
             Stat::make('Total Revenue', 'Rp ' . number_format($totalRevenue, 0, ',', '.'))
@@ -44,21 +49,21 @@ class StatsOverviewWidget extends BaseWidget
                 ->descriptionIcon($nettProfit >= 0 ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-triangle')
                 ->color($nettProfit >= 0 ? 'success' : 'danger'),
 
-            Stat::make('Open Leads', $openLeads)
-                ->description($wonLeads . ' leads won bulan ini')
+            Stat::make('Prospects', $prospects)
+                ->description($closing . ' customer sedang closing')
                 ->descriptionIcon('heroicon-m-funnel')
                 ->color('warning')
-                ->chart([5, 8, 6, 10, 8, 12, $openLeads]),
+                ->chart([5, 8, 6, 10, 8, 12, $prospects]),
 
-            Stat::make('Total Customers', $customers)
-                ->description('Potential & existing')
+            Stat::make('Active Customers', $active)
+                ->description('Total ' . $customers . ' customers')
                 ->descriptionIcon('heroicon-m-building-office-2')
-                ->color('info'),
+                ->color('success'),
 
             Stat::make('PO Bulan Ini', $poThisMonth)
                 ->description('Purchase Orders ' . now()->format('M Y'))
                 ->descriptionIcon('heroicon-m-document-text')
-                ->color('primary'),
+                ->color('info'),
         ];
     }
 }

@@ -12,6 +12,6 @@ class EditSalesActivity extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [Actions\DeleteAction::make()];
+        return [Actions\DeleteAction::make()->icon('heroicon-o-trash')];
     }
 }

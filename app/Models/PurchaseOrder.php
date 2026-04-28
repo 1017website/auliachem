@@ -11,26 +11,21 @@ class PurchaseOrder extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'customer_id', 'sales_lead_id', 'supplier_id', 'product_category_id',
+        'customer_id', 'supplier_id', 'product_category_id',
         'po_number', 'po_date', 'total_amount', 'cogs', 'gross_profit', 'status',
         'created_by', 'updated_by', 'deleted_by',
     ];
 
     protected $casts = [
-        'po_date' => 'date',
-        'total_amount' => 'decimal:2',
-        'cogs' => 'decimal:2',
-        'gross_profit' => 'decimal:2',
+        'po_date'       => 'date',
+        'total_amount'  => 'decimal:2',
+        'cogs'          => 'decimal:2',
+        'gross_profit'  => 'decimal:2',
     ];
 
     public function customer()
     {
         return $this->belongsTo(Customer::class);
-    }
-
-    public function salesLead()
-    {
-        return $this->belongsTo(SalesLead::class);
     }
 
     public function supplier()

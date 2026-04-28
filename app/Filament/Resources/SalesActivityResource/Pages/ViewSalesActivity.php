@@ -12,9 +12,6 @@ class ViewSalesActivity extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\EditAction::make()
-                ->icon('heroicon-o-pencil-square'),
-        ];
+        return [Actions\EditAction::make()->icon('heroicon-o-pencil-square')];
     }
 }

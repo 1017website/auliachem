@@ -1,32 +1,26 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Resources\CustomerResource\RelationManagers;
 
-use App\Models\SalesActivity;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
 
-class RecentActivitiesWidget extends BaseWidget
+class PipelineLogsRelationManager extends RelationManager
 {
-    protected static ?int $sort = 2;
-    protected int|string|array $columnSpan = 'full';
-    protected static ?string $heading = 'Aktivitas Sales Terkini';
+    protected static string $relationship = 'pipelineLogs';
+    protected static ?string $title = 'Riwayat Stage';
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                SalesActivity::query()
-                    ->with(['customer', 'createdBy'])
-                    ->latest('activity_date')
-                    ->limit(8)
-            )
             ->columns([
-                Tables\Columns\TextColumn::make('activity_date')
-                    ->label('Tanggal')->date('d M Y')->weight('medium'),
-                Tables\Columns\TextColumn::make('customer.company_name')
-                    ->label('Customer')->weight('semibold'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Waktu')
+                    ->dateTime('d M Y, H:i')
+                    ->sortable()
+                    ->icon('heroicon-m-clock')
+                    ->weight('medium'),
                 Tables\Columns\BadgeColumn::make('stage')
                     ->label('Stage')
                     ->colors([
@@ -44,8 +38,8 @@ class RecentActivitiesWidget extends BaseWidget
                         'maintaining'  => 'Maintaining',
                         default        => $state,
                     }),
-                Tables\Columns\BadgeColumn::make('type')
-                    ->label('Metode')
+                Tables\Columns\BadgeColumn::make('contact_type')
+                    ->label('Kontak')
                     ->colors([
                         'success' => 'visit',
                         'info'    => 'phone',
@@ -53,11 +47,20 @@ class RecentActivitiesWidget extends BaseWidget
                         'primary' => 'email',
                         'gray'    => 'other',
                     ]),
+                Tables\Columns\TextColumn::make('contact_date')
+                    ->label('Tgl Kontak')
+                    ->date('d M Y')
+                    ->icon('heroicon-m-calendar'),
                 Tables\Columns\TextColumn::make('notes')
-                    ->label('Catatan')->limit(45)->color('gray'),
+                    ->label('Catatan')
+                    ->limit(60)
+                    ->color('gray'),
                 Tables\Columns\TextColumn::make('createdBy.name')
-                    ->label('Sales')->badge()->color('primary'),
+                    ->label('Oleh')
+                    ->badge()
+                    ->color('primary'),
             ])
-            ->paginated(false);
+            ->defaultSort('created_at', 'desc')
+            ->paginated([5, 10, 25]);
     }
 }
