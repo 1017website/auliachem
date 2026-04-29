@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\SalesActivityExporter;
 use App\Filament\Resources\SalesActivityResource\Pages;
 use App\Models\SalesActivity;
 use Filament\Forms;
@@ -16,7 +17,7 @@ class SalesActivityResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     protected static ?string $navigationLabel = 'Aktivitas';
     protected static ?string $navigationGroup = 'CRM';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -28,28 +29,27 @@ class SalesActivityResource extends Resource
             Forms\Components\Select::make('stage')
                 ->label('Stage Saat Ini')
                 ->options([
-                    'identifying'  => '🔍 Identifying',
-                    'approaching'  => '🤝 Approaching',
-                    'following_up' => '💬 Following Up',
-                    'closing'      => '🎯 Closing',
-                    'maintaining'  => '✅ Maintaining',
-                ])
-                ->required(),
+                    'identifying'  => 'Identifying',
+                    'approaching'  => 'Approaching',
+                    'following_up' => 'Following Up',
+                    'closing'      => 'Closing',
+                    'maintaining'  => 'Maintaining',
+                ])->required()->native(false),
             Forms\Components\Select::make('type')
                 ->label('Metode Kontak')
                 ->options([
-                    'phone'    => '📞 Phone',
-                    'visit'    => '🤝 Visit',
-                    'whatsapp' => '💬 WhatsApp',
-                    'email'    => '✉️ Email',
+                    'phone'    => 'Phone',
+                    'visit'    => 'Visit',
+                    'whatsapp' => 'WhatsApp',
+                    'email'    => 'Email',
                     'other'    => 'Other',
-                ])->required(),
+                ])->required()->native(false),
             Forms\Components\DatePicker::make('activity_date')
-                ->label('Tanggal')->required()->default(now()),
+                ->label('Tanggal')->required()->default(now())->native(false),
             Forms\Components\Textarea::make('notes')
                 ->label('Catatan / Hasil Follow-up')
                 ->placeholder('Apa yang dibahas? Apa hasilnya? Langkah selanjutnya?')
-                ->nullable()->columnSpanFull(),
+                ->nullable()->columnSpanFull()->rows(4),
         ])->columns(2);
     }
 
@@ -58,8 +58,7 @@ class SalesActivityResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('activity_date')
-                    ->label('Tanggal')->date('d M Y')->sortable()
-                    ->icon('heroicon-m-calendar')->weight('medium'),
+                    ->label('Tanggal')->date('d M Y')->sortable()->weight('medium'),
                 Tables\Columns\TextColumn::make('customer.company_name')
                     ->label('Customer')->searchable()->sortable()->weight('semibold'),
                 Tables\Columns\BadgeColumn::make('stage')
@@ -116,11 +115,18 @@ class SalesActivityResource extends Resource
                     ->label('Customer')->searchable()->preload(),
                 Tables\Filters\TrashedFilter::make(),
             ])
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->action(fn () => SalesActivityExporter::download()),
+            ])
             ->actions([
-                Tables\Actions\ViewAction::make()->icon('heroicon-o-eye')->color('gray')->iconButton(),
-                Tables\Actions\EditAction::make()->icon('heroicon-o-pencil-square')->color('warning')->iconButton(),
-                Tables\Actions\DeleteAction::make()->icon('heroicon-o-trash')->iconButton(),
-                Tables\Actions\RestoreAction::make()->icon('heroicon-o-arrow-uturn-left')->iconButton(),
+                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
+                Tables\Actions\RestoreAction::make()->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -7,6 +7,8 @@ use App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 use App\Models\PurchaseOrder;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -22,21 +24,32 @@ class PurchaseOrderResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Informasi PO')
+            // ═══════════ HEADER PO ═══════════
+            Forms\Components\Section::make('Informasi Purchase Order')
                 ->schema([
                     Forms\Components\TextInput::make('po_number')
-                        ->label('No. PO')->required()->maxLength(100)->unique(ignoreRecord: true),
+                        ->label('No. PO')
+                        ->required()
+                        ->maxLength(100)
+                        ->unique(ignoreRecord: true)
+                        ->placeholder('PO-2026-001'),
                     Forms\Components\DatePicker::make('po_date')
-                        ->label('Tanggal PO')->required()->default(now()),
+                        ->label('Tanggal PO')
+                        ->required()
+                        ->default(now())
+                        ->native(false),
                     Forms\Components\Select::make('customer_id')
                         ->label('Customer')
-                        ->relationship('customer', 'company_name')->required()->searchable()->preload(),
+                        ->relationship('customer', 'company_name')
+                        ->required()
+                        ->searchable()
+                        ->preload(),
                     Forms\Components\Select::make('supplier_id')
                         ->label('Supplier')
-                        ->relationship('supplier', 'company_name')->required()->searchable()->preload(),
-                    Forms\Components\Select::make('product_category_id')
-                        ->label('Kategori Produk')
-                        ->relationship('productCategory', 'name')->required()->searchable()->preload(),
+                        ->relationship('supplier', 'company_name')
+                        ->required()
+                        ->searchable()
+                        ->preload(),
                     Forms\Components\Select::make('status')
                         ->label('Status')
                         ->options([
@@ -45,19 +58,135 @@ class PurchaseOrderResource extends Resource
                             'delivered' => 'Delivered',
                             'invoiced'  => 'Invoiced',
                         ])
-                        ->default('pending')->required(),
+                        ->default('pending')
+                        ->required()
+                        ->native(false),
                 ])->columns(2),
 
-            Forms\Components\Section::make('Nilai Transaksi')
+            // ═══════════ LINE ITEMS (REPEATER) ═══════════
+            Forms\Components\Section::make('Item Penjualan')
+                ->description('Tambahkan satu atau lebih produk yang dijual dalam PO ini')
                 ->schema([
-                    Forms\Components\TextInput::make('total_amount')
-                        ->label('Total Amount')->numeric()->required()->prefix('Rp'),
-                    Forms\Components\TextInput::make('cogs')
-                        ->label('COGS')->numeric()->required()->prefix('Rp'),
-                    Forms\Components\TextInput::make('gross_profit')
-                        ->label('Gross Profit')->numeric()->required()->prefix('Rp'),
+                    Forms\Components\Repeater::make('items')
+                        ->relationship()
+                        ->label('')
+                        ->schema([
+                            Forms\Components\Select::make('product_category_id')
+                                ->label('Kategori')
+                                ->relationship('productCategory', 'name')
+                                ->required()
+                                ->searchable()
+                                ->preload()
+                                ->columnSpan(2),
+                            Forms\Components\TextInput::make('product_name')
+                                ->label('Nama Produk')
+                                ->required()
+                                ->placeholder('Contoh: Methanol 99%')
+                                ->columnSpan(3),
+                            Forms\Components\TextInput::make('quantity')
+                                ->label('Qty')
+                                ->numeric()
+                                ->required()
+                                ->default(1)
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => self::recalcRow($get, $set))
+                                ->columnSpan(1),
+                            Forms\Components\TextInput::make('unit')
+                                ->label('Unit')
+                                ->required()
+                                ->default('kg')
+                                ->datalist(['kg', 'liter', 'drum', 'pcs', 'ton', 'galon'])
+                                ->columnSpan(1),
+                            Forms\Components\TextInput::make('unit_price')
+                                ->label('Harga Jual / unit')
+                                ->numeric()
+                                ->required()
+                                ->prefix('Rp')
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => self::recalcRow($get, $set))
+                                ->columnSpan(2),
+                            Forms\Components\TextInput::make('unit_cost')
+                                ->label('COGS / unit')
+                                ->numeric()
+                                ->required()
+                                ->prefix('Rp')
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => self::recalcRow($get, $set))
+                                ->columnSpan(2),
+                            Forms\Components\Placeholder::make('subtotal_display')
+                                ->label('Subtotal')
+                                ->content(function (Get $get): string {
+                                    $qty   = (float) $get('quantity');
+                                    $price = (float) $get('unit_price');
+                                    return 'Rp ' . number_format($qty * $price, 0, ',', '.');
+                                })
+                                ->columnSpan(1),
+                            Forms\Components\Textarea::make('notes')
+                                ->label('Catatan (opsional)')
+                                ->rows(2)
+                                ->columnSpanFull(),
+                        ])
+                        ->columns(12)
+                        ->defaultItems(1)
+                        ->addActionLabel('+ Tambah Item')
+                        ->reorderableWithButtons()
+                        ->collapsible()
+                        ->cloneable()
+                        ->itemLabel(fn (array $state): ?string =>
+                            ($state['product_name'] ?? null)
+                                ? $state['product_name'] . ' (' . ($state['quantity'] ?? 0) . ' ' . ($state['unit'] ?? '') . ')'
+                                : 'Item baru'
+                        )
+                        ->live()
+                        ->afterStateUpdated(fn (Get $get, Set $set) => self::updateHeaderTotals($get, $set)),
+                ])->collapsible(),
+
+            // ═══════════ TOTALS (READONLY DISPLAY) ═══════════
+            Forms\Components\Section::make('Ringkasan')
+                ->schema([
+                    Forms\Components\Placeholder::make('total_amount_display')
+                        ->label('Total Penjualan')
+                        ->content(fn (Get $get) => 'Rp ' . number_format(self::calcTotal($get, 'unit_price'), 0, ',', '.')),
+                    Forms\Components\Placeholder::make('cogs_display')
+                        ->label('Total COGS')
+                        ->content(fn (Get $get) => 'Rp ' . number_format(self::calcTotal($get, 'unit_cost'), 0, ',', '.')),
+                    Forms\Components\Placeholder::make('gross_profit_display')
+                        ->label('Gross Profit')
+                        ->content(function (Get $get) {
+                            $gp = self::calcTotal($get, 'unit_price') - self::calcTotal($get, 'unit_cost');
+                            return 'Rp ' . number_format($gp, 0, ',', '.');
+                        }),
                 ])->columns(3),
         ]);
+    }
+
+    protected static function recalcRow(Get $get, Set $set): void
+    {
+        $qty   = (float) $get('quantity');
+        $price = (float) $get('unit_price');
+        $cost  = (float) $get('unit_cost');
+        $set('subtotal', $qty * $price);
+        $set('subtotal_cogs', $qty * $cost);
+        $set('subtotal_gross_profit', ($qty * $price) - ($qty * $cost));
+    }
+
+    protected static function calcTotal(Get $get, string $priceField): float
+    {
+        $items = $get('items') ?? [];
+        $sum = 0;
+        foreach ($items as $row) {
+            $qty   = (float) ($row['quantity'] ?? 0);
+            $price = (float) ($row[$priceField] ?? 0);
+            $sum += $qty * $price;
+        }
+        return $sum;
+    }
+
+    protected static function updateHeaderTotals(Get $get, Set $set): void
+    {
+        // Simpan ke field tersembunyi agar masuk ke kolom parent
+        // Sebenarnya recalculateTotals() di model PO yang akan handle setelah save,
+        // jadi placeholder display sudah cukup untuk UI.
     }
 
     public static function table(Table $table): Table
@@ -65,19 +194,23 @@ class PurchaseOrderResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('po_number')
-                    ->label('No. PO')->searchable()->sortable()->weight('semibold')->copyable(),
+                    ->label('No. PO')
+                    ->searchable()->sortable()->weight('semibold')->copyable(),
                 Tables\Columns\TextColumn::make('po_date')
-                    ->label('Tanggal')->date('d M Y')->sortable()->icon('heroicon-m-calendar'),
+                    ->label('Tanggal')->date('d M Y')->sortable(),
                 Tables\Columns\TextColumn::make('customer.company_name')
                     ->label('Customer')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('supplier.company_name')
-                    ->label('Supplier')->searchable(),
-                Tables\Columns\TextColumn::make('productCategory.name')
-                    ->label('Kategori')->badge()->color('gray'),
+                    ->label('Supplier')->searchable()->toggleable(),
+                Tables\Columns\TextColumn::make('items_count')
+                    ->counts('items')
+                    ->label('Items')
+                    ->badge()
+                    ->color('gray'),
                 Tables\Columns\TextColumn::make('total_amount')
                     ->label('Total')->money('IDR')->sortable(),
                 Tables\Columns\TextColumn::make('gross_profit')
-                    ->label('Gross Profit')->money('IDR')->color('success'),
+                    ->label('Gross Profit')->money('IDR')->color('success')->toggleable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'gray'    => 'pending',
@@ -97,11 +230,18 @@ class PurchaseOrderResource extends Resource
                     ]),
                 Tables\Filters\TrashedFilter::make(),
             ])
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->action(fn () => \App\Filament\Exports\PurchaseOrderExporter::download()),
+            ])
             ->actions([
-                Tables\Actions\ViewAction::make()->icon('heroicon-o-eye')->color('gray')->iconButton(),
-                Tables\Actions\EditAction::make()->icon('heroicon-o-pencil-square')->color('warning')->iconButton(),
-                Tables\Actions\DeleteAction::make()->icon('heroicon-o-trash')->iconButton(),
-                Tables\Actions\RestoreAction::make()->icon('heroicon-o-arrow-uturn-left')->iconButton(),
+                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
+                Tables\Actions\RestoreAction::make()->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

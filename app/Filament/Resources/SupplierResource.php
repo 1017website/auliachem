@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\SupplierExporter;
 use App\Filament\Resources\SupplierResource\Pages;
 use App\Models\Supplier;
 use Filament\Forms;
@@ -21,22 +22,39 @@ class SupplierResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('company_name')->required()->maxLength(255),
-            Forms\Components\TextInput::make('pic_name')->required()->maxLength(255),
-            Forms\Components\TextInput::make('phone')->required()->maxLength(50)->tel(),
-            Forms\Components\TextInput::make('country')->required()->maxLength(100),
-            Forms\Components\Select::make('type')
-                ->options(['potential' => 'Potential', 'existing' => 'Existing'])->required(),
-            Forms\Components\Select::make('source')
-                ->options(['local' => 'Local', 'import' => 'Import'])->required(),
-            Forms\Components\Select::make('principal_id')
-                ->relationship('principal', 'name')->nullable()->searchable()->preload(),
-            Forms\Components\Select::make('product_category_id')
-                ->relationship('productCategory', 'name')->required()->searchable()->preload(),
-            Forms\Components\TextInput::make('lead_time_days')->numeric()->nullable()->suffix('hari'),
-            Forms\Components\Select::make('currency')
-                ->options(['IDR' => 'IDR', 'USD' => 'USD', 'EUR' => 'EUR'])
-                ->default('IDR')->required(),
+            Forms\Components\Section::make('Informasi Supplier')
+                ->schema([
+                    Forms\Components\TextInput::make('company_name')->label('Nama Perusahaan')->required()->maxLength(255),
+                    Forms\Components\TextInput::make('pic_name')->label('PIC')->required()->maxLength(255),
+                    Forms\Components\TextInput::make('phone')->label('No. Telepon')->required()->maxLength(50)->tel(),
+                    Forms\Components\TextInput::make('country')->label('Negara')->required()->maxLength(100),
+                ])->columns(2),
+
+            Forms\Components\Section::make('Klasifikasi')
+                ->schema([
+                    Forms\Components\Select::make('type')
+                        ->label('Tipe')
+                        ->options(['potential' => 'Potential', 'existing' => 'Existing'])->required()->native(false),
+                    Forms\Components\Select::make('source')
+                        ->label('Source')
+                        ->options(['local' => 'Local', 'import' => 'Import'])->required()->native(false),
+                    Forms\Components\Select::make('principal_id')
+                        ->label('Principal')
+                        ->relationship('principal', 'name')->nullable()->searchable()->preload(),
+                    Forms\Components\Select::make('product_category_id')
+                        ->label('Kategori Produk')
+                        ->relationship('productCategory', 'name')->required()->searchable()->preload(),
+                ])->columns(2),
+
+            Forms\Components\Section::make('Detail Operasional')
+                ->schema([
+                    Forms\Components\TextInput::make('lead_time_days')
+                        ->label('Lead Time')->numeric()->nullable()->suffix('hari'),
+                    Forms\Components\Select::make('currency')
+                        ->label('Currency')
+                        ->options(['IDR' => 'IDR', 'USD' => 'USD', 'EUR' => 'EUR'])
+                        ->default('IDR')->required()->native(false),
+                ])->columns(2),
         ]);
     }
 
@@ -44,11 +62,10 @@ class SupplierResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('company_name')
+                Tables\Columns\TextColumn::make('company_name')->label('Perusahaan')
                     ->searchable()->sortable()->weight('semibold'),
                 Tables\Columns\TextColumn::make('pic_name')->searchable()->label('PIC'),
-                Tables\Columns\TextColumn::make('country')
-                    ->icon('heroicon-m-globe-alt')->color('gray'),
+                Tables\Columns\TextColumn::make('country')->label('Negara')->color('gray'),
                 Tables\Columns\BadgeColumn::make('type')
                     ->colors(['warning' => 'potential', 'success' => 'existing']),
                 Tables\Columns\BadgeColumn::make('source')
@@ -58,7 +75,7 @@ class SupplierResource extends Resource
                 Tables\Columns\BadgeColumn::make('currency')
                     ->colors(['success' => 'IDR', 'warning' => 'USD', 'info' => 'EUR']),
                 Tables\Columns\TextColumn::make('lead_time_days')
-                    ->suffix(' hari')->label('Lead Time')->color('gray'),
+                    ->suffix(' hari')->label('Lead Time')->color('gray')->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
@@ -67,21 +84,18 @@ class SupplierResource extends Resource
                     ->options(['local' => 'Local', 'import' => 'Import']),
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->icon('heroicon-o-eye')
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
-                    ->iconButton(),
-                Tables\Actions\EditAction::make()
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('warning')
-                    ->iconButton(),
-                Tables\Actions\DeleteAction::make()
-                    ->icon('heroicon-o-trash')
-                    ->iconButton(),
-                Tables\Actions\RestoreAction::make()
-                    ->icon('heroicon-o-arrow-uturn-left')
-                    ->iconButton(),
+                    ->action(fn () => SupplierExporter::download()),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
+                Tables\Actions\RestoreAction::make()->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

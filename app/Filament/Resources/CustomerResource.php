@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\CustomerExporter;
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Filament\Resources\CustomerResource\RelationManagers;
 use App\Models\Customer;
@@ -49,7 +50,7 @@ class CustomerResource extends Resource
                     Forms\Components\Select::make('type')
                         ->label('Tipe Customer')
                         ->options(['potential' => 'Potential', 'existing' => 'Existing'])
-                        ->required(),
+                        ->required()->native(false),
                     Forms\Components\Select::make('status')
                         ->label('Status')
                         ->options([
@@ -57,7 +58,7 @@ class CustomerResource extends Resource
                             'active'   => 'Active',
                             'inactive' => 'Inactive',
                         ])
-                        ->default('prospect')->required(),
+                        ->default('prospect')->required()->native(false),
                     Forms\Components\Select::make('assigned_to')
                         ->label('Assigned To')
                         ->relationship('assignedTo', 'name')
@@ -89,7 +90,7 @@ class CustomerResource extends Resource
                 Tables\Columns\TextColumn::make('industry.name')
                     ->label('Industri')->badge()->color('gray'),
                 Tables\Columns\TextColumn::make('productCategories.name')
-                    ->label('Produk')->badge()->color('info')->separator(', '),
+                    ->label('Produk')->badge()->color('info')->separator(', ')->toggleable(),
                 Tables\Columns\BadgeColumn::make('latestActivity.stage')
                     ->label('Stage')
                     ->colors([
@@ -108,8 +109,7 @@ class CustomerResource extends Resource
                         default        => '—',
                     }),
                 Tables\Columns\TextColumn::make('latestActivity.activity_date')
-                    ->label('Last Contact')->date('d M Y')
-                    ->icon('heroicon-m-calendar')->color('gray'),
+                    ->label('Last Contact')->date('d M Y')->color('gray')->toggleable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'warning' => 'prospect',
@@ -119,7 +119,7 @@ class CustomerResource extends Resource
                 Tables\Columns\TextColumn::make('assignedTo.name')
                     ->label('Sales')->badge()->color('primary'),
                 Tables\Columns\TextColumn::make('activities_count')
-                    ->counts('activities')->label('Aktivitas')->badge()->color('gray'),
+                    ->counts('activities')->label('Aktivitas')->badge()->color('gray')->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -132,11 +132,18 @@ class CustomerResource extends Resource
                     ->relationship('industry', 'name')->label('Industri'),
                 Tables\Filters\TrashedFilter::make(),
             ])
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->action(fn () => CustomerExporter::download()),
+            ])
             ->actions([
-                Tables\Actions\ViewAction::make()->icon('heroicon-o-eye')->color('gray')->iconButton(),
-                Tables\Actions\EditAction::make()->icon('heroicon-o-pencil-square')->color('warning')->iconButton(),
-                Tables\Actions\DeleteAction::make()->icon('heroicon-o-trash')->iconButton(),
-                Tables\Actions\RestoreAction::make()->icon('heroicon-o-arrow-uturn-left')->iconButton(),
+                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
+                Tables\Actions\RestoreAction::make()->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

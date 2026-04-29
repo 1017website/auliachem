@@ -17,11 +17,30 @@ class PurchaseOrder extends Model
     ];
 
     protected $casts = [
-        'po_date'       => 'date',
-        'total_amount'  => 'decimal:2',
-        'cogs'          => 'decimal:2',
-        'gross_profit'  => 'decimal:2',
+        'po_date'      => 'date',
+        'total_amount' => 'decimal:2',
+        'cogs'         => 'decimal:2',
+        'gross_profit' => 'decimal:2',
     ];
+
+    /**
+     * Hitung ulang total/cogs/gross_profit dari items.
+     */
+    public function recalculateTotals(): void
+    {
+        $this->loadMissing('items');
+
+        $this->update([
+            'total_amount' => $this->items->sum('subtotal'),
+            'cogs'         => $this->items->sum('subtotal_cogs'),
+            'gross_profit' => $this->items->sum('subtotal_gross_profit'),
+        ]);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(PoItem::class);
+    }
 
     public function customer()
     {

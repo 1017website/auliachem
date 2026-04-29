@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\ExpenseExporter;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Models\Expense;
 use Filament\Forms;
@@ -21,25 +22,32 @@ class ExpenseResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Select::make('po_id')
-                ->label('Purchase Order (opsional)')
-                ->relationship('purchaseOrder', 'po_number')
-                ->nullable()->searchable(),
-            Forms\Components\Select::make('category')
-                ->options([
-                    'shipping'     => 'Shipping',
-                    'import_duty'  => 'Import Duty',
-                    'handling'     => 'Handling',
-                    'other_po'     => 'Other PO',
-                    'salary'       => 'Salary',
-                    'rent_utility' => 'Rent & Utility',
-                    'marketing'    => 'Marketing',
-                    'office'       => 'Office',
-                    'other_ops'    => 'Other Operational',
-                ])->required(),
-            Forms\Components\TextInput::make('description')->required()->maxLength(255),
-            Forms\Components\TextInput::make('amount')->numeric()->required()->prefix('Rp'),
-            Forms\Components\DatePicker::make('expense_date')->required(),
+            Forms\Components\Section::make('Detail Expense')
+                ->schema([
+                    Forms\Components\Select::make('po_id')
+                        ->label('Purchase Order (opsional)')
+                        ->relationship('purchaseOrder', 'po_number')
+                        ->nullable()->searchable(),
+                    Forms\Components\Select::make('category')
+                        ->label('Kategori')
+                        ->options([
+                            'shipping'     => 'Shipping',
+                            'import_duty'  => 'Import Duty',
+                            'handling'     => 'Handling',
+                            'other_po'     => 'Other PO',
+                            'salary'       => 'Salary',
+                            'rent_utility' => 'Rent & Utility',
+                            'marketing'    => 'Marketing',
+                            'office'       => 'Office',
+                            'other_ops'    => 'Other Operational',
+                        ])->required()->native(false),
+                    Forms\Components\TextInput::make('description')
+                        ->label('Deskripsi')->required()->maxLength(255)->columnSpanFull(),
+                    Forms\Components\TextInput::make('amount')
+                        ->label('Jumlah')->numeric()->required()->prefix('Rp'),
+                    Forms\Components\DatePicker::make('expense_date')
+                        ->label('Tanggal Expense')->required()->default(now())->native(false),
+                ])->columns(2),
         ]);
     }
 
@@ -48,17 +56,19 @@ class ExpenseResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('expense_date')
-                    ->date('d M Y')->sortable()->icon('heroicon-m-calendar'),
+                    ->date('d M Y')->sortable()->label('Tanggal'),
                 Tables\Columns\BadgeColumn::make('category')
+                    ->label('Kategori')
                     ->colors([
                         'info'    => fn ($s) => in_array($s, ['shipping', 'import_duty', 'handling', 'other_po']),
                         'warning' => fn ($s) => in_array($s, ['salary', 'rent_utility']),
                         'primary' => fn ($s) => in_array($s, ['marketing', 'office', 'other_ops']),
                     ]),
-                Tables\Columns\TextColumn::make('description')->limit(50),
+                Tables\Columns\TextColumn::make('description')->label('Deskripsi')->limit(50),
                 Tables\Columns\TextColumn::make('purchaseOrder.po_number')
                     ->label('PO')->default('-')->badge()->color('gray'),
-                Tables\Columns\TextColumn::make('amount')->money('IDR')->sortable()->color('danger'),
+                Tables\Columns\TextColumn::make('amount')
+                    ->label('Jumlah')->money('IDR')->sortable()->color('danger'),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('By')->badge()->color('primary'),
             ])
@@ -78,21 +88,18 @@ class ExpenseResource extends Resource
                     ]),
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->icon('heroicon-o-eye')
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
-                    ->iconButton(),
-                Tables\Actions\EditAction::make()
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('warning')
-                    ->iconButton(),
-                Tables\Actions\DeleteAction::make()
-                    ->icon('heroicon-o-trash')
-                    ->iconButton(),
-                Tables\Actions\RestoreAction::make()
-                    ->icon('heroicon-o-arrow-uturn-left')
-                    ->iconButton(),
+                    ->action(fn () => ExpenseExporter::download()),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
+                Tables\Actions\RestoreAction::make()->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
