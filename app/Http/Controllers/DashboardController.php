@@ -101,7 +101,7 @@ class DashboardController extends Controller
         $totalDo = $totalPo;
 
         return view('dashboard.index', compact(
-            'revenue','totalDo','activeLeads','dealClosed','conversionRate',
+            'revenue','totalDo','totalPo','activeLeads','dealClosed','conversionRate',
             'revenueGrowth','doGrowth','dealGrowth','leadsGrowth','prevLabel',
             'pipelineStages','todayReminders','recentActivities','topSales',
             'revenueChart','volumeChart','trendWon','trendLost'
