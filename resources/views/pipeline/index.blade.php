@@ -118,10 +118,10 @@
                             <span style="color:var(--text-muted)"> · {{ $lead->pic_position }}</span>
                             @endif
                         </div>
-                        @if($lead->service_type)
+                        @if($lead->product_interest)
                         <div class="kc-service">
-                            <i class="fas fa-ship me-1" style="font-size:.6rem"></i>{{ $lead->service_type }}
-                            @if($lead->route) · {{ $lead->route }} @endif
+                            <i class="fas fa-flask me-1" style="font-size:.6rem"></i>{{ $lead->product_interest }}
+                            
                         </div>
                         @endif
                         <div class="kc-footer mt-2">
@@ -240,13 +240,8 @@
                             <input type="email" name="email" class="form-control">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Service Type</label>
-                            <select name="service_type" class="form-select">
-                                <option value="">- Pilih -</option>
-                                @foreach(['Sea Freight Import','Sea Freight Export','Air Freight Import','Air Freight Export','Trucking Domestic','Custom Clearance'] as $svc)
-                                <option value="{{ $svc }}">{{ $svc }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Product Interest</label>
+                            <input type="text" name="product_interest" class="form-control" placeholder="Solvent, Resin, Pigment, dll">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Pipeline Stage <span class="text-danger">*</span></label>

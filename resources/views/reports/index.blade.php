@@ -59,7 +59,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Search</label>
-                        <input type="text" name="search" class="form-control" placeholder="Cari nama company, nomor DO..." value="{{ $search }}">
+                        <input type="text" name="search" class="form-control" placeholder="Cari nama company, nomor PO..." value="{{ $search }}">
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i> Generate</button>
@@ -92,7 +92,7 @@
 
 {{-- Report Type Tabs --}}
 <div class="d-flex gap-2 mb-4 flex-wrap">
-    @foreach(['sales'=>'Sales Report','customer'=>'Customer Report','pipeline'=>'Pipeline Report','performance'=>'Performance Report','do'=>'DO Report'] as $type => $label)
+    @foreach(['sales'=>'Sales Report','customer'=>'Customer Report','pipeline'=>'Pipeline Report','performance'=>'Performance Report','po'=>'PO Report'] as $type => $label)
     <a href="{{ route('reports.index', array_merge(request()->except('report_type','page'), ['report_type'=>$type])) }}"
         class="report-tab {{ $reportType === $type ? 'active' : '' }}">
         {{ $label }}
@@ -145,7 +145,7 @@
         <table class="table report-table mb-0">
             <thead><tr>
                 <th>No</th><th>Tgl Dibuat</th><th>Company</th><th>PIC</th>
-                <th>Sales PIC</th><th>Stage</th><th>Service</th><th>Route</th>
+                <th>Sales PIC</th><th>Stage</th><th>Service</th><th>Volume Est.</th>
                 <th>Potensi Revenue</th><th>Probability</th><th>Exp. Closing</th>
             </tr></thead>
             <tbody>
@@ -162,8 +162,8 @@
                         @php $stageMap=['Identifying'=>'identifying','Approaching'=>'approaching','Follow Up'=>'follow-up','Closing'=>'closing','Won'=>'won','Lost'=>'lost']; @endphp
                         <span class="badge-stage badge-{{ $stageMap[$lead->pipeline_stage]??'identifying' }}" style="font-size:11px">{{ $lead->pipeline_stage }}</span>
                     </td>
-                    <td style="font-size:12px">{{ $lead->service_type ?? '-' }}</td>
-                    <td style="font-size:12px">{{ $lead->route ?? '-' }}</td>
+                    <td style="font-size:12px">{{ $lead->product_interest ?? "-" }}</td>
+                    <td style="font-size:12px">{{ $lead->volume_estimate ?? '-' }}</td>
                     <td style="font-size:12px;font-weight:600;color:var(--primary)">{{ idrm($lead->potensi_revenue) }}</td>
                     <td style="font-size:12px;text-align:center">{{ $lead->probability ?? 0 }}%</td>
                     <td style="font-size:12px;color:#6b7280">{{ $lead->expected_closing?->format('d M Y') ?? '-' }}</td>
@@ -208,7 +208,7 @@
         <table class="table report-table mb-0">
             <thead><tr>
                 <th>No</th><th>Company</th><th>Stage</th><th>Temperature</th>
-                <th>Service</th><th>Route</th><th>Revenue</th><th>Probability</th><th>Sales PIC</th><th>Last Updated</th>
+                <th>Service</th><th>Volume Est.</th><th>Revenue</th><th>Probability</th><th>Sales PIC</th><th>Last Updated</th>
             </tr></thead>
             <tbody>
                 @forelse($reportData as $i => $lead)
@@ -221,8 +221,8 @@
                     </td>
                     <td><span class="badge-stage badge-{{ $stageMap[$lead->pipeline_stage]??'identifying' }}" style="font-size:11px">{{ $lead->pipeline_stage }}</span></td>
                     <td><span class="badge-{{ strtolower($lead->temperature) }}" style="font-size:11px">{{ $lead->temperature }}</span></td>
-                    <td style="font-size:12px">{{ $lead->service_type ?? '-' }}</td>
-                    <td style="font-size:12px">{{ $lead->route ?? '-' }}</td>
+                    <td style="font-size:12px">{{ $lead->product_interest ?? "-" }}</td>
+                    <td style="font-size:12px">{{ $lead->volume_estimate ?? '-' }}</td>
                     <td style="font-size:12px;font-weight:600;color:var(--primary)">{{ idrm($lead->potensi_revenue) }}</td>
                     <td style="font-size:12px;text-align:center">{{ $lead->probability ?? 0 }}%</td>
                     <td style="font-size:12px">{{ $lead->salesUser?->name ?? '-' }}</td>
@@ -274,22 +274,22 @@
             </tbody>
         </table>
 
-        {{-- DO Report --}}
+        {{-- PO Report --}}
         @elseif($reportType === 'do')
         <table class="table report-table mb-0">
             <thead><tr>
-                <th>No</th><th>No. DO</th><th>Customer</th><th>Vendor</th>
-                <th>Service Type</th><th>Route</th><th>Revenue</th><th>Cost Vendor</th><th>Gross Profit</th><th>Nett Profit</th><th>Status</th><th>Tgl Order</th>
+                <th>No</th><th>No. PO</th><th>Customer</th><th>Supplier</th>
+                <th>Product Interest</th><th>Volume Est.</th><th>Revenue</th><th>Cost Vendor</th><th>Gross Profit</th><th>Nett Profit</th><th>Status</th><th>Tgl Order</th>
             </tr></thead>
             <tbody>
                 @forelse($reportData as $i => $do)
                 <tr>
                     <td style="color:#9ca3af;font-size:12px">{{ $reportData->firstItem() + $i }}</td>
-                    <td style="font-weight:600;font-size:12px">{{ $do->do_number }}</td>
+                    <td style="font-weight:600;font-size:12px">{{ $do->po_number }}</td>
                     <td style="font-size:12px">{{ $do->customer?->company_name ?? '-' }}</td>
-                    <td style="font-size:12px;color:#6b7280">{{ $do->vendor?->vendor_name ?? '-' }}</td>
-                    <td style="font-size:12px">{{ $do->service_type }}</td>
-                    <td style="font-size:12px">{{ $do->route }}</td>
+                    <td style="font-size:12px;color:#6b7280">{{ $do->supplier?->supplier_name ?? '-' }}</td>
+                    <td style="font-size:12px">{{ $do->items->first()?->product_name ?? '-' }}</td>
+                    <td style="font-size:12px">{{ idrm($do->total_revenue) }}</td>
                     <td style="font-size:12px;font-weight:600;color:var(--primary)">{{ idrm($do->amount) }}</td>
                     <td style="font-size:12px;color:#dc2626">{{ idrm($do->cost) }}</td>
                     <td style="font-size:12px;font-weight:600;color:#10b981">{{ idrm($do->gross_profit) }}</td>

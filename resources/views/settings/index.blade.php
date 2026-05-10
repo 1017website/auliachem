@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Settings')
 @section('page-title', 'Settings')
-@section('page-subtitle', 'Konfigurasi sistem CRM Logistic Service')
+@section('page-subtitle', 'Konfigurasi sistem Chemical CRM')
 
 @push('styles')
 <style>
@@ -201,7 +201,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
                     <div style="background:#f9fafb;border-radius:8px;padding:16px">
                         <div style="font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Versi Aplikasi</div>
                         <div style="font-size:22px;font-weight:700;color:#0f1d35;margin-top:4px">v1.0.0</div>
-                        <div style="font-size:12px;color:#6b7280">CRM Logistic Service</div>
+                        <div style="font-size:12px;color:#6b7280">Chemical CRM</div>
                     </div>
                 </div>
                 <div class="col-md-6">

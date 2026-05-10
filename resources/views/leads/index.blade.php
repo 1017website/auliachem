@@ -45,7 +45,7 @@
                     <tr>
                         <th>Company</th>
                         <th>PIC / Jabatan</th>
-                        <th>Service / Route</th>
+                        <th>Product Interest</th>
                         <th>Potensi Revenue</th>
                         <th>Sales PIC</th>
                         <th>Next Follow Up</th>
@@ -64,8 +64,7 @@
                             <div style="font-size:.7rem;color:var(--text-muted)">{{ $lead->pic_position ?? $lead->phone }}</div>
                         </td>
                         <td>
-                            <div style="font-size:.8rem">{{ $lead->service_type ?? '-' }}</div>
-                            <div style="font-size:.7rem;color:var(--text-muted)">{{ $lead->route }}</div>
+                            <div style="font-size:.8rem">{{ $lead->product_interest ?? "-" }}</div>
                         </td>
                         <td style="font-weight:600;color:var(--primary)">{{ idrm($lead->potensi_revenue) }}</td>
                         <td style="font-size:.78rem">{{ $lead->salesUser?->name }}</td>
@@ -138,7 +137,7 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label">Jabatan PIC</label>
-                            <input type="text" name="pic_position" class="form-control" value="{{ old('pic_position') }}" placeholder="Misal: Direktur, Manager Logistik">
+                            <input type="text" name="pic_position" class="form-control" value="{{ old('pic_position') }}" placeholder="Misal: Direktur, Procurement Manager">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Phone</label>
@@ -153,17 +152,12 @@
                             <input type="text" name="industry" class="form-control" value="{{ old('industry') }}" placeholder="Misal: Manufaktur, Retail">
                         </div>
                         <div class="col-6">
-                            <label class="form-label">Service Type</label>
-                            <select name="service_type" class="form-select">
-                                <option value="">Pilih service</option>
-                                @foreach(['Import Sea Freight','Export Sea Freight','Import Air Freight','Export Air Freight','Trucking Domestic','Project Cargo'] as $svc)
-                                <option value="{{ $svc }}" {{ old('service_type') == $svc ? 'selected' : '' }}>{{ $svc }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Product Interest</label>
+                            <input type="text" name="product_interest" class="form-control" value="{{ old('product_interest') }}" placeholder="Contoh: Solvent, Resin, Pigment, dll">
                         </div>
                         <div class="col-6">
-                            <label class="form-label">Route</label>
-                            <input type="text" name="route" class="form-control" value="{{ old('route') }}" placeholder="Misal: Shanghai - Surabaya">
+                            <label class="form-label">Volume Estimate</label>
+                            <input type="text" name="volume_estimate" class="form-control" value="{{ old('route') }}" placeholder="Estimasi volume (kg, ton, dll)">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Potensi Revenue</label>
@@ -208,7 +202,7 @@
                             <i class="fas fa-info-circle text-primary me-1"></i> Format CSV
                         </div>
                         <div style="font-size:11px;color:#6b7280;line-height:1.8">
-                            Kolom: <strong>Lead Code, Company Name, PIC Name, Phone, Email, Pipeline Stage, Temperature, Service Type, Route, Potensi Revenue, Probability, Expected Closing, Sales PIC, Lead Source</strong>
+                            Kolom: <strong>Lead Code, Company Name, PIC Name, Phone, Email, Pipeline Stage, Temperature, Product Interest, Volume Estimate, Potensi Revenue, Probability, Expected Closing, Sales PIC, Lead Source</strong>
                         </div>
                         <a href="{{ route('leads.export') }}" class="btn btn-sm btn-outline-primary mt-2" style="font-size:11px">
                             <i class="fas fa-download me-1"></i> Download Template CSV

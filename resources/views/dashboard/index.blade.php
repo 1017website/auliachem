@@ -33,8 +33,8 @@ function growthBadge($val, $prev_label) {
                 <i class="fas fa-truck" style="color:#059669"></i>
             </div>
             <div>
-                <div class="kpi-label">Total DO</div>
-                <div class="kpi-value">{{ $totalDo }}</div>
+                <div class="kpi-label">Total PO</div>
+                <div class="kpi-value">{{ $totalPo }}</div>
                 <div>{!! growthBadge($doGrowth, $prevLabel) !!}</div>
             </div>
         </div>
@@ -96,7 +96,7 @@ function growthBadge($val, $prev_label) {
     <div class="col-lg-4">
         <div class="card h-100">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <span>Volume DO</span>
+                <span>Volume PO</span>
                 <select class="form-select form-select-sm" style="width:130px"><option>This Month</option></select>
             </div>
             <div class="card-body p-3">
@@ -140,7 +140,7 @@ function growthBadge($val, $prev_label) {
                             @forelse($stageLeads->take(3) as $lead)
                             <div class="kanban-card" onclick="window.location='{{ route('leads.show', $lead) }}'">
                                 <div class="kc-company">{{ $lead->company_name }}</div>
-                                <div class="kc-service">{{ $lead->service_type }}</div>
+                                <div class="kc-service">{{ $lead->product_interest }}</div>
                                 <div class="kc-footer">
                                     <span class="badge-{{ strtolower($lead->temperature) }}">{{ $lead->temperature }}</span>
                                     <small style="color:var(--text-muted)">Today</small>
@@ -292,7 +292,7 @@ function growthBadge($val, $prev_label) {
                             <div class="qa-icon" style="background:#ccfbf1">
                                 <i class="fas fa-file-alt" style="color:#0d9488;font-size:.8rem"></i>
                             </div>
-                            <span class="qa-label">Create DO</span>
+                            <span class="qa-label">Create PO</span>
                         </a>
                     </div>
                     <div class="col-4">
@@ -339,7 +339,7 @@ new Chart(document.getElementById('revenueChart').getContext('2d'), {
     }
 });
 
-// ── Volume DO Chart (data real dari DB) ──
+// ── Volume PO Chart (data real dari DB) ──
 new Chart(document.getElementById('volumeChart').getContext('2d'), {
     type: 'bar',
     data: {

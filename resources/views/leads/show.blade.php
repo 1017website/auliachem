@@ -79,14 +79,13 @@
             </div>
         </div>
 
-        @if($lead->service_type)
+        @if($lead->product_interest)
         <div class="card mb-3">
-            <div class="card-header">Kebutuhan & Rute</div>
+            <div class="card-header">Kebutuhan Produk</div>
             <div class="card-body p-3">
                 @foreach([
-                ['icon'=>'ship','label'=>'Jenis Layanan','value'=>$lead->service_type],
-                ['icon'=>'route','label'=>'Rute','value'=>$lead->route ?? '-'],
-                ['icon'=>'box','label'=>'Commodity','value'=>$lead->commodity ?? '-'],
+                ['icon'=>'flask','label'=>'Product Interest','value'=>$lead->product_interest],
+                ['icon'=>'box','label'=>'Volume Estimate','value'=>$lead->volume_estimate ?? '-'],
                 ['icon'=>'chart-bar','label'=>'Volume','value'=>$lead->volume_estimate ?? '-'],
                 ['icon'=>'clock','label'=>'Timeline','value'=>$lead->timeline ?? '-'],
                 ] as $f)
@@ -248,7 +247,7 @@
                     ['icon'=>'envelope','label'=>'Log Email','color'=>'#fef3c7','ico'=>'#d97706','action'=>"quickActivity('Email')"],
                     ['icon'=>'sticky-note','label'=>'Add Note','color'=>'#ccfbf1','ico'=>'#0d9488','action'=>"quickActivity('Note')"],
                     ['icon'=>'bell','label'=>'Set Reminder','color'=>'#fee2e2','ico'=>'#dc2626','action'=>"document.getElementById('actType').value='Task';new bootstrap.Modal(document.getElementById('addActivityModal')).show()"],
-                    ['icon'=>'file-invoice','label'=>'Quotation','color'=>'#ede9fe','ico'=>'#7c3aed','action'=>''],
+                    ['icon'=>'file-alt','label'=>'Activity','color'=>'#f0fdf4','ico'=>'#10b981','action'=>'#activitySection'],
                     ] as $qa)
                     <div class="col-4">
                         <div class="quick-action-btn" onclick="{{ $qa['action'] }}" style="cursor:pointer">
@@ -313,21 +312,16 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Service Type</label>
-                            <select name="service_type" class="form-select">
-                                <option value="">- Pilih -</option>
-                                @foreach(['Sea Freight Import','Sea Freight Export','Air Freight Import','Air Freight Export','Trucking Domestic','Custom Clearance'] as $svc)
-                                <option value="{{ $svc }}" {{ $lead->service_type === $svc ? 'selected' : '' }}>{{ $svc }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Product Interest</label>
+                            <input type="text" name="product_interest" class="form-control" value="{{ $lead->product_interest }}" placeholder="Solvent, Resin, Pigment, dll">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Rute</label>
-                            <input type="text" name="route" class="form-control" value="{{ $lead->route }}" placeholder="Contoh: Jakarta - Surabaya">
+                            <label class="form-label">Volume Estimate</label>
+                            <input type="text" name="volume_estimate" class="form-control" value="{{ $lead->volume_estimate }}" placeholder="Estimasi volume (kg, ton, dll)">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Commodity</label>
-                            <input type="text" name="commodity" class="form-control" value="{{ $lead->commodity }}">
+                            <label class="form-label">Target Supplier</label>
+                            <input type="text" name="competitor" class="form-control" value="{{ $lead->competitor }}" placeholder="Supplier yang sedang digunakan">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Potensi Revenue (IDR)</label>
@@ -389,7 +383,7 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label">Subject <span class="text-danger">*</span></label>
-                            <input type="text" name="subject" class="form-control" required placeholder="Contoh: Follow up tawaran Sea Freight">
+                            <input type="text" name="subject" class="form-control" required placeholder="Contoh: Follow up penawaran produk Solvent">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tanggal & Waktu <span class="text-danger">*</span></label>

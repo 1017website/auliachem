@@ -35,7 +35,7 @@ class LeadsController extends Controller
 
     public function show(Lead $lead)
     {
-        $lead->load(['salesUser', 'activities.salesUser', 'quotations']);
+        $lead->load(['salesUser', 'activities.salesUser']);
         $salesUsers = User::orderBy('name')->get();
         return view('leads.show', compact('lead', 'salesUsers'));
     }
@@ -59,9 +59,9 @@ class LeadsController extends Controller
             'industry'        => 'nullable|string|max:100',
             'pipeline_stage'  => 'nullable|in:Identifying,Approaching,Follow Up,Closing,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
-            'service_type'    => 'nullable|string|max:100',
+            'product_interest' => 'nullable|string|max:255',
             'route'           => 'nullable|string|max:255',
-            'commodity'       => 'nullable|string|max:255',
+            
             'volume_estimate' => 'nullable|string|max:100',
             'potensi_revenue' => 'nullable|numeric|min:0',
             'probability'     => 'nullable|integer|min:0|max:100',
@@ -114,9 +114,9 @@ class LeadsController extends Controller
             'industry'        => 'nullable|string|max:100',
             'pipeline_stage'  => 'sometimes|in:Identifying,Approaching,Follow Up,Closing,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
-            'service_type'    => 'nullable|string|max:100',
+            'product_interest' => 'nullable|string|max:255',
             'route'           => 'nullable|string|max:255',
-            'commodity'       => 'nullable|string|max:255',
+            
             'volume_estimate' => 'nullable|string|max:100',
             'potensi_revenue' => 'nullable|numeric|min:0',
             'probability'     => 'nullable|integer|min:0|max:100',
@@ -275,8 +275,8 @@ class LeadsController extends Controller
                     $lead->email,
                     $lead->pipeline_stage,
                     $lead->temperature,
-                    $lead->service_type,
-                    $lead->route,
+                    $lead->product_interest,
+                    
                     $lead->potensi_revenue,
                     $lead->probability,
                     $lead->expected_closing?->format('Y-m-d'),
@@ -317,7 +317,7 @@ class LeadsController extends Controller
                     'email'          => trim($row[4] ?? ''),
                     'pipeline_stage' => in_array(trim($row[5] ?? ''), ['Identifying', 'Approaching', 'Follow Up', 'Closing', 'Won', 'Lost', 'Maintaining']) ? trim($row[5]) : 'Identifying',
                     'temperature'    => in_array(trim($row[6] ?? ''), ['Hot', 'Warm', 'Cold']) ? trim($row[6]) : 'Cold',
-                    'service_type'   => trim($row[7] ?? ''),
+                    'product_interest' => trim($row[7] ?? ''),
                     'route'          => trim($row[8] ?? ''),
                     'potensi_revenue' => is_numeric($row[9] ?? '') ? $row[9] : 0,
                     'probability'    => is_numeric($row[10] ?? '') ? $row[10] : 0,

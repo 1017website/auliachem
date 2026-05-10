@@ -22,14 +22,14 @@ class SearchController extends Controller
         // Search Leads
         $leads = Lead::where('company_name', 'like', "%$q%")
             ->orWhere('pic_name', 'like', "%$q%")
-            ->orWhere('service_type', 'like', "%$q%")
+            ->orWhere('product_interest', 'like', "%$q%")
             ->limit(4)->get();
 
         foreach ($leads as $lead) {
             $results->push([
                 'type'     => 'lead',
                 'title'    => $lead->company_name,
-                'subtitle' => $lead->pipeline_stage . ' · ' . ($lead->service_type ?? '-'),
+                'subtitle' => $lead->pipeline_stage . ' · ' . ($lead->product_interest ?? '-'),
                 'url'      => route('leads.show', $lead->id),
             ]);
         }

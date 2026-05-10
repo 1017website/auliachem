@@ -10,114 +10,59 @@ class CrmSeeder extends Seeder
 {
     public function run(): void
     {
-        // Sales Users
-        $salesUsers = [
-            ['name' => 'Budi Santoso', 'email' => 'budi.santoso@logisticservice.co.id', 'phone' => '0812-3456-7890', 'position' => 'Sales Executive'],
-            ['name' => 'Rina Wulandari', 'email' => 'rina.wulandari@logisticservice.co.id', 'phone' => '0813-4567-8901', 'position' => 'Sales Executive'],
-            ['name' => 'Andi Wijaya', 'email' => 'andi.wijaya@logisticservice.co.id', 'phone' => '0814-5678-9012', 'position' => 'Sales Executive'],
-            ['name' => 'Dimas Pratama', 'email' => 'dimas.pratama@logisticservice.co.id', 'phone' => '0815-6789-0123', 'position' => 'Sales Executive'],
-            ['name' => 'Siti Aisyah', 'email' => 'siti.aisyah@logisticservice.co.id', 'phone' => '0816-7890-1234', 'position' => 'Sales Executive'],
-        ];
-        foreach ($salesUsers as $user) {
-            DB::table('sales_users')->insert(array_merge($user, ['created_at' => now(), 'updated_at' => now()]));
-        }
+        $now = Carbon::now();
 
-        // Customers
-        $customers = [
-            ['company_name' => 'PT. Sumber Makmur', 'pic_name' => 'Budi Hartono', 'pic_position' => 'Purchasing Manager', 'phone' => '0812-3456-7890', 'email' => 'budi.hartono@sumbermakmur.co.id', 'address' => 'Jl. Industri Raya No. 45, Cakung, Jakarta Timur 13910', 'industry' => 'Manufacturing', 'location' => 'Jakarta', 'status' => 'Existing', 'value_tag' => 'High Value', 'sales_user_id' => 1, 'customer_since' => '2023-01-12'],
-            ['company_name' => 'PT. Cipta Abadi', 'pic_name' => 'Andi Wijaya', 'pic_position' => 'Purchasing Manager', 'phone' => '0813-9876-5432', 'email' => 'andi.wijaya@ciptaabadi.co.id', 'address' => 'Jl. Industri Raya No. 88, Rungkut, Surabaya 60293', 'industry' => 'Importir', 'location' => 'Surabaya', 'status' => 'Existing', 'value_tag' => 'Normal', 'sales_user_id' => 1, 'customer_since' => '2023-03-15'],
-            ['company_name' => 'PT. Jaya Sentosa', 'pic_name' => 'Tommy Wibowo', 'pic_position' => 'Logistics Manager', 'phone' => '0811-2223-4445', 'email' => 'tommy@jayasentosa.co.id', 'address' => 'Jl. Raya Bekasi No. 12, Jakarta Timur', 'industry' => 'Exportir', 'location' => 'Jakarta', 'status' => 'Existing', 'value_tag' => 'High Value', 'sales_user_id' => 2, 'customer_since' => '2022-08-01'],
-            ['company_name' => 'PT. Global Indo', 'pic_name' => 'Dedi Suhendra', 'pic_position' => 'Procurement', 'phone' => '0812-5566-7788', 'email' => 'dedi@globalindo.co.id', 'address' => 'Jl. MH Thamrin No. 5, Tangerang', 'industry' => 'Trading', 'location' => 'Tangerang', 'status' => 'Potential', 'value_tag' => 'Normal', 'sales_user_id' => 1, 'customer_since' => null],
-            ['company_name' => 'CV. Maju Bersama', 'pic_name' => 'Rina Anita', 'pic_position' => 'Owner', 'phone' => '0813-3211-6677', 'email' => 'rina.anita@majubersama.co.id', 'address' => 'Jl. Siliwangi No. 34, Bekasi', 'industry' => 'Manufacturing', 'location' => 'Bekasi', 'status' => 'Existing', 'value_tag' => 'Normal', 'sales_user_id' => 2, 'customer_since' => '2023-06-20'],
-            ['company_name' => 'PT. Prima Sukses', 'pic_name' => 'Jason', 'pic_position' => 'Sales Manager', 'phone' => '0812-7788-9900', 'email' => 'jason@primasukses.co.id', 'address' => 'Jl. Pemuda No. 21, Semarang', 'industry' => 'Retail', 'location' => 'Semarang', 'status' => 'Potential', 'value_tag' => 'Normal', 'sales_user_id' => 3, 'customer_since' => null],
-            ['company_name' => 'PT. Lautan Biru', 'pic_name' => 'Steven', 'pic_position' => 'Director', 'phone' => '0811-8899-1122', 'email' => 'steven@lautanbiru.co.id', 'address' => 'Jl. Pelabuhan No. 8, Batam', 'industry' => 'Exportir', 'location' => 'Batam', 'status' => 'Existing', 'value_tag' => 'Normal', 'sales_user_id' => 1, 'customer_since' => '2022-11-10'],
-            ['company_name' => 'PT. Indotech', 'pic_name' => 'Yudi', 'pic_position' => 'Procurement Manager', 'phone' => '0813-6677-8899', 'email' => 'yudi@indotech.co.id', 'address' => 'Jl. Teknologi No. 15, Bandung', 'industry' => 'Manufacturing', 'location' => 'Bandung', 'status' => 'Potential', 'value_tag' => 'Normal', 'sales_user_id' => 3, 'customer_since' => null],
-            ['company_name' => 'PT. Sejahtera Abadi', 'pic_name' => 'Wulan', 'pic_position' => 'Logistics Manager', 'phone' => '0812-1234-5678', 'email' => 'wulan@sejahteraabadi.co.id', 'address' => 'Jl. Pattimura No. 33, Medan', 'industry' => 'Logistics', 'location' => 'Medan', 'status' => 'Existing', 'value_tag' => 'Normal', 'sales_user_id' => 2, 'customer_since' => '2023-09-05'],
-            ['company_name' => 'PT. Karya Utama', 'pic_name' => 'Fajar', 'pic_position' => 'Owner', 'phone' => '0813-9090-1212', 'email' => 'fajar@karyautama.co.id', 'address' => 'Jl. Veteran No. 77, Makassar', 'industry' => 'Importir', 'location' => 'Makassar', 'status' => 'Potential', 'value_tag' => 'Normal', 'sales_user_id' => 1, 'customer_since' => null],
-        ];
-        foreach ($customers as $customer) {
-            DB::table('customers')->insert(array_merge($customer, ['created_at' => now(), 'updated_at' => now()]));
-        }
-
-        // Vendors
-        $vendors = [
-            ['vendor_name' => 'PT. Samudera Indonesia', 'pic_name' => 'Rudi Hartono', 'pic_position' => 'Operations Manager', 'phone' => '0812-3456-7890', 'email' => 'rudi@samudera.co.id', 'address' => 'Jl. Pluit Selatan Raya No. 10, Penjaringan, Jakarta Utara 14450', 'vendor_type' => 'Shipping Line', 'service_type' => 'Sea Freight', 'coverage_area' => 'Jakarta, Surabaya, Medan', 'status' => 'Active', 'is_preferred' => true, 'rating' => 4.8, 'payment_term' => '30 Days', 'vendor_since' => '2021-01-12'],
-            ['vendor_name' => 'PT. Trans Logistik', 'pic_name' => 'Andi Wijaya', 'pic_position' => 'Marketing Manager', 'phone' => '0813-9876-5432', 'email' => 'andi@translogistik.co.id', 'address' => 'Jl. Raya Bekasi No. 45, Jabodetabek', 'vendor_type' => 'Trucking', 'service_type' => 'Trucking', 'coverage_area' => 'Jabodetabek, Jawa Barat', 'status' => 'Active', 'is_preferred' => false, 'rating' => 4.5, 'payment_term' => '14 Days', 'vendor_since' => '2020-05-20'],
-            ['vendor_name' => 'Maersk Line Indonesia', 'pic_name' => 'Dewi Lestari', 'pic_position' => 'Sales Representative', 'phone' => '0811-2233-4455', 'email' => 'dewi.maersk@maersk.com', 'address' => 'Gedung BRI II, Jakarta Pusat', 'vendor_type' => 'Shipping Line', 'service_type' => 'Sea Freight', 'coverage_area' => 'All Indonesia', 'status' => 'Active', 'is_preferred' => false, 'rating' => 4.7, 'payment_term' => '30 Days', 'vendor_since' => '2019-08-15'],
-            ['vendor_name' => 'Garuda Indonesia Cargo', 'pic_name' => 'Budi Prasetyo', 'pic_position' => 'Account Manager', 'phone' => '0812-5566-7788', 'email' => 'budi.cargo@garuda.co.id', 'address' => 'Bandara Soekarno-Hatta, Tangerang', 'vendor_type' => 'Air Freight', 'service_type' => 'Air Freight', 'coverage_area' => 'All Indonesia', 'status' => 'Active', 'is_preferred' => false, 'rating' => 4.6, 'payment_term' => '21 Days', 'vendor_since' => '2020-11-01'],
-            ['vendor_name' => 'PT. Berlian Jaya Logistics', 'pic_name' => 'Jimmy Setiawan', 'pic_position' => 'Direktur', 'phone' => '0813-6677-8899', 'email' => 'jimmy@berlianjaya.co.id', 'address' => 'Jl. Raya Semarang No. 22, Jawa Tengah', 'vendor_type' => 'Trucking', 'service_type' => 'Trucking', 'coverage_area' => 'Jawa Tengah, Jawa Timur', 'status' => 'Active', 'is_preferred' => false, 'rating' => 4.2, 'payment_term' => '14 Days', 'vendor_since' => '2021-03-08'],
-        ];
-        foreach ($vendors as $vendor) {
-            DB::table('vendors')->insert(array_merge($vendor, ['created_at' => now(), 'updated_at' => now()]));
-        }
-
-        // Leads
-        $leads = [
-            ['lead_code' => 'LEAD-2025-0001', 'company_name' => 'PT. Maju Bersama', 'pic_name' => 'Rina Anita', 'phone' => '0813-3211-6677', 'industry' => 'Manufacturing', 'pipeline_stage' => 'Identifying', 'temperature' => 'Warm', 'service_type' => 'Import Sea Freight', 'route' => 'Shanghai - Surabaya', 'potensi_revenue' => 50000000, 'probability' => 20, 'lead_score' => 45, 'lead_source' => 'Website', 'sales_user_id' => 1, 'customer_id' => 5],
-            ['lead_code' => 'LEAD-2025-0002', 'company_name' => 'PT. Global Indo', 'pic_name' => 'Dedi Suhendra', 'phone' => '0812-5566-7788', 'industry' => 'Trading', 'pipeline_stage' => 'Identifying', 'temperature' => 'Cold', 'service_type' => 'Trucking Domestic', 'route' => 'Jakarta - Surabaya', 'potensi_revenue' => 45000000, 'probability' => 15, 'lead_score' => 35, 'lead_source' => 'Cold Call', 'sales_user_id' => 1, 'customer_id' => 4],
-            ['lead_code' => 'LEAD-2025-0003', 'company_name' => 'PT. Sejahtera Abadi', 'pic_name' => 'Wulan', 'phone' => '0812-1234-5678', 'industry' => 'Logistics', 'pipeline_stage' => 'Identifying', 'temperature' => 'Warm', 'service_type' => 'Air Freight', 'route' => 'Jakarta - Medan', 'potensi_revenue' => 60000000, 'probability' => 25, 'lead_score' => 55, 'lead_source' => 'Referral', 'sales_user_id' => 2, 'customer_id' => 9],
-            ['lead_code' => 'LEAD-2025-0048', 'company_name' => 'PT. Cipta Abadi', 'pic_name' => 'Andi Wijaya', 'pic_position' => 'Purchasing Manager', 'phone' => '0813-9876-5432', 'email' => 'andi.wijaya@ciptaabadi.co.id', 'address' => 'Jl. Industri Raya No. 88, Rungkut, Surabaya 60293', 'industry' => 'Manufacturing', 'pipeline_stage' => 'Approaching', 'temperature' => 'Warm', 'service_type' => 'Import Sea Freight', 'route' => 'Shanghai, China - Surabaya, ID', 'commodity' => 'Mesin & Sparepart', 'volume_estimate' => '2 x 20\' DC / Bulan', 'timeline' => 'Juni 2025', 'notes_kebutuhan' => 'Butuh harga kompetitif dan estimasi transit time yang pasti.', 'catatan_internal' => "Customer minta harga bersaing, prioritas transit time yang pasti.\nDecision maker: Pak Andi (Purchasing), approval dari Pak Hendra (Direktur).\nStrategi: Follow up benefit service (transit time & handling) + harga.", 'potensi_revenue' => 250000000, 'probability' => 40, 'lead_score' => 65, 'lead_source' => 'Website', 'competitor' => '2 Forwarder lain', 'expected_closing' => '2025-06-30', 'sales_user_id' => 1, 'customer_id' => 2, 'next_follow_up' => '2025-05-22', 'next_follow_up_time' => '10:00:00', 'next_follow_up_notes' => 'Konfirmasi feedback quotation dan timeline decision.'],
-            ['lead_code' => 'LEAD-2025-0049', 'company_name' => 'PT. Jaya Sentosa', 'pic_name' => 'Hendra', 'phone' => '0811-2223-4445', 'industry' => 'Exportir', 'pipeline_stage' => 'Follow Up', 'temperature' => 'Hot', 'service_type' => 'Export Sea Freight', 'route' => 'Surabaya - Shanghai', 'potensi_revenue' => 180000000, 'probability' => 60, 'lead_score' => 75, 'lead_source' => 'Referral', 'sales_user_id' => 1, 'customer_id' => 3],
-            ['lead_code' => 'LEAD-2025-0050', 'company_name' => 'PT. Sinar Harapan', 'pic_name' => 'Wulan', 'phone' => '0812-9988-7766', 'industry' => 'Manufacturing', 'pipeline_stage' => 'Follow Up', 'temperature' => 'Warm', 'service_type' => 'Trucking Domestic', 'route' => 'Surabaya - Jakarta', 'potensi_revenue' => 90000000, 'probability' => 50, 'lead_score' => 60, 'lead_source' => 'Cold Call', 'sales_user_id' => 2],
-            ['lead_code' => 'LEAD-2025-0051', 'company_name' => 'PT. Karya Utama', 'pic_name' => 'Fajar', 'phone' => '0813-9090-1212', 'industry' => 'Importir', 'pipeline_stage' => 'Closing', 'temperature' => 'Hot', 'service_type' => 'Import Sea Freight', 'route' => 'Hongkong - Jakarta', 'potensi_revenue' => 220000000, 'probability' => 80, 'lead_score' => 85, 'lead_source' => 'Referral', 'sales_user_id' => 1, 'customer_id' => 10],
-            ['lead_code' => 'LEAD-2025-0052', 'company_name' => 'PT. Prima Sukses', 'pic_name' => 'Jason', 'phone' => '0812-7788-9900', 'industry' => 'Retail', 'pipeline_stage' => 'Closing', 'temperature' => 'Warm', 'service_type' => 'Export Air Freight', 'route' => 'Jakarta - Singapore', 'potensi_revenue' => 150000000, 'probability' => 70, 'lead_score' => 78, 'lead_source' => 'Website', 'sales_user_id' => 2],
-            ['lead_code' => 'LEAD-2025-0053', 'company_name' => 'PT. Damai Sejahtera', 'pic_name' => 'Eko Prasetyo', 'phone' => '0819-1234-5678', 'industry' => 'Trading', 'pipeline_stage' => 'Won', 'temperature' => 'Hot', 'service_type' => 'Trucking Domestic', 'route' => 'Jakarta - Surabaya', 'potensi_revenue' => 50000000, 'probability' => 100, 'lead_score' => 95, 'lead_source' => 'Referral', 'sales_user_id' => 1],
-        ];
-        foreach ($leads as $lead) {
-            DB::table('leads')->insert(array_merge(['created_at' => now(), 'updated_at' => now()], $lead));
-        }
-
-        // Activities
-        $activities = [
-            ['lead_id' => 4, 'customer_id' => 2, 'sales_user_id' => 1, 'type' => 'Call', 'subject' => 'Call - PT. Sumber Makmur', 'description' => 'Follow up penawaran jasa trucking project Surabaya - Jakarta.', 'activity_at' => '2025-05-20 09:30:00', 'status' => 'Done'],
-            ['lead_id' => 4, 'customer_id' => 2, 'sales_user_id' => 1, 'type' => 'Visit', 'subject' => 'Visit - PT. Cipta Abadi', 'description' => 'Meeting kebutuhan import barang dari China.', 'activity_at' => '2025-05-19 14:00:00', 'status' => 'Done'],
-            ['lead_id' => 4, 'customer_id' => 2, 'sales_user_id' => 1, 'type' => 'Email', 'subject' => 'Email - PT. Jaya Sentosa', 'description' => 'Kirim quotation sea freight rute Shanghai - Jakarta.', 'activity_at' => '2025-05-19 13:00:00', 'status' => 'Done'],
-            ['lead_id' => 4, 'customer_id' => 2, 'sales_user_id' => 1, 'type' => 'Call', 'subject' => 'Call - PT. Sinar Harapan', 'description' => 'Konfirmasi harga dan jadwal pengiriman.', 'activity_at' => '2025-05-20 14:15:00', 'status' => 'Done'],
-            ['lead_id' => 4, 'customer_id' => 2, 'sales_user_id' => 1, 'type' => 'Visit', 'subject' => 'Visit - CV. Maju Bersama', 'description' => 'Survey lokasi dan kebutuhan distribusi domestik.', 'activity_at' => '2025-05-20 15:30:00', 'status' => 'Pending'],
-            ['lead_id' => 4, 'customer_id' => 2, 'sales_user_id' => 1, 'type' => 'Email', 'subject' => 'Email - PT. Global Indo', 'description' => 'Kirim dokumen rate card terbaru via email.', 'activity_at' => '2025-05-20 16:45:00', 'status' => 'Done'],
-            ['lead_id' => 4, 'customer_id' => 2, 'sales_user_id' => 1, 'type' => 'Call', 'subject' => 'Call - PT. Cipta Abadi', 'description' => 'Konfirmasi feedback quotation dan timeline decision.', 'activity_at' => '2025-05-22 10:00:00', 'status' => 'Planned', 'next_follow_up' => '2025-05-22'],
-        ];
-        foreach ($activities as $activity) {
-            DB::table('activities')->insert(array_merge($activity, ['created_at' => now(), 'updated_at' => now()]));
-        }
-
-        // Delivery Orders
-        $dos = [
-            ['do_number' => 'DO-2505-0123', 'customer_id' => 1, 'vendor_id' => 1, 'lead_id' => null, 'service_type' => 'Sea Freight', 'route' => 'Shanghai - JKT', 'amount' => 340000000, 'currency' => 'IDR', 'status' => 'Done', 'order_date' => '2025-05-16'],
-            ['do_number' => 'DO-2504-0098', 'customer_id' => 1, 'vendor_id' => 2, 'lead_id' => null, 'service_type' => 'Trucking', 'route' => 'Surabaya - JKT', 'amount' => 120000000, 'currency' => 'IDR', 'status' => 'Done', 'order_date' => '2025-04-28'],
-            ['do_number' => 'DO-2504-0076', 'customer_id' => 1, 'vendor_id' => 4, 'lead_id' => null, 'service_type' => 'Air Freight', 'route' => 'Hongkong - JKT', 'amount' => 210000000, 'currency' => 'IDR', 'status' => 'Done', 'order_date' => '2025-04-15'],
-            ['do_number' => 'DO-2505-021', 'customer_id' => 2, 'vendor_id' => 1, 'lead_id' => null, 'service_type' => 'Sea Freight', 'route' => 'JKT - Shanghai', 'amount' => 1250, 'currency' => 'USD', 'status' => 'Done', 'order_date' => '2025-05-20'],
-            ['do_number' => 'DO-2505-017', 'customer_id' => 2, 'vendor_id' => 1, 'lead_id' => null, 'service_type' => 'Sea Freight', 'route' => 'JKT - Singapore', 'amount' => 550, 'currency' => 'USD', 'status' => 'Done', 'order_date' => '2025-05-19'],
-        ];
-        foreach ($dos as $do) {
-            DB::table('delivery_orders')->insert(array_merge($do, ['created_at' => now(), 'updated_at' => now()]));
-        }
-
-        // Quotations
-        DB::table('quotations')->insert([
-            'quotation_number' => 'QT-2025-0156',
-            'lead_id' => 4,
-            'customer_id' => 2,
-            'service_type' => 'Import Sea Freight',
-            'route' => 'Shanghai - Surabaya',
-            'total_price' => 2450,
-            'currency' => 'USD',
-            'sent_at' => '2025-05-19',
-            'valid_until' => '2025-06-02',
-            'status' => 'Sent',
-            'created_at' => now(),
-            'updated_at' => now(),
+        // ── Customers ──
+        DB::table('customers')->insert([
+            ['company_name'=>'PT. Maju Kimia Indonesia','pic_name'=>'Budi Santoso','pic_position'=>'Purchasing Manager','phone'=>'0812-1111-2222','email'=>'budi@majukimia.co.id','address'=>'Jl. Industri Raya No. 10, Surabaya','industry'=>'Manufacturing','location'=>'Surabaya','status'=>'Existing','value_tag'=>'High Value','user_id'=>1,'customer_since'=>'2022-03-15','created_at'=>$now,'updated_at'=>$now],
+            ['company_name'=>'PT. Cipta Resin Abadi','pic_name'=>'Andi Wijaya','pic_position'=>'Procurement','phone'=>'0813-2222-3333','email'=>'andi@ciptaresin.co.id','address'=>'Jl. Raya Bekasi No. 45, Jakarta Timur','industry'=>'Plastic & Packaging','location'=>'Jakarta','status'=>'Existing','value_tag'=>'High Value','user_id'=>2,'customer_since'=>'2021-07-20','created_at'=>$now,'updated_at'=>$now],
+            ['company_name'=>'CV. Solvent Jaya','pic_name'=>'Dewi Rahayu','pic_position'=>'Owner','phone'=>'0811-3333-4444','email'=>'dewi@solventjaya.co.id','address'=>'Jl. Gatot Subroto No. 88, Bandung','industry'=>'Coating & Paint','location'=>'Bandung','status'=>'Existing','value_tag'=>'Normal','user_id'=>1,'customer_since'=>'2023-01-10','created_at'=>$now,'updated_at'=>$now],
+            ['company_name'=>'PT. Global Pigment Nusantara','pic_name'=>'Hendra Kusuma','pic_position'=>'Direktur','phone'=>'0819-4444-5555','email'=>'hendra@globalpigment.co.id','address'=>'Kawasan Industri MM2100, Bekasi','industry'=>'Ink & Pigment','location'=>'Bekasi','status'=>'Potential','value_tag'=>'High Value','user_id'=>2,'customer_since'=>null,'created_at'=>$now,'updated_at'=>$now],
+            ['company_name'=>'PT. Surya Polimer Mandiri','pic_name'=>'Fajar Nugroho','pic_position'=>'Technical Manager','phone'=>'0812-5555-6666','email'=>'fajar@suryapolimer.co.id','address'=>'Jl. Raya Semarang No. 22, Semarang','industry'=>'Polymer & Rubber','location'=>'Semarang','status'=>'Potential','value_tag'=>'Normal','user_id'=>1,'customer_since'=>null,'created_at'=>$now,'updated_at'=>$now],
         ]);
 
-        // Vendor Rates
-        $rates = [
-            ['vendor_id' => 1, 'route' => 'Jakarta - Shanghai', 'container_type' => "20' DC", 'price' => 1250, 'currency' => 'USD', 'last_updated' => '2025-05-20'],
-            ['vendor_id' => 1, 'route' => 'Jakarta - Singapore', 'container_type' => "20' DC", 'price' => 550, 'currency' => 'USD', 'last_updated' => '2025-05-20'],
-            ['vendor_id' => 1, 'route' => 'Surabaya - Singapore', 'container_type' => "20' DC", 'price' => 600, 'currency' => 'USD', 'last_updated' => '2025-05-18'],
-            ['vendor_id' => 1, 'route' => 'Jakarta - Rotterdam', 'container_type' => "40' HC", 'price' => 2450, 'currency' => 'USD', 'last_updated' => '2025-05-15'],
+        // ── Suppliers ──
+        DB::table('suppliers')->insert([
+            ['supplier_name'=>'PT. Bratachem','pic_name'=>'Rudi Hartono','pic_position'=>'Sales Manager','phone'=>'0812-6666-7777','email'=>'rudi@bratachem.co.id','address'=>'Jl. Karet Pedurenan No. 10, Jakarta','source_type'=>'Local','product_category'=>'Solvent, Resin, Pigment','origin_country'=>null,'status'=>'Active','relationship_status'=>'Existing','is_preferred'=>1,'rating'=>4.8,'payment_term'=>'30 Days','supplier_since'=>'2020-01-12','created_at'=>$now,'updated_at'=>$now],
+            ['supplier_name'=>'Dow Chemical Indonesia','pic_name'=>'Jimmy Setiawan','pic_position'=>'Account Manager','phone'=>'0813-7777-8888','email'=>'jimmy@dow.com','address'=>'Gedung BRI II, Jakarta Pusat','source_type'=>'Import','product_category'=>'Polyurethane, Epoxy','origin_country'=>'USA','status'=>'Active','relationship_status'=>'Existing','is_preferred'=>1,'rating'=>4.7,'payment_term'=>'45 Days','supplier_since'=>'2019-08-15','created_at'=>$now,'updated_at'=>$now],
+            ['supplier_name'=>'Sinopec Chemical Shanghai','pic_name'=>'Wang Li','pic_position'=>'Export Manager','phone'=>'0811-8888-9999','email'=>'wangli@sinopec.cn','address'=>'Shanghai, China','source_type'=>'Import','product_category'=>'Methanol, Ethanol, Toluene','origin_country'=>'China','status'=>'Active','relationship_status'=>'Existing','is_preferred'=>0,'rating'=>4.5,'payment_term'=>'60 Days','supplier_since'=>'2021-03-08','created_at'=>$now,'updated_at'=>$now],
+            ['supplier_name'=>'PT. Chandra Asri Petrochemical','pic_name'=>'Sari Dewi','pic_position'=>'Sales Executive','phone'=>'0812-9090-1010','email'=>'sari@cap.co.id','address'=>'Jl. Raya Anyer KM 123, Cilegon','source_type'=>'Local','product_category'=>'Polyethylene, Polypropylene','origin_country'=>null,'status'=>'Active','relationship_status'=>'Existing','is_preferred'=>0,'rating'=>4.3,'payment_term'=>'30 Days','supplier_since'=>'2022-06-01','created_at'=>$now,'updated_at'=>$now],
+            ['supplier_name'=>'BASF India Limited','pic_name'=>'Raj Sharma','pic_position'=>'Regional Sales','phone'=>'0813-1010-2020','email'=>'raj.sharma@basf.in','address'=>'Mumbai, India','source_type'=>'Import','product_category'=>'Specialty Chemical, Additives','origin_country'=>'India','status'=>'Active','relationship_status'=>'Potential','is_preferred'=>0,'rating'=>0,'payment_term'=>null,'supplier_since'=>null,'created_at'=>$now,'updated_at'=>$now],
+        ]);
+
+        // ── Leads ──
+        DB::table('leads')->insert([
+            ['lead_code'=>'LEAD-2025-0001','company_name'=>'PT. Maju Kimia Indonesia','pic_name'=>'Budi Santoso','phone'=>'0812-1111-2222','industry'=>'Manufacturing','pipeline_stage'=>'Identifying','temperature'=>'Warm','product_interest'=>'Solvent IPA','volume_estimate'=>'5 Ton/Bulan','potensi_revenue'=>75000000,'probability'=>20,'lead_score'=>45,'lead_source'=>'Website','user_id'=>1,'customer_id'=>1,'created_at'=>$now,'updated_at'=>$now],
+            ['lead_code'=>'LEAD-2025-0002','company_name'=>'CV. Solvent Jaya','pic_name'=>'Dewi Rahayu','phone'=>'0811-3333-4444','industry'=>'Coating & Paint','pipeline_stage'=>'Approaching','temperature'=>'Hot','product_interest'=>'Toluene & Xylene','volume_estimate'=>'10 Ton/Bulan','potensi_revenue'=>120000000,'probability'=>40,'lead_score'=>65,'lead_source'=>'Referral','user_id'=>2,'customer_id'=>3,'created_at'=>$now,'updated_at'=>$now],
+            ['lead_code'=>'LEAD-2025-0003','company_name'=>'PT. Global Pigment Nusantara','pic_name'=>'Hendra Kusuma','phone'=>'0819-4444-5555','industry'=>'Ink & Pigment','pipeline_stage'=>'Follow Up','temperature'=>'Warm','product_interest'=>'Pigment Paste & Dispersant','volume_estimate'=>'2 Ton/Bulan','potensi_revenue'=>80000000,'probability'=>50,'lead_score'=>60,'lead_source'=>'Cold Call','user_id'=>1,'customer_id'=>4,'created_at'=>$now,'updated_at'=>$now],
+            ['lead_code'=>'LEAD-2025-0004','company_name'=>'PT. Cipta Resin Abadi','pic_name'=>'Andi Wijaya','phone'=>'0813-2222-3333','industry'=>'Plastic & Packaging','pipeline_stage'=>'Closing','temperature'=>'Hot','product_interest'=>'Epoxy Resin','volume_estimate'=>'3 Ton/Bulan','potensi_revenue'=>200000000,'probability'=>75,'lead_score'=>82,'lead_source'=>'Referral','user_id'=>1,'customer_id'=>2,'notes_kebutuhan'=>'Butuh kualitas food grade dan sertifikasi COA.','competitor'=>'2 Supplier lain','expected_closing'=>'2025-06-30','next_follow_up'=>'2025-05-22','created_at'=>$now,'updated_at'=>$now],
+            ['lead_code'=>'LEAD-2025-0005','company_name'=>'PT. Surya Polimer Mandiri','pic_name'=>'Fajar Nugroho','phone'=>'0812-5555-6666','industry'=>'Polymer & Rubber','pipeline_stage'=>'Won','temperature'=>'Hot','product_interest'=>'Polyethylene HDPE','volume_estimate'=>'20 Ton/Bulan','potensi_revenue'=>350000000,'probability'=>100,'lead_score'=>95,'lead_source'=>'Referral','user_id'=>2,'customer_id'=>5,'created_at'=>$now,'updated_at'=>$now],
+        ]);
+
+        // ── Purchase Orders + Items ──
+        $pos = [
+            ['po_number'=>'PO-202605-0001','customer_id'=>1,'supplier_id'=>1,'currency'=>'IDR','status'=>'Done','order_date'=>'2026-05-10'],
+            ['po_number'=>'PO-202605-0002','customer_id'=>2,'supplier_id'=>2,'currency'=>'IDR','status'=>'Done','order_date'=>'2026-05-08'],
+            ['po_number'=>'PO-202605-0003','customer_id'=>3,'supplier_id'=>3,'currency'=>'IDR','status'=>'In Progress','order_date'=>'2026-05-05'],
         ];
-        foreach ($rates as $rate) {
-            DB::table('vendor_rates')->insert(array_merge($rate, ['created_at' => now(), 'updated_at' => now()]));
+        $items = [
+            [
+                ['product_name'=>'IPA (Isopropyl Alcohol)','unit'=>'kg','qty'=>5000,'buy_price'=>12000,'sell_price'=>15000],
+                ['product_name'=>'Ethanol 96%','unit'=>'liter','qty'=>2000,'buy_price'=>8000,'sell_price'=>10500],
+            ],
+            [
+                ['product_name'=>'Epoxy Resin Bisphenol A','unit'=>'kg','qty'=>3000,'buy_price'=>35000,'sell_price'=>43000],
+            ],
+            [
+                ['product_name'=>'Toluene','unit'=>'kg','qty'=>8000,'buy_price'=>9500,'sell_price'=>12000],
+                ['product_name'=>'Xylene','unit'=>'kg','qty'=>5000,'buy_price'=>10000,'sell_price'=>12500],
+            ],
+        ];
+        foreach ($pos as $i => $po) {
+            $poId = DB::table('purchase_orders')->insertGetId(array_merge($po, ['lead_id'=>null,'notes'=>null,'created_at'=>$now,'updated_at'=>$now]));
+            foreach ($items[$i] as $item) {
+                DB::table('purchase_order_items')->insert(array_merge($item, ['purchase_order_id'=>$poId,'description'=>null,'created_at'=>$now,'updated_at'=>$now]));
+            }
         }
     }
 }

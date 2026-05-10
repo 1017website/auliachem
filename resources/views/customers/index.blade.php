@@ -180,7 +180,7 @@
                 <ul class="nav nav-tabs mb-3" style="font-size:.75rem" id="custTabs">
                     <li class="nav-item"><a class="nav-link active" href="#" onclick="showTab('overview',this);return false" style="padding:6px 10px">Overview</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('activity',this);return false" style="padding:6px 10px">Activity</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('transaction',this);return false" style="padding:6px 10px">DO</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('transaction',this);return false" style="padding:6px 10px">PO</a></li>
                 </ul>
 
                 <div id="tab-overview">
@@ -201,13 +201,13 @@
                         </div>
                         <div class="col-6">
                             <div style="background:#f0fdf4;border-radius:8px;padding:10px">
-                                <div style="font-size:1rem;font-weight:800;color:#16a34a">{{ $selectedCustomer->deliveryOrders->count() }}</div>
-                                <div style="font-size:.65rem;color:var(--text-muted)">Total DO</div>
+                                <div style="font-size:1rem;font-weight:800;color:#16a34a">{{ $selectedCustomer->purchaseOrders->count() }}</div>
+                                <div style="font-size:.65rem;color:var(--text-muted)">Total PO</div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div style="background:#fefce8;border-radius:8px;padding:10px">
-                                <div style="font-size:.85rem;font-weight:700">{{ $selectedCustomer->deliveryOrders->count() > 0 ? \Carbon\Carbon::parse($selectedCustomer->deliveryOrders->sortByDesc('order_date')->first()->order_date)->diffForHumans() : '-' }}</div>
+                                <div style="font-size:.85rem;font-weight:700">{{ $selectedCustomer->purchaseOrders->count() > 0 ? \Carbon\Carbon::parse($selectedCustomer->purchaseOrders->sortByDesc('order_date')->first()->order_date)->diffForHumans() : '-' }}</div>
                                 <div style="font-size:.65rem;color:var(--text-muted)">Last Order</div>
                             </div>
                         </div>
@@ -266,18 +266,18 @@
 
                 <div id="tab-transaction" style="display:none">
                     <strong style="font-size:.8rem;display:block;margin-bottom:10px">Delivery Orders</strong>
-                    @forelse($selectedCustomer->deliveryOrders->sortByDesc('order_date') as $do)
+                    @forelse($selectedCustomer->purchaseOrders->sortByDesc('order_date') as $do)
                     <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f9fafb">
                         <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                             <i class="fas fa-ship" style="font-size:.7rem;color:#2563eb"></i>
                         </div>
                         <div style="flex:1;min-width:0">
-                            <div style="font-size:.78rem;font-weight:600">{{ $do->do_number }}</div>
-                            <div style="font-size:.7rem;color:var(--text-muted)">{{ $do->service_type }} · {{ $do->route }}</div>
+                            <div style="font-size:.78rem;font-weight:600">{{ $do->po_number }}</div>
+                            <div style="font-size:.7rem;color:var(--text-muted)">{{ $do->supplier?->supplier_name ?? "-" }}</div>
                             <div style="font-size:.7rem;color:var(--text-muted)">{{ \Carbon\Carbon::parse($do->order_date)->format('d M Y') }}</div>
                         </div>
                         <div class="text-end" style="flex-shrink:0">
-                            <div style="font-size:.75rem;font-weight:600">{{ idrm($do->amount) }}</div>
+                            <div style="font-size:.75rem;font-weight:600">{{ idrm($do->total_revenue) }}</div>
                             <span class="badge-{{ strtolower($do->status) }}" style="font-size:.62rem">{{ $do->status }}</span>
                         </div>
                     </div>
