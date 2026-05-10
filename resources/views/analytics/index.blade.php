@@ -239,13 +239,13 @@
                 <div class="col-6">
                     <div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center">
                         <div style="font-size:11px;color:#6b7280">Avg Gross Margin</div>
-                        <div style="font-size:18px;font-weight:700;color:#10b981">32%</div>
+                        <div style="font-size:18px;font-weight:700;color:#10b981">{{ $avgGrossMargin }}%</div>
                     </div>
                 </div>
                 <div class="col-6">
                     <div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center">
                         <div style="font-size:11px;color:#6b7280">Avg Nett Margin</div>
-                        <div style="font-size:18px;font-weight:700;color:#3b82f6">19%</div>
+                        <div style="font-size:18px;font-weight:700;color:#3b82f6">{{ $avgNettMargin }}%</div>
                     </div>
                 </div>
             </div>

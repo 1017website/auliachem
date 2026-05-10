@@ -104,11 +104,27 @@ class AnalyticsController extends Controller
         $recentDeals = Lead::with('salesUser')->where('pipeline_stage', 'Won')
             ->orderBy('updated_at', 'desc')->limit(5)->get();
 
+        // ── Avg Gross Margin dari profit analysis 6 bulan ──
+        $marginData    = array_filter($profitAnalysis, fn($m) => $m['revenue'] > 0);
+        $avgGrossMargin = count($marginData) > 0
+            ? round(collect($marginData)->avg(fn($m) => $m['revenue'] > 0 ? (($m['gross_profit'] / $m['revenue']) * 100) : 0), 1)
+            : 0;
+        $avgNettMargin = $avgGrossMargin; // chemical: nett = gross (belum ada other_cost)
+        $revenueByService = \App\Models\PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
+            ->where('purchase_orders.status', 'Done')->where('purchase_orders.currency', 'IDR')
+            ->whereBetween('purchase_orders.order_date', [$startDate, $endDate])
+            ->selectRaw('product_name as service_type, SUM(qty * sell_price) as total')
+            ->groupBy('product_name')->orderByDesc('total')->limit(5)->get();
+
+        // ── Revenue by route (tidak ada di chemical, kirim collection kosong) ──
+        $revenueByRoute = collect();
+
         $salesUsers = User::orderBy('name')->get();
 
         return view('analytics.index', compact(
             'revenue','grossProfit','nettProfit','volumePo','dealsClosed','conversionRate',
-            'revenueTrend','profitAnalysis','revenueByProduct',
+            'revenueTrend','profitAnalysis','revenueByProduct','revenueByService','revenueByRoute',
+            'avgGrossMargin','avgNettMargin',
             'funnel','salesPerformance','topCustomers','leadSources',
             'recentDeals','salesUsers','startDate','endDate','salesId'
         ));
