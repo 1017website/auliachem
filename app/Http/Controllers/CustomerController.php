@@ -16,7 +16,7 @@ class CustomerController extends Controller
         $search   = $request->get('search');
         $salesId  = $request->get('user_id');
 
-        $query = Customer::with(['salesUser', 'deliveryOrders', 'activities']);
+        $query = Customer::with(['salesUser', 'purchaseOrders', 'activities']);
         if ($status && $status !== 'all')     $query->where('status', $status);
         if ($industry && $industry !== 'all') $query->where('industry', $industry);
         if ($salesId)  $query->where('user_id', $salesId);
@@ -36,7 +36,7 @@ class CustomerController extends Controller
         $salesUsers        = User::orderBy('name')->get();
 
         $selectedCustomer = $request->get('selected_id')
-            ? Customer::with(['salesUser','deliveryOrders','activities.salesUser','leads'])->find($request->get('selected_id'))
+            ? Customer::with(['salesUser','purchaseOrders','activities.salesUser','leads'])->find($request->get('selected_id'))
             : null;
 
         return view('customers.index', compact(
