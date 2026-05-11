@@ -6,20 +6,39 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
     public function up(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            if (!Schema::hasColumn('notifications', 'user_id')) {
-                $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete()->after('id');
-            }
+        // Drop dan recreate agar struktur identik dengan logistic CRM
+        Schema::dropIfExists('notifications');
+
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('type');
+            $table->string('title');
+            $table->text('message');
+            $table->string('icon')->default('bell');
+            $table->string('icon_color')->default('#3b82f6');
+            $table->string('url')->nullable();
+            $table->boolean('is_read')->default(false);
+            $table->timestamps();
+
+            $table->index(['user_id', 'is_read']);
+            $table->index('created_at');
         });
     }
 
     public function down(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
-            $table->dropColumn('user_id');
-        });
+        Schema::dropIfExists('notifications');
     }
+};
 };
