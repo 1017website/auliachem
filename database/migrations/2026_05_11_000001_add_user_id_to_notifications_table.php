@@ -6,14 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
     public function up(): void
     {
         // Drop dan recreate agar struktur identik dengan logistic CRM
@@ -40,5 +32,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('notifications');
     }
-};
 };
