@@ -80,7 +80,8 @@ class SalesActivityController extends Controller
         ]);
 
         // Selalu pakai auth user
-        $validated['user_id'] = auth()->id();
+        $validated['user_id']       = auth()->id();
+        $validated['sales_user_id'] = $validated['sales_user_id'] ?? auth()->id();
 
         // Foto: file upload tidak masuk $validated secara otomatis di Laravel
         // harus di-handle manual setelah validate()

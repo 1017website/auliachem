@@ -116,7 +116,7 @@
                             @endif
 
                             <div class="activity-meta d-flex align-items-center gap-3 mt-1">
-                                <span><i class="fas fa-user me-1"></i>{{ $act->salesUser?->name ?? 'Unknown' }}</span>
+                                <span><i class="fas fa-user me-1"></i>{{ $act->salesUser?->name ?? $act->user?->name ?? '-' }}</span>
                                 @if($act->next_follow_up)
                                 <span style="color:#d97706"><i class="fas fa-calendar-check me-1"></i>Follow up: {{ $act->next_follow_up->format('d M Y') }}</span>
                                 @endif
