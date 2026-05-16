@@ -1,4 +1,3 @@
-@ -1,401 +0,0 @@
 @extends('layouts.app')
 @section('title', 'Analytics')
 @section('page-title', 'Analytics')
