@@ -347,17 +347,17 @@
     </div>
 </div>
 
+@push('scripts')
+<script>
 function openActivityModal(type) {
-    // Pre-select radio button for the given type
     const radio = document.getElementById('type_' + type);
     if (radio) {
         radio.checked = true;
-        // Show/hide photo field for Visit
         const photoField = document.getElementById('photoField');
         if (photoField) photoField.style.display = type === 'Visit' ? 'block' : 'none';
     }
 }
-<script>
+
     function onTypeChange(type) {
         document.getElementById('photoWrap').style.display = type === 'Visit' ? 'block' : 'none';
         if (type !== 'Visit') {
