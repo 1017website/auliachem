@@ -153,11 +153,11 @@
         <div class="modal-header"><h6 class="modal-title fw-bold">Tambah User Baru</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form action="{{ route('users.store') }}" method="POST">@csrf
             <div class="modal-body"><div class="row g-3">
-                <div class="col-12"><label class="form-label">Nama Lengkap <span class="text-danger">*</span></label><input type="text" name="name" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label">Email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label">No. HP</label><input type="text" name="phone" class="form-control"></div>
-                <div class="col-md-6"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" name="password" class="form-control" required placeholder="Min. 6 karakter"></div>
-                <div class="col-md-6"><label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label><input type="password" name="password_confirmation" class="form-control" required></div>
+                <div class="col-12"><label class="form-label">Nama Lengkap <span class="text-danger">*</span></label><input type="text" name="name" class="form-control" required autocomplete="off"></div>
+                <div class="col-md-6"><label class="form-label">Email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" required autocomplete="off"></div>
+                <div class="col-md-6"><label class="form-label">No. HP</label><input type="text" name="phone" class="form-control" autocomplete="off"></div>
+                <div class="col-md-6"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" name="password" class="form-control" required placeholder="Min. 6 karakter" autocomplete="new-password"></div>
+                <div class="col-md-6"><label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label><input type="password" name="password_confirmation" class="form-control" required autocomplete="new-password"></div>
                 <div class="col-12"><label class="form-label">Jabatan / Position</label><input type="text" name="position" class="form-control" placeholder="Contoh: Senior Sales Executive"></div>
                 <div class="col-md-6"><label class="form-label">Role <span class="text-danger">*</span></label>
                     <select name="role" class="form-select" required>

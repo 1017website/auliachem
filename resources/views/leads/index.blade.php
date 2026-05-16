@@ -79,7 +79,7 @@
                         </td>
                         <td>
                             <div class="d-flex gap-1">
-                                <a href="{{ route('leads.show', $lead) }}" class="btn btn-sm btn-outline-primary" style="padding:3px 7px">
+                                <a href="{{ route('leads.show', $lead) }}" class="btn btn-sm btn-outline-primary" style="padding:3px 7px" title="Lihat Detail">
                                     <i class="fas fa-eye" style="font-size:.7rem"></i>
                                 </a>
                                 <form method="POST" action="{{ route('leads.destroy', $lead) }}" onsubmit="return confirm('Hapus lead ini?')">

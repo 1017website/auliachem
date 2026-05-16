@@ -24,6 +24,7 @@ function growthBadge($val, $prev_label) {
                 <div class="kpi-label">Revenue (Omzet)</div>
                 <div class="kpi-value">{{ idrm($revenue) }}</div>
                 <div>{!! growthBadge($revenueGrowth, $prevLabel) !!}</div>
+                <div style="font-size:10px;color:#9ca3af;margin-top:2px">dari PO berstatus Done</div>
             </div>
         </div>
     </div>

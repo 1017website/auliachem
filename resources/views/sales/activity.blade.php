@@ -13,13 +13,13 @@
             <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                 <i class="fas fa-plus"></i> Add Activity
             </button>
-            <button class="btn btn-outline-secondary d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="openActivityModal('Call')" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                 <i class="fas fa-phone" style="color:#059669"></i> Log Call
             </button>
-            <button class="btn btn-outline-secondary d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="openActivityModal('Visit')" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                 <i class="fas fa-building" style="color:#7c3aed"></i> Log Visit
             </button>
-            <button class="btn btn-outline-secondary d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="openActivityModal('Email')" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                 <i class="fas fa-envelope" style="color:#d97706"></i> Send Email
             </button>
         </div>
@@ -347,7 +347,16 @@
     </div>
 </div>
 
-@push('scripts')
+function openActivityModal(type) {
+    // Pre-select radio button for the given type
+    const radio = document.getElementById('type_' + type);
+    if (radio) {
+        radio.checked = true;
+        // Show/hide photo field for Visit
+        const photoField = document.getElementById('photoField');
+        if (photoField) photoField.style.display = type === 'Visit' ? 'block' : 'none';
+    }
+}
 <script>
     function onTypeChange(type) {
         document.getElementById('photoWrap').style.display = type === 'Visit' ? 'block' : 'none';

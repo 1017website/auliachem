@@ -275,34 +275,32 @@
         </table>
 
         {{-- PO Report --}}
-        @elseif($reportType === 'do')
+        @elseif($reportType === 'po')
         <table class="table report-table mb-0">
             <thead><tr>
                 <th>No</th><th>No. PO</th><th>Customer</th><th>Supplier</th>
-                <th>Product Interest</th><th>Volume Est.</th><th>Revenue</th><th>Cost Vendor</th><th>Gross Profit</th><th>Nett Profit</th><th>Status</th><th>Tgl Order</th>
+                <th>Produk Utama</th><th>Revenue</th><th>Gross Profit</th><th>Status</th><th>Tgl Order</th>
             </tr></thead>
             <tbody>
-                @forelse($reportData as $i => $do)
+                @forelse($reportData as $i => $po)
                 <tr>
                     <td style="color:#9ca3af;font-size:12px">{{ $reportData->firstItem() + $i }}</td>
-                    <td style="font-weight:600;font-size:12px">{{ $do->po_number }}</td>
-                    <td style="font-size:12px">{{ $do->customer?->company_name ?? '-' }}</td>
-                    <td style="font-size:12px;color:#6b7280">{{ $do->supplier?->supplier_name ?? '-' }}</td>
-                    <td style="font-size:12px">{{ $do->items->first()?->product_name ?? '-' }}</td>
-                    <td style="font-size:12px">{{ idrm($do->total_revenue) }}</td>
-                    <td style="font-size:12px;font-weight:600;color:var(--primary)">{{ idrm($do->amount) }}</td>
-                    <td style="font-size:12px;color:#dc2626">{{ idrm($do->cost) }}</td>
-                    <td style="font-size:12px;font-weight:600;color:#10b981">{{ idrm($do->gross_profit) }}</td>
-                    <td style="font-size:12px;font-weight:600;color:#7c3aed">{{ idrm($do->nett_profit) }}</td>
-                    <td style="font-size:12px">{{ $do->currency }}</td>
-                    <td>
-                        @php $sc=['Done'=>'badge-won','In Progress'=>'badge-follow-up','Pending'=>'badge-approaching','Cancelled'=>'badge-lost']; @endphp
-                        <span class="{{ $sc[$do->status]??'badge-stage' }}" style="font-size:11px">{{ $do->status }}</span>
+                    <td style="font-weight:600;font-size:12px">{{ $po->po_number }}</td>
+                    <td style="font-size:12px">{{ $po->customer?->company_name ?? '-' }}</td>
+                    <td style="font-size:12px;color:#6b7280">{{ $po->supplier?->supplier_name ?? '-' }}</td>
+                    <td style="font-size:12px">{{ $po->items->first()?->product_name ?? '-' }}
+                        @if($po->items->count() > 1)<span style="color:#9ca3af"> +{{ $po->items->count()-1 }}</span>@endif
                     </td>
-                    <td style="font-size:12px;color:#6b7280">{{ \Carbon\Carbon::parse($do->order_date)->format('d M Y') }}</td>
+                    <td style="font-size:12px;font-weight:600;color:var(--primary)">{{ idrm($po->total_revenue) }}</td>
+                    <td style="font-size:12px;font-weight:600;color:#10b981">{{ idrm($po->gross_profit) }}</td>
+                    <td>
+                        @php $sc=['Done'=>'badge-won','In Progress'=>'badge-follow-up','Cancelled'=>'badge-lost']; @endphp
+                        <span class="{{ $sc[$po->status]??'badge-stage' }}" style="font-size:11px">{{ $po->status }}</span>
+                    </td>
+                    <td style="font-size:12px;color:#6b7280">{{ \Carbon\Carbon::parse($po->order_date)->format('d M Y') }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="10" class="text-center py-4" style="color:#9ca3af">Tidak ada data</td></tr>
+                <tr><td colspan="9" class="text-center py-4" style="color:#9ca3af">Tidak ada data</td></tr>
                 @endforelse
             </tbody>
         </table>

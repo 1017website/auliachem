@@ -61,6 +61,7 @@ class TaskReminderController extends Controller
         if (auth()->user()->isSalesExecutive()) {
             $validated['user_id'] = auth()->id();
         }
+        $validated['sales_user_id'] = $validated['user_id'];
         Activity::create($validated);
         return redirect()->route('tasks.index')->with('success', 'Task berhasil ditambahkan.');
     }
