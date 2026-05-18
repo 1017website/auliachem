@@ -93,12 +93,6 @@
                             <td class="py-2" style="font-size:12px">
                                 <div style="font-weight:600">{{ $po->salesUser?->name ?? '-' }}</div>
                             </td>
-                                <div style="font-size:11px">{{ $item->product_name }} <span style="color:#9ca3af">({{ number_format($item->qty,0,'.','.') }} {{ $item->unit }})</span></div>
-                                @endforeach
-                                @if($po->items->count() > 2)
-                                <div style="font-size:10px;color:#9ca3af">+{{ $po->items->count()-2 }} item lagi</div>
-                                @endif
-                            </td>
                             <td class="py-2" style="font-weight:600;color:var(--primary)">{{ idrm($po->total_revenue) }}</td>
                             <td class="py-2" style="color:#dc2626;font-size:12px">{{ idrm($po->total_cost) }}</td>
                             <td class="py-2" style="font-weight:600;color:#10b981">{{ idrm($po->gross_profit) }}</td>
