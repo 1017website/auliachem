@@ -173,33 +173,43 @@ class LeadsController extends Controller
     {
         $stage = $lead->pipeline_stage;
 
-        if ($stage === 'Lost') {
-            return;
-        }
+        if ($stage === 'Lost') return;
 
         $status = in_array($stage, ['Closing', 'Won', 'Maintaining']) ? 'Existing' : 'Potential';
 
         $customerData = [
-            'company_name'   => $lead->company_name,
-            'pic_name'       => $lead->pic_name,
-            'pic_position'   => $lead->pic_position,
-            'phone'          => $lead->phone ?? '',
-            'email'          => $lead->email,
-            'address'        => $lead->address,
-            'industry'       => $lead->industry,
-            'status'         => $status,
-            'user_id'        => $lead->user_id,
-            'customer_since' => $status === 'Existing' ? now()->toDateString() : null,
+            'company_name' => $lead->company_name,
+            'pic_name'     => $lead->pic_name,
+            'pic_position' => $lead->pic_position,
+            'phone'        => $lead->phone ?? '',
+            'email'        => $lead->email,
+            'address'      => $lead->address,
+            'industry'     => $lead->industry,
+            'status'       => $status,
+            'user_id'      => $lead->user_id,
         ];
 
         if ($lead->customer_id) {
-            \App\Models\Customer::where('id', $lead->customer_id)->update($customerData);
+            $existing = \App\Models\Customer::find($lead->customer_id);
+            if ($existing) {
+                // Jika baru jadi Existing, set customer_since
+                if ($status === 'Existing' && $existing->status !== 'Existing') {
+                    $customerData['customer_since'] = now()->toDateString();
+                }
+                $existing->update($customerData);
+            }
         } else {
             $customer = \App\Models\Customer::where('company_name', $lead->company_name)->first();
             if ($customer) {
+                if ($status === 'Existing' && $customer->status !== 'Existing') {
+                    $customerData['customer_since'] = now()->toDateString();
+                }
                 $customer->update($customerData);
                 $lead->updateQuietly(['customer_id' => $customer->id]);
             } else {
+                if ($status === 'Existing') {
+                    $customerData['customer_since'] = now()->toDateString();
+                }
                 $customer = \App\Models\Customer::create($customerData);
                 $lead->updateQuietly(['customer_id' => $customer->id]);
             }
@@ -240,55 +250,31 @@ class LeadsController extends Controller
         $leads = Lead::with(['salesUser'])->orderBy('created_at', 'desc')->get();
 
         $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="leads_' . date('Ymd_His') . '.csv"',
+            'Lead Code', 'Company Name', 'PIC Name', 'Phone', 'Email',
+            'Pipeline Stage', 'Temperature', 'Product Interest', 'Volume Estimate',
+            'Potensi Revenue', 'Probability %', 'Expected Closing',
+            'Sales PIC', 'Lead Source', 'Created At',
         ];
 
-        $callback = function () use ($leads) {
-            $file = fopen('php://output', 'w');
-            // BOM for Excel UTF-8
-            fputs($file, "\xEF\xBB\xBF");
-            // Header row
-            fputcsv($file, [
-                'Lead Code',
-                'Company Name',
-                'PIC Name',
-                'Phone',
-                'Email',
-                'Pipeline Stage',
-                'Temperature',
-                'Service Type',
-                'Route',
-                'Potensi Revenue',
-                'Probability %',
-                'Expected Closing',
-                'Sales PIC',
-                'Lead Source',
-                'Created At',
-            ]);
-            foreach ($leads as $lead) {
-                fputcsv($file, [
-                    $lead->lead_code,
-                    $lead->company_name,
-                    $lead->pic_name,
-                    $lead->phone,
-                    $lead->email,
-                    $lead->pipeline_stage,
-                    $lead->temperature,
-                    $lead->product_interest,
-                    
-                    $lead->potensi_revenue,
-                    $lead->probability,
-                    $lead->expected_closing?->format('Y-m-d'),
-                    $lead->salesUser?->name,
-                    $lead->lead_source,
-                    $lead->created_at->format('Y-m-d H:i'),
-                ]);
-            }
-            fclose($file);
-        };
+        $rows = $leads->map(fn($lead) => [
+            $lead->lead_code,
+            $lead->company_name,
+            $lead->pic_name,
+            $lead->phone,
+            $lead->email,
+            $lead->pipeline_stage,
+            $lead->temperature,
+            $lead->product_interest,
+            $lead->volume_estimate,
+            $lead->potensi_revenue,
+            $lead->probability,
+            $lead->expected_closing?->format('Y-m-d'),
+            $lead->salesUser?->name,
+            $lead->lead_source,
+            $lead->created_at->format('Y-m-d H:i'),
+        ])->toArray();
 
-        return response()->stream($callback, 200, $headers);
+        return \App\Helpers\ExcelExport::download('leads_' . date('Ymd_His'), $headers, $rows, 'Leads');
     }
 
     // ── Import CSV ──

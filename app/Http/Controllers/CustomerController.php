@@ -97,25 +97,15 @@ class CustomerController extends Controller
     public function export()
     {
         $customers = Customer::with(['salesUser'])->orderBy('company_name')->get();
-        $headers   = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="customers_' . date('Ymd_His') . '.csv"',
-        ];
-        $callback = function () use ($customers) {
-            $f = fopen('php://output', 'w');
-            fputs($f, "\xEF\xBB\xBF");
-            fputcsv($f, ['Company Name','PIC Name','Position','Phone','Email','Industry','Location','Status','Sales PIC','Customer Since']);
-            foreach ($customers as $c) {
-                fputcsv($f, [
-                    $c->company_name, $c->pic_name, $c->pic_position,
-                    $c->phone, $c->email, $c->industry, $c->location,
-                    $c->status, $c->salesUser?->name,
-                    $c->customer_since?->format('Y-m-d'),
-                ]);
-            }
-            fclose($f);
-        };
-        return response()->stream($callback, 200, $headers);
+        $headers   = ['Company Name','PIC Name','Position','Phone','Email','Industry','Location','Status','Sales PIC','Customer Since'];
+        $rows      = $customers->map(fn($c) => [
+            $c->company_name, $c->pic_name, $c->pic_position,
+            $c->phone, $c->email, $c->industry, $c->location,
+            $c->status, $c->salesUser?->name,
+            $c->customer_since?->format('Y-m-d'),
+        ])->toArray();
+
+        return \App\Helpers\ExcelExport::download('customers_' . date('Ymd_His'), $headers, $rows, 'Customers');
     }
 
     public function import(Request $request)

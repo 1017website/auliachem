@@ -105,22 +105,13 @@ class SupplierController extends Controller
     public function export(Request $request)
     {
         $suppliers = Supplier::all();
-        $filename  = 'suppliers-' . date('Ymd') . '.csv';
-        $headers   = ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename=\"$filename\""];
+        $headers   = ['Supplier Name', 'Source Type', 'PIC', 'Phone', 'Email', 'Product Category', 'Origin Country', 'Relationship', 'Status', 'Preferred', 'Rating'];
+        $rows      = $suppliers->map(fn($s) => [
+            $s->supplier_name, $s->source_type, $s->pic_name, $s->phone, $s->email,
+            $s->product_category, $s->origin_country, $s->relationship_status,
+            $s->status, $s->is_preferred ? 'Yes' : 'No', $s->rating,
+        ])->toArray();
 
-        $callback = function () use ($suppliers) {
-            $f = fopen('php://output', 'w');
-            fputcsv($f, ['Supplier Name', 'Source Type', 'PIC', 'Phone', 'Email', 'Product Category', 'Origin Country', 'Relationship', 'Status', 'Preferred', 'Rating']);
-            foreach ($suppliers as $s) {
-                fputcsv($f, [
-                    $s->supplier_name, $s->source_type, $s->pic_name, $s->phone, $s->email,
-                    $s->product_category, $s->origin_country, $s->relationship_status,
-                    $s->status, $s->is_preferred ? 'Yes' : 'No', $s->rating,
-                ]);
-            }
-            fclose($f);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return \App\Helpers\ExcelExport::download('suppliers-' . date('Ymd'), $headers, $rows, 'Suppliers');
     }
 }

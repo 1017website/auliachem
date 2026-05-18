@@ -168,35 +168,33 @@ class PurchaseOrderController extends Controller
             ->whereBetween('order_date', [$startDate, $endDate])
             ->orderByDesc('order_date')->get();
 
-        $filename = 'purchase-orders-' . $startDate . '-sd-' . $endDate . '.csv';
-        $headers  = ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename=\"$filename\""];
+        $headers = ['PO Number', 'Customer', 'Supplier', 'Product', 'Unit', 'Qty', 'Buy Price', 'Sell Price', 'Subtotal Revenue', 'Subtotal HPP', 'Gross Profit', 'Currency', 'Status', 'Tgl Order'];
 
-        $callback = function () use ($pos) {
-            $f = fopen('php://output', 'w');
-            fputcsv($f, ['PO Number', 'Customer', 'Supplier', 'Product', 'Unit', 'Qty', 'Buy Price', 'Sell Price', 'Subtotal Revenue', 'Subtotal Cost', 'Gross Profit', 'Currency', 'Status', 'Tgl Order']);
-            foreach ($pos as $po) {
-                foreach ($po->items as $item) {
-                    fputcsv($f, [
-                        $po->po_number,
-                        $po->customer?->company_name ?? '-',
-                        $po->supplier?->supplier_name ?? '-',
-                        $item->product_name,
-                        $item->unit,
-                        $item->qty,
-                        $item->buy_price,
-                        $item->sell_price,
-                        $item->subtotal_revenue,
-                        $item->subtotal_cost,
-                        $item->gross_profit,
-                        $po->currency,
-                        $po->status,
-                        $po->order_date?->format('Y-m-d'),
-                    ]);
-                }
+        $rows = [];
+        foreach ($pos as $po) {
+            foreach ($po->items as $item) {
+                $rows[] = [
+                    $po->po_number,
+                    $po->customer?->company_name ?? '-',
+                    $po->supplier?->supplier_name ?? '-',
+                    $item->product_name,
+                    $item->unit,
+                    (float) $item->qty,
+                    (float) $item->buy_price,
+                    (float) $item->sell_price,
+                    (float) $item->subtotal_revenue,
+                    (float) $item->subtotal_cost,
+                    (float) $item->gross_profit,
+                    $po->currency,
+                    $po->status,
+                    $po->order_date?->format('Y-m-d'),
+                ];
             }
-            fclose($f);
-        };
+        }
 
-        return response()->stream($callback, 200, $headers);
+        return \App\Helpers\ExcelExport::download(
+            'purchase-orders-' . $startDate . '-sd-' . $endDate,
+            $headers, $rows, 'Purchase Orders'
+        );
     }
 }

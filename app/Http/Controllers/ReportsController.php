@@ -98,50 +98,46 @@ class ReportsController extends Controller
         $reportType = $request->get('report_type', 'sales');
         $salesId    = $request->get('user_id');
 
-        $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="report_' . $reportType . '_' . date('Ymd_His') . '.csv"',
-        ];
+        $filename = 'report_' . $reportType . '_' . date('Ymd_His');
 
-        $callback = function () use ($startDate, $endDate, $reportType, $salesId) {
-            $f = fopen('php://output', 'w');
-            fputs($f, "\xEF\xBB\xBF");
+        switch ($reportType) {
+            case 'sales':
+                $headers = ['Lead Code', 'Company', 'PIC', 'Product Interest', 'Stage', 'Temperature', 'Potensi Revenue', 'Probability', 'Expected Closing', 'Sales PIC', 'Created At'];
+                $leads   = Lead::with(['salesUser'])->whereBetween('created_at', [$startDate, $endDate]);
+                if ($salesId) $leads->where('user_id', $salesId);
+                $rows = $leads->get()->map(fn($l) => [
+                    $l->lead_code, $l->company_name, $l->pic_name, $l->product_interest,
+                    $l->pipeline_stage, $l->temperature, (float)$l->potensi_revenue, $l->probability,
+                    $l->expected_closing?->format('Y-m-d'), $l->salesUser?->name, $l->created_at->format('Y-m-d H:i'),
+                ])->toArray();
+                return \App\Helpers\ExcelExport::download($filename, $headers, $rows, 'Sales Report');
 
-            switch ($reportType) {
-                case 'sales':
-                    fputcsv($f, ['Lead Code', 'Company', 'PIC', 'Product Interest', 'Stage', 'Temperature', 'Potensi Revenue', 'Probability', 'Expected Closing', 'Sales PIC', 'Created At']);
-                    $leads = Lead::with(['salesUser'])->whereBetween('created_at', [$startDate, $endDate]);
-                    if ($salesId) $leads->where('user_id', $salesId);
-                    foreach ($leads->get() as $l) {
-                        fputcsv($f, [$l->lead_code, $l->company_name, $l->pic_name, $l->product_interest, $l->pipeline_stage, $l->temperature, $l->potensi_revenue, $l->probability, $l->expected_closing?->format('Y-m-d'), $l->salesUser?->name, $l->created_at->format('Y-m-d H:i')]);
+            case 'po':
+                $headers = ['PO Number', 'Customer', 'Supplier', 'Product', 'Unit', 'Qty', 'Buy Price', 'Sell Price', 'Gross Profit', 'Currency', 'Status', 'Order Date'];
+                $pos     = PurchaseOrder::with(['customer', 'supplier', 'items'])->whereBetween('order_date', [$startDate, $endDate])->get();
+                $rows    = [];
+                foreach ($pos as $po) {
+                    foreach ($po->items as $item) {
+                        $rows[] = [
+                            $po->po_number, $po->customer?->company_name, $po->supplier?->supplier_name,
+                            $item->product_name, $item->unit, (float)$item->qty,
+                            (float)$item->buy_price, (float)$item->sell_price, (float)$item->gross_profit,
+                            $po->currency, $po->status, $po->order_date?->format('Y-m-d'),
+                        ];
                     }
-                    break;
+                }
+                return \App\Helpers\ExcelExport::download($filename, $headers, $rows, 'PO Report');
 
-                case 'po':
-                    fputcsv($f, ['PO Number', 'Customer', 'Supplier', 'Product', 'Unit', 'Qty', 'Buy Price', 'Sell Price', 'Gross Profit', 'Currency', 'Status', 'Order Date']);
-                    $pos = PurchaseOrder::with(['customer', 'supplier', 'items'])->whereBetween('order_date', [$startDate, $endDate])->get();
-                    foreach ($pos as $po) {
-                        foreach ($po->items as $item) {
-                            fputcsv($f, [
-                                $po->po_number, $po->customer?->company_name, $po->supplier?->supplier_name,
-                                $item->product_name, $item->unit, $item->qty,
-                                $item->buy_price, $item->sell_price, $item->gross_profit,
-                                $po->currency, $po->status, $po->order_date?->format('Y-m-d'),
-                            ]);
-                        }
-                    }
-                    break;
+            case 'customer':
+                $headers = ['Company Name', 'PIC', 'Phone', 'Email', 'Industry', 'Status', 'Sales PIC', 'Customer Since'];
+                $rows    = Customer::with('salesUser')->get()->map(fn($c) => [
+                    $c->company_name, $c->pic_name, $c->phone, $c->email,
+                    $c->industry, $c->status, $c->salesUser?->name, $c->customer_since?->format('Y-m-d'),
+                ])->toArray();
+                return \App\Helpers\ExcelExport::download($filename, $headers, $rows, 'Customer Report');
 
-                case 'customer':
-                    fputcsv($f, ['Company Name', 'PIC', 'Phone', 'Email', 'Industry', 'Status', 'Sales PIC', 'Customer Since']);
-                    foreach (Customer::with('salesUser')->get() as $c) {
-                        fputcsv($f, [$c->company_name, $c->pic_name, $c->phone, $c->email, $c->industry, $c->status, $c->salesUser?->name, $c->customer_since?->format('Y-m-d')]);
-                    }
-                    break;
-            }
-            fclose($f);
-        };
-
-        return response()->stream($callback, 200, $headers);
+            default:
+                return back();
+        }
     }
 }
