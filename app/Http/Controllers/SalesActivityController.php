@@ -48,7 +48,7 @@ class SalesActivityController extends Controller
             'Identifying' => ['count' => Lead::where('pipeline_stage', 'Identifying')->count(), 'value' => Lead::where('pipeline_stage', 'Identifying')->sum('potensi_revenue')],
             'Approaching' => ['count' => Lead::where('pipeline_stage', 'Approaching')->count(), 'value' => Lead::where('pipeline_stage', 'Approaching')->sum('potensi_revenue')],
             'Follow Up'   => ['count' => Lead::where('pipeline_stage', 'Follow Up')->count(), 'value' => Lead::where('pipeline_stage', 'Follow Up')->sum('potensi_revenue')],
-            'Closing'     => ['count' => Lead::where('pipeline_stage', 'Closing')->count(), 'value' => Lead::where('pipeline_stage', 'Closing')->sum('potensi_revenue')],
+            'Won/Closing' => ['count' => Lead::where('pipeline_stage', 'Won')->count(), 'value' => Lead::where('pipeline_stage', 'Won')->sum('potensi_revenue')],
             'Maintaining' => ['count' => Lead::where('pipeline_stage', 'Maintaining')->count(), 'value' => Lead::where('pipeline_stage', 'Maintaining')->sum('potensi_revenue')],
         ];
 
@@ -92,8 +92,11 @@ class SalesActivityController extends Controller
 
         // Update pipeline_stage lead jika dikirim
         if (!empty($validated['lead_id']) && $request->filled('pipeline_stage')) {
-            \App\Models\Lead::where('id', $validated['lead_id'])
-                ->update(['pipeline_stage' => $request->pipeline_stage]);
+            $lead = \App\Models\Lead::find($validated['lead_id']);
+            if ($lead) {
+                $lead->update(['pipeline_stage' => $request->pipeline_stage]);
+                \App\Http\Controllers\LeadsController::syncToCustomer($lead->fresh());
+            }
         }
 
         Activity::create($validated);

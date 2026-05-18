@@ -216,7 +216,7 @@
                     <label class="form-label" style="font-size:.78rem">Lead</label>
                     <select id="stageLeadSelect" class="form-select form-select-sm">
                         <option value="">-- Pilih Lead --</option>
-                        @foreach(\App\Models\Lead::whereNotIn('pipeline_stage',['Won','Lost'])->orderBy('company_name')->get() as $l)
+                        @foreach(\App\Models\Lead::whereNotIn('pipeline_stage',['Won'])->orderBy('company_name')->get() as $l)
                         <option value="{{ $l->id }}" data-stage="{{ $l->pipeline_stage }}">{{ $l->company_name }}</option>
                         @endforeach
                     </select>
@@ -224,8 +224,8 @@
                 <div class="mb-3">
                     <label class="form-label" style="font-size:.78rem">Pipeline Stage</label>
                     <select id="stageSelect" class="form-select form-select-sm">
-                        @foreach(['Identifying','Approaching','Follow Up','Closing','Won','Maintaining'] as $s)
-                        <option value="{{ $s }}">{{ $s }}</option>
+                        @foreach(['Identifying'=>'Identifying','Approaching'=>'Approaching','Follow Up'=>'Follow Up','Won'=>'Won/Closing','Maintaining'=>'Maintaining'] as $val => $label)
+                        <option value="{{ $val }}">{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -263,8 +263,8 @@
                     <div class="mb-3" id="stageWrap" style="display:none">
                         <label class="form-label">Update Pipeline Stage</label>
                         <select name="pipeline_stage" class="form-select" id="actStageSelect">
-                            @foreach(['Identifying','Approaching','Follow Up','Closing','Won','Lost','Maintaining'] as $s)
-                            <option value="{{ $s }}">{{ $s }}</option>
+                            @foreach(['Identifying','Approaching','Follow Up','Won/Closing','Lost','Maintaining'] as $s)
+                            <option value="{{ $s === 'Won/Closing' ? 'Won' : $s }}">{{ $s }}</option>
                             @endforeach
                         </select>
                         <div class="form-text">Opsional — biarkan jika tidak ingin mengubah stage</div>

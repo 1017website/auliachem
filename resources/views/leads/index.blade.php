@@ -46,6 +46,7 @@
                         <tr>
                             <th>Company</th>
                             <th>PIC / Jabatan</th>
+                            <th>Pipeline Stage</th>
                             <th>Product Interest</th>
                             <th>Potensi Revenue</th>
                             <th>Sales PIC</th>
@@ -65,6 +66,23 @@
                                     <div style="font-size:.8rem">{{ $lead->pic_name }}</div>
                                     <div style="font-size:.7rem;color:var(--text-muted)">
                                         {{ $lead->pic_position ?? $lead->phone }}</div>
+                                </td>
+                                <td>
+                                    @php
+                                        $stageColors = [
+                                            'Identifying' => ['bg'=>'#dbeafe','color'=>'#1d4ed8'],
+                                            'Approaching' => ['bg'=>'#fef3c7','color'=>'#b45309'],
+                                            'Follow Up'   => ['bg'=>'#ede9fe','color'=>'#6d28d9'],
+                                            'Won'         => ['bg'=>'#d1fae5','color'=>'#065f46'],
+                                            'Lost'        => ['bg'=>'#fee2e2','color'=>'#991b1b'],
+                                            'Maintaining' => ['bg'=>'#e0e7ff','color'=>'#3730a3'],
+                                        ];
+                                        $sc = $stageColors[$lead->pipeline_stage] ?? ['bg'=>'#f3f4f6','color'=>'#374151'];
+                                        $stageLabel = $lead->pipeline_stage === 'Won' ? 'Won/Closing' : $lead->pipeline_stage;
+                                    @endphp
+                                    <span style="background:{{ $sc['bg'] }};color:{{ $sc['color'] }};padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:600">
+                                        {{ $stageLabel }}
+                                    </span>
                                 </td>
                                 <td>
                                     <div style="font-size:.8rem">{{ $lead->product_interest ?? "-" }}</div>

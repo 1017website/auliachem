@@ -18,7 +18,7 @@ class LeadsController extends Controller
         $search = $request->get('search');
 
         $query = Lead::with(['salesUser', 'activities'])
-            ->whereNotIn('pipeline_stage', ['Won', 'Lost']);
+            ->whereNotIn('pipeline_stage', ['Won']);
 
         if (auth()->user()->isSalesExecutive()) {
             $query->where('user_id', auth()->id());
@@ -57,7 +57,7 @@ class LeadsController extends Controller
             'email'           => 'nullable|email|max:255',
             'address'         => 'nullable|string',
             'industry'        => 'nullable|string|max:100',
-            'pipeline_stage'  => 'nullable|in:Identifying,Approaching,Follow Up,Closing,Won,Lost,Maintaining',
+            'pipeline_stage'  => 'nullable|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
             'product_interest' => 'nullable|string|max:255',
             'route'           => 'nullable|string|max:255',
@@ -82,7 +82,7 @@ class LeadsController extends Controller
         $lead = Lead::create($validated);
 
         // Auto-sync ke database customer
-        $this->syncToCustomer($lead);
+        self::syncToCustomer($lead);
 
         // Notifikasi: Lead Baru
         Notification::broadcast(
@@ -112,7 +112,7 @@ class LeadsController extends Controller
             'email'           => 'nullable|email|max:255',
             'address'         => 'nullable|string',
             'industry'        => 'nullable|string|max:100',
-            'pipeline_stage'  => 'sometimes|in:Identifying,Approaching,Follow Up,Closing,Won,Lost,Maintaining',
+            'pipeline_stage'  => 'sometimes|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
             'product_interest' => 'nullable|string|max:255',
             'route'           => 'nullable|string|max:255',
@@ -134,7 +134,7 @@ class LeadsController extends Controller
 
         // Auto-sync ke database customer setiap kali stage berubah
         if (isset($validated['pipeline_stage'])) {
-            $this->syncToCustomer($lead);
+            self::syncToCustomer($lead);
         }
 
         // Notifikasi: Deal Won
@@ -169,13 +169,12 @@ class LeadsController extends Controller
      * - Closing / Won → Existing
      * - Lost → hapus dari customer jika ada (opsional: biarkan)
      */
-    private function syncToCustomer(Lead $lead): void
+    public static function syncToCustomer(Lead $lead): void
     {
         $stage = $lead->pipeline_stage;
 
-        if ($stage === 'Lost') return;
-
-        $status = in_array($stage, ['Closing', 'Won', 'Maintaining']) ? 'Existing' : 'Potential';
+        // Lost: tetap di customer sebagai Potential agar bisa di-follow up kembali
+        $status = in_array($stage, ['Won', 'Maintaining']) ? 'Existing' : 'Potential';
 
         $customerData = [
             'company_name' => $lead->company_name,
@@ -241,7 +240,13 @@ class LeadsController extends Controller
         }
         Activity::create($validated);
 
-        return redirect()->route('leads.show', $lead)->with('success', 'Activity berhasil ditambahkan.');
+        // Sync customer jika ada perubahan pipeline_stage dari activity
+        if ($request->filled('pipeline_stage')) {
+            $lead->update(['pipeline_stage' => $request->pipeline_stage]);
+            self::syncToCustomer($lead->fresh());
+        }
+
+        return redirect()->route('sales.activity')->with('success', 'Activity berhasil ditambahkan.');
     }
 
     // ── Export CSV ──

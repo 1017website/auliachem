@@ -27,20 +27,9 @@
         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editLeadModal">
             <i class="fas fa-edit me-1"></i> Edit Lead
         </button>
-        <form method="POST" action="{{ route('leads.update', $lead) }}" class="d-inline">
-            @csrf @method('PUT')
-            <input type="hidden" name="pipeline_stage" value="Lost">
-            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tandai sebagai Lost?')">
-                <i class="fas fa-times-circle me-1"></i> Mark as Lost
-            </button>
-        </form>
-        <form method="POST" action="{{ route('leads.update', $lead) }}" class="d-inline">
-            @csrf @method('PUT')
-            <input type="hidden" name="pipeline_stage" value="Won">
-            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Convert lead ini ke Deal Won?')">
-                <i class="fas fa-check-circle me-1"></i> Convert to Deal
-            </button>
-        </form>
+        <a href="{{ route('sales.activity') }}" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Activity
+        </a>
     </div>
 </div>
 
@@ -107,17 +96,9 @@
         <div class="card mb-3">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <span>Activity Timeline</span>
-                <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem" data-bs-toggle="modal" data-bs-target="#addActivityModal">
-                        <i class="fas fa-plus me-1"></i> Add Activity
-                    </button>
-                    <button class="btn btn-sm btn-outline-success" style="font-size:.72rem" onclick="quickActivity('Call')">
-                        <i class="fas fa-phone me-1"></i> Log Call
-                    </button>
-                    <button class="btn btn-sm btn-outline-primary" style="font-size:.72rem" onclick="quickActivity('Visit')">
-                        <i class="fas fa-building me-1"></i> Log Visit
-                    </button>
-                </div>
+                <a href="{{ route('sales.activity') }}" class="btn btn-sm btn-outline-secondary" style="font-size:.72rem">
+                    <i class="fas fa-plus me-1"></i> Add Activity
+                </a>
             </div>
             <div class="card-body p-3">
                 <div class="activity-timeline">
@@ -236,31 +217,6 @@
             </div>
         </div>
 
-        {{-- Quick Actions --}}
-        <div class="card">
-            <div class="card-header">Quick Actions</div>
-            <div class="card-body p-3">
-                <div class="row g-2">
-                    @foreach([
-                    ['icon'=>'phone','label'=>'Log Call','color'=>'#d1fae5','ico'=>'#059669','action'=>"quickActivity('Call')"],
-                    ['icon'=>'building','label'=>'Log Visit','color'=>'#dbeafe','ico'=>'#2563eb','action'=>"quickActivity('Visit')"],
-                    ['icon'=>'envelope','label'=>'Log Email','color'=>'#fef3c7','ico'=>'#d97706','action'=>"quickActivity('Email')"],
-                    ['icon'=>'sticky-note','label'=>'Add Note','color'=>'#ccfbf1','ico'=>'#0d9488','action'=>"quickActivity('Note')"],
-                    ['icon'=>'bell','label'=>'Set Reminder','color'=>'#fee2e2','ico'=>'#dc2626','action'=>"document.getElementById('actType').value='Task';new bootstrap.Modal(document.getElementById('addActivityModal')).show()"],
-                    ['icon'=>'file-alt','label'=>'Activity','color'=>'#f0fdf4','ico'=>'#10b981','action'=>'#activitySection'],
-                    ] as $qa)
-                    <div class="col-4">
-                        <div class="quick-action-btn" onclick="{{ $qa['action'] }}" style="cursor:pointer">
-                            <div class="qa-icon" style="background:{{ $qa['color'] }}">
-                                <i class="fas fa-{{ $qa['icon'] }}" style="color:{{ $qa['ico'] }};font-size:.8rem"></i>
-                            </div>
-                            <span class="qa-label">{{ $qa['label'] }}</span>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -353,66 +309,7 @@
     </div>
 </div>
 
-{{-- 2. Add Activity Modal --}}
-<div class="modal fade" id="addActivityModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold">Tambah Activity</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('leads.activity.store', $lead) }}">
-                @csrf
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Jenis Activity <span class="text-danger">*</span></label>
-                            <select name="type" id="actType" class="form-select" required>
-                                @foreach(['Call','Visit','Email','Note','Task'] as $t)
-                                <option value="{{ $t }}">{{ $t }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Status <span class="text-danger">*</span></label>
-                            <select name="status" class="form-select" required>
-                                <option value="Done">Done</option>
-                                <option value="Planned">Planned</option>
-                                <option value="Pending">Pending</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Subject <span class="text-danger">*</span></label>
-                            <input type="text" name="subject" class="form-control" required placeholder="Contoh: Follow up penawaran produk Solvent">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Tanggal & Waktu <span class="text-danger">*</span></label>
-                            <input type="datetime-local" name="activity_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            @include('components.sales-pic-field', ['selectedId' => $lead->user_id])
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Keterangan</label>
-                            <textarea name="description" class="form-control" rows="3" placeholder="Detail aktivitas..."></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Next Follow Up</label>
-                            <input type="date" name="next_follow_up" class="form-control">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Simpan Activity</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 {{-- 3. Edit Catatan Internal Modal --}}
-<div class="modal fade" id="editCatatanModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -504,12 +401,3 @@
 </div>
 
 @endsection
-
-@push('scripts')
-<script>
-    function quickActivity(type) {
-        document.getElementById('actType').value = type;
-        new bootstrap.Modal(document.getElementById('addActivityModal')).show();
-    }
-</script>
-@endpush
