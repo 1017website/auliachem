@@ -490,15 +490,12 @@ async function openEditPo(id) {
     setSelect2('epSupplier', po.supplier_id);
     setSelect2('epLead',     po.lead_id);
 
-    // Re-set date after Select2 (Select2 may re-render and clear nearby DOM)
-    const setDate = () => {
-        const el = document.getElementById('epDate');
-        el.value = dateVal;
-        el.setAttribute('value', dateVal);
-    };
-    setDate();
-    setTimeout(setDate, 100);
-    setTimeout(setDate, 300);
+    // Re-set date — gunakan local captured value agar tidak tertimpa call berikutnya
+    const capturedDate = dateVal;
+    const applyDate = () => { document.getElementById('epDate').value = capturedDate; };
+    applyDate();
+    const t1 = setTimeout(applyDate, 100);
+    const t2 = setTimeout(applyDate, 300);
 
     // Clear & rebuild items
     const body = document.getElementById('editItemsBody');
@@ -508,9 +505,9 @@ async function openEditPo(id) {
 
     recalcTotal('editItemsBody');
     const modal = new bootstrap.Modal(document.getElementById('editPoModal'));
-    // Set date lagi saat modal fully shown (setelah animasi selesai)
     document.getElementById('editPoModal').addEventListener('shown.bs.modal', function handler() {
-        document.getElementById('epDate').value = dateVal;
+        clearTimeout(t1); clearTimeout(t2);
+        document.getElementById('epDate').value = capturedDate;
         this.removeEventListener('shown.bs.modal', handler);
     });
     modal.show();
