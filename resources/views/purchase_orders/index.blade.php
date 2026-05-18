@@ -14,7 +14,7 @@
                 <i class="fas fa-plus me-1"></i> Tambah PO
             </button>
             <a href="{{ route('purchase-orders.export', request()->query()) }}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-download me-1"></i> Export CSV
+                <i class="fas fa-download me-1"></i> Export Excel
             </a>
         </div>
         <div class="d-flex gap-3 flex-wrap">

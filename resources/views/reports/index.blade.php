@@ -79,7 +79,7 @@
                 <div style="font-size:13px;font-weight:600;color:#0f1d35;margin-bottom:10px">Export Report</div>
                 <a href="{{ route('reports.export', array_merge(request()->query(), ['report_type'=>$reportType])) }}"
                     class="d-flex align-items-center gap-2 p-2 mb-2" style="border:1px solid #bbf7d0;border-radius:8px;text-decoration:none;color:#16a34a;background:#f0fdf4;font-size:13px;font-weight:500">
-                    <i class="fas fa-file-csv" style="font-size:16px"></i> Export CSV
+                    <i class="fas fa-file-excel" style="font-size:16px"></i> Export Excel
                 </a>
                 <button type="button" onclick="window.print()"
                     class="d-flex align-items-center gap-2 p-2 w-100" style="border:1px solid #bfdbfe;border-radius:8px;color:#2563eb;background:#eff6ff;font-size:13px;font-weight:500;cursor:pointer">

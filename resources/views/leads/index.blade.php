@@ -14,7 +14,7 @@
             <i class="fas fa-upload me-1"></i> Import
         </button>
         <a href="{{ route('leads.export') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-download me-1"></i> Export CSV
+            <i class="fas fa-download me-1"></i> Export Excel
         </a>
     </div>
 </div>
