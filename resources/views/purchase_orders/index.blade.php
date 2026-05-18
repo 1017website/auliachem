@@ -217,8 +217,18 @@
                                     <td><input type="text" name="items[0][product_name]" class="form-control form-control-sm" required></td>
                                     <td><input type="text" name="items[0][unit]" class="form-control form-control-sm" placeholder="kg" value="kg"></td>
                                     <td><input type="number" name="items[0][qty]" class="form-control form-control-sm item-qty" step="0.001" min="0" required oninput="calcRow(this)"></td>
-                                    <td><input type="number" name="items[0][buy_price]" class="form-control form-control-sm item-buy" step="1" min="0" required oninput="calcRow(this)"></td>
-                                    <td><input type="number" name="items[0][sell_price]" class="form-control form-control-sm item-sell" step="1" min="0" required oninput="calcRow(this)"></td>
+                                    <td>
+                                        <input type="hidden" name="items[0][buy_price]" class="item-buy-hidden" value="0">
+                                        <input type="text" class="form-control form-control-sm item-buy" placeholder="0"
+                                            oninput="syncHidden(this,'item-buy-hidden');calcRow(this)"
+                                            onblur="formatPriceInput(this)">
+                                    </td>
+                                    <td>
+                                        <input type="hidden" name="items[0][sell_price]" class="item-sell-hidden" value="0">
+                                        <input type="text" class="form-control form-control-sm item-sell" placeholder="0"
+                                            oninput="syncHidden(this,'item-sell-hidden');calcRow(this)"
+                                            onblur="formatPriceInput(this)">
+                                    </td>
                                     <td class="item-profit text-end" style="font-weight:600;color:#10b981;vertical-align:middle">Rp 0</td>
                                     <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)" style="padding:2px 6px"><i class="fas fa-times"></i></button></td>
                                 </tr>
@@ -351,13 +361,35 @@
 <script>
 let itemIndex = 1;
 
+function formatNum(n) {
+    if (!n && n !== 0) return '';
+    return Math.round(n).toLocaleString('id-ID');
+}
+
+function parseNum(str) {
+    if (!str) return 0;
+    return parseFloat(String(str).replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function formatPriceInput(el) {
+    const raw = parseNum(el.value);
+    if (raw > 0) el.value = formatNum(raw);
+    calcRow(el);
+}
+
 function formatRp(n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
+
+function syncHidden(el, hiddenClass) {
+    const row    = el.closest('tr');
+    const hidden = row.querySelector('.' + hiddenClass);
+    if (hidden) hidden.value = parseNum(el.value);
+}
 
 function calcRow(el) {
     const row  = el.closest('tr');
-    const qty  = parseFloat(row.querySelector('.item-qty')?.value)  || 0;
-    const buy  = parseFloat(row.querySelector('.item-buy')?.value)  || 0;
-    const sell = parseFloat(row.querySelector('.item-sell')?.value) || 0;
+    const qty  = parseFloat(row.querySelector('.item-qty')?.value) || 0;
+    const buy  = parseNum(row.querySelector('.item-buy')?.value);
+    const sell = parseNum(row.querySelector('.item-sell')?.value);
     const profit = (sell - buy) * qty;
     row.querySelector('.item-profit').textContent = formatRp(profit);
     row.querySelector('.item-profit').style.color = profit >= 0 ? '#10b981' : '#dc2626';
@@ -370,8 +402,8 @@ function recalcTotal(bodyId) {
     let revenue = 0, profit = 0;
     body.querySelectorAll('tr').forEach(row => {
         const qty  = parseFloat(row.querySelector('.item-qty')?.value)  || 0;
-        const buy  = parseFloat(row.querySelector('.item-buy')?.value)  || 0;
-        const sell = parseFloat(row.querySelector('.item-sell')?.value) || 0;
+        const buy  = parseNum(row.querySelector('.item-buy')?.value);
+        const sell = parseNum(row.querySelector('.item-sell')?.value);
         revenue += qty * sell;
         profit  += (sell - buy) * qty;
     });
@@ -389,8 +421,18 @@ function addItemRow(bodyId, data = {}) {
         <td><input type="text" name="${prefix}[${idx}][product_name]" class="form-control form-control-sm" value="${data.product_name||''}" required></td>
         <td><input type="text" name="${prefix}[${idx}][unit]" class="form-control form-control-sm" value="${data.unit||'kg'}"></td>
         <td><input type="number" name="${prefix}[${idx}][qty]" class="form-control form-control-sm item-qty" step="0.001" min="0" value="${data.qty||''}" required oninput="calcRow(this)"></td>
-        <td><input type="number" name="${prefix}[${idx}][buy_price]" class="form-control form-control-sm item-buy" step="1" min="0" value="${data.buy_price||''}" required oninput="calcRow(this)"></td>
-        <td><input type="number" name="${prefix}[${idx}][sell_price]" class="form-control form-control-sm item-sell" step="1" min="0" value="${data.sell_price||''}" required oninput="calcRow(this)"></td>
+        <td>
+            <input type="hidden" name="${prefix}[${idx}][buy_price]" class="item-buy-hidden" value="${data.buy_price||0}">
+            <input type="text" class="form-control form-control-sm item-buy" value="${data.buy_price ? formatNum(data.buy_price) : ''}" placeholder="0"
+                oninput="syncHidden(this,'item-buy-hidden');calcRow(this)"
+                onblur="formatPriceInput(this)">
+        </td>
+        <td>
+            <input type="hidden" name="${prefix}[${idx}][sell_price]" class="item-sell-hidden" value="${data.sell_price||0}">
+            <input type="text" class="form-control form-control-sm item-sell" value="${data.sell_price ? formatNum(data.sell_price) : ''}" placeholder="0"
+                oninput="syncHidden(this,'item-sell-hidden');calcRow(this)"
+                onblur="formatPriceInput(this)">
+        </td>
         <td class="item-profit text-end" style="font-weight:600;color:#10b981;vertical-align:middle">Rp 0</td>
         <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)" style="padding:2px 6px"><i class="fas fa-times"></i></button></td>
     `;

@@ -110,7 +110,10 @@ class PurchaseOrderController extends Controller
     public function edit(PurchaseOrder $purchaseOrder)
     {
         $purchaseOrder->load(['items', 'customer', 'supplier', 'lead']);
-        return response()->json($purchaseOrder);
+        $data = $purchaseOrder->toArray();
+        // Format order_date agar bisa langsung dipakai di input[type=date]
+        $data['order_date'] = $purchaseOrder->order_date?->format('Y-m-d');
+        return response()->json($data);
     }
 
     public function update(Request $request, PurchaseOrder $purchaseOrder)
