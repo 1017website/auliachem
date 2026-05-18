@@ -277,6 +277,22 @@ class LeadsController extends Controller
         return \App\Helpers\ExcelExport::download('leads_' . date('Ymd_His'), $headers, $rows, 'Leads');
     }
 
+    public function template()
+    {
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="template_import_leads.csv"',
+        ];
+        $callback = function () {
+            $f = fopen('php://output', 'w');
+            fputs($f, "\xEF\xBB\xBF");
+            fputcsv($f, ['Lead Code', 'Company Name', 'PIC Name', 'Phone', 'Email', 'Pipeline Stage', 'Temperature', 'Product Interest', 'Volume Estimate', 'Potensi Revenue', 'Probability', 'Expected Closing', 'Sales PIC', 'Lead Source']);
+            fputcsv($f, ['LEAD-2026-0001', 'PT. Contoh Kimia', 'Budi Santoso', '0812-1234-5678', 'budi@contoh.co.id', 'Identifying', 'Warm', 'Solvent IPA', '5 Ton/Bulan', '50000000', '30', '2026-12-31', 'sales@crm.com', 'Referral']);
+            fclose($f);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
+
     // ── Import CSV ──
     public function import(Request $request)
     {

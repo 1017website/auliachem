@@ -108,6 +108,22 @@ class CustomerController extends Controller
         return \App\Helpers\ExcelExport::download('customers_' . date('Ymd_His'), $headers, $rows, 'Customers');
     }
 
+    public function template()
+    {
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="template_import_customers.csv"',
+        ];
+        $callback = function () {
+            $f = fopen('php://output', 'w');
+            fputs($f, "\xEF\xBB\xBF");
+            fputcsv($f, ['Company Name', 'PIC Name', 'Position', 'Phone', 'Email', 'Industry', 'Location', 'Status', 'Sales PIC Email']);
+            fputcsv($f, ['PT. Contoh Kimia', 'Budi Santoso', 'Purchasing Manager', '0812-1234-5678', 'budi@contoh.co.id', 'Manufacturing', 'Surabaya', 'Potential', 'sales@crm.com']);
+            fclose($f);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|file|mimes:csv,txt|max:2048']);

@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
 
     // Leads & Pipeline
     Route::get('/leads/export',           [LeadsController::class, 'export'])->name('leads.export');
+    Route::get('/leads/template',         [LeadsController::class, 'template'])->name('leads.template');
     Route::post('/leads/import',          [LeadsController::class, 'import'])->name('leads.import');
     Route::post('/leads/{lead}/activity', [LeadsController::class, 'storeActivity'])->name('leads.activity.store');
     Route::resource('leads', LeadsController::class);
@@ -71,6 +72,7 @@ Route::middleware('auth')->group(function () {
 
     // CRM Data
     Route::get('/customers/export',               [CustomerController::class, 'export'])->name('customers.export');
+    Route::get('/customers/template',             [CustomerController::class, 'template'])->name('customers.template');
     Route::post('/customers/import',              [CustomerController::class, 'import'])->name('customers.import');
     Route::post('/customers/{customer}/activity', [CustomerController::class, 'storeActivity'])->name('customers.activity.store');
     Route::resource('customers', CustomerController::class);

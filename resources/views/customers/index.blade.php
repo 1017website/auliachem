@@ -15,9 +15,9 @@
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                     <i class="fas fa-plus me-1"></i> Add Customer
                 </button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importCustomerModal">
+                {{-- <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importCustomerModal">
                     <i class="fas fa-upload me-1"></i> Import
-                </button>
+                </button> --}}
                 <a href="{{ route('customers.export') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-download me-1"></i> Export Excel
                 </a>
@@ -343,7 +343,7 @@
                 <div class="mb-3 p-3" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb">
                     <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px"><i class="fas fa-info-circle text-primary me-1"></i> Format CSV</div>
                     <div style="font-size:11px;color:#6b7280">Kolom: <strong>Company Name, PIC Name, Position, Phone, Email, Industry, Location, Status, Sales PIC, Customer Since</strong></div>
-                    <a href="{{ route('customers.export') }}" class="btn btn-sm btn-outline-primary mt-2" style="font-size:11px"><i class="fas fa-download me-1"></i> Download Template</a>
+                    <a href="{{ route('customers.template') }}" class="btn btn-sm btn-outline-primary mt-2" style="font-size:11px"><i class="fas fa-download me-1"></i> Download Template</a>
                 </div>
                 <div><label class="form-label">File CSV <span class="text-danger">*</span></label><input type="file" name="file" class="form-control" accept=".csv,.txt" required></div>
             </div>
