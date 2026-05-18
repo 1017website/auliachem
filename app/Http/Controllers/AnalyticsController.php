@@ -43,10 +43,12 @@ class AnalyticsController extends Controller
         $revenueTrend = [];
         for ($i = 5; $i >= 0; $i--) {
             $m = now()->subMonths($i);
-            $pos = PurchaseOrder::with('items')
+            $q = PurchaseOrder::with('items')
                 ->whereYear('order_date', $m->year)->whereMonth('order_date', $m->month)
-                ->where('currency', 'IDR')->where('status', 'Done')->get();
-            $val = $pos->sum(fn($po) => $po->total_revenue);
+                ->where('currency', 'IDR')->where('status', 'Done');
+            if ($salesId)
+                $q->whereHas('lead', fn($lq) => $lq->where('user_id', $salesId));
+            $val = $q->get()->sum(fn($po) => $po->total_revenue);
             $revenueTrend[] = ['label' => $m->format('M Y'), 'value' => round($val / 1000000, 2)];
         }
 
@@ -54,9 +56,12 @@ class AnalyticsController extends Controller
         $profitAnalysis = [];
         for ($i = 5; $i >= 0; $i--) {
             $m = now()->subMonths($i);
-            $pos = PurchaseOrder::with('items')
+            $q = PurchaseOrder::with('items')
                 ->whereYear('order_date', $m->year)->whereMonth('order_date', $m->month)
-                ->where('currency', 'IDR')->where('status', 'Done')->get();
+                ->where('currency', 'IDR')->where('status', 'Done');
+            if ($salesId)
+                $q->whereHas('lead', fn($lq) => $lq->where('user_id', $salesId));
+            $pos = $q->get();
             $rev = $pos->sum(fn($po) => $po->total_revenue);
             $cost = $pos->sum(fn($po) => $po->total_cost);
             $gross = $rev - $cost;
@@ -70,10 +75,12 @@ class AnalyticsController extends Controller
         }
 
         // ── Revenue by product (top 5) ──
-        $revenueByProduct = \App\Models\PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
+        $productQuery = \App\Models\PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
             ->where('purchase_orders.status', 'Done')->where('purchase_orders.currency', 'IDR')
-            ->whereBetween('purchase_orders.order_date', [$startDate, $endDate])
-            ->selectRaw('product_name, SUM(qty * sell_price) as total')
+            ->whereBetween('purchase_orders.order_date', [$startDate, $endDate]);
+        if ($salesId)
+            $productQuery->whereHas('purchaseOrder.lead', fn($q) => $q->where('user_id', $salesId));
+        $revenueByProduct = $productQuery->selectRaw('product_name, SUM(qty * sell_price) as total')
             ->groupBy('product_name')->orderByDesc('total')->limit(5)->get();
 
         // ── Pipeline funnel ──
@@ -81,7 +88,7 @@ class AnalyticsController extends Controller
             ->mapWithKeys(fn($s) => [$s => (clone $leadsQuery)->where('pipeline_stage', $s)->count()]);
 
         // ── Lead sources ──
-        $leadSources = Lead::whereNotNull('lead_source')
+        $leadSources = (clone $leadsQuery)->whereNotNull('lead_source')
             ->selectRaw('lead_source, COUNT(*) as count')
             ->groupBy('lead_source')->orderByDesc('count')->get();
 
@@ -96,16 +103,24 @@ class AnalyticsController extends Controller
         })->sortByDesc('revenue');
 
         // ── Top customers ──
-        $topCustomers = Customer::with('purchaseOrders.items')->get()->map(fn($c) => [
-            'customer' => $c,
-            'revenue' => $c->total_revenue,
-            'deals' => $c->purchaseOrders()->whereBetween('order_date', [$startDate, $endDate])->count(),
-            'repeat' => $c->purchaseOrders()->where('status', 'Done')->count() > 1,
-        ])->sortByDesc('revenue')->take(5);
+        $topCustomers = Customer::with('purchaseOrders.items')->get()->map(function ($c) use ($startDate, $endDate, $salesId) {
+            $poQuery = $c->purchaseOrders()->where('status', 'Done')->where('currency', 'IDR');
+            if ($salesId)
+                $poQuery->whereHas('lead', fn($q) => $q->where('user_id', $salesId));
+            $pos = $poQuery->with('items')->get();
+            return [
+                'customer' => $c,
+                'revenue' => $pos->sum(fn($po) => $po->total_revenue),
+                'deals' => $c->purchaseOrders()->whereBetween('order_date', [$startDate, $endDate])->count(),
+                'repeat' => $pos->count() > 1,
+            ];
+        })->sortByDesc('revenue')->take(5);
 
         // ── Recent deals closed ──
-        $recentDeals = Lead::with('salesUser')->where('pipeline_stage', 'Won')
-            ->orderBy('updated_at', 'desc')->limit(5)->get();
+        $recentDealsQuery = Lead::with('salesUser')->where('pipeline_stage', 'Won');
+        if ($salesId)
+            $recentDealsQuery->where('user_id', $salesId);
+        $recentDeals = $recentDealsQuery->orderBy('updated_at', 'desc')->limit(5)->get();
 
         // ── Avg Gross Margin dari profit analysis 6 bulan ──
         $marginData = array_filter($profitAnalysis, fn($m) => $m['revenue'] > 0);
@@ -113,10 +128,12 @@ class AnalyticsController extends Controller
             ? round(collect($marginData)->avg(fn($m) => $m['revenue'] > 0 ? (($m['gross_profit'] / $m['revenue']) * 100) : 0), 1)
             : 0;
         $avgNettMargin = $avgGrossMargin; // chemical: nett = gross (belum ada other_cost)
-        $revenueByService = \App\Models\PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
+        $serviceQuery = \App\Models\PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
             ->where('purchase_orders.status', 'Done')->where('purchase_orders.currency', 'IDR')
-            ->whereBetween('purchase_orders.order_date', [$startDate, $endDate])
-            ->selectRaw('product_name as service_type, SUM(qty * sell_price) as total')
+            ->whereBetween('purchase_orders.order_date', [$startDate, $endDate]);
+        if ($salesId)
+            $serviceQuery->whereHas('purchaseOrder.lead', fn($q) => $q->where('user_id', $salesId));
+        $revenueByService = $serviceQuery->selectRaw('product_name as service_type, SUM(qty * sell_price) as total')
             ->groupBy('product_name')->orderByDesc('total')->limit(5)->get();
 
         // ── Revenue by route (tidak ada di chemical, kirim collection kosong) ──
