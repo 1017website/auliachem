@@ -465,15 +465,12 @@ async function openEditPo(id) {
     document.getElementById('editPoForm').action = `/purchase-orders/${id}`;
     document.getElementById('editPoNumber').textContent = po.po_number;
 
-    // Set non-Select2 fields first
+    // Set semua field — clear dulu baru set
     document.getElementById('epStatus').value   = po.status;
     document.getElementById('epCurrency').value = po.currency;
     document.getElementById('epNotes').value    = po.notes || '';
 
     // Set date — extract Y-m-d jika format ISO
-    const rawDate = po.order_date || '';
-    const dateVal = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate;
-    document.getElementById('epDate').value = dateVal;
 
     // Set Select2 values
     const setSelect2 = (elId, val) => {
@@ -490,12 +487,10 @@ async function openEditPo(id) {
     setSelect2('epSupplier', po.supplier_id);
     setSelect2('epLead',     po.lead_id);
 
-    // Re-set date — gunakan local captured value agar tidak tertimpa call berikutnya
-    const capturedDate = dateVal;
-    const applyDate = () => { document.getElementById('epDate').value = capturedDate; };
-    applyDate();
-    const t1 = setTimeout(applyDate, 100);
-    const t2 = setTimeout(applyDate, 300);
+    // Set date — simple, langsung, tanpa timer
+    const epDate = document.getElementById('epDate');
+    epDate.value = '';
+    epDate.value = (po.order_date || '').split('T')[0];
 
     // Clear & rebuild items
     const body = document.getElementById('editItemsBody');
@@ -504,13 +499,7 @@ async function openEditPo(id) {
     po.items.forEach(item => addItemRow('editItemsBody', item));
 
     recalcTotal('editItemsBody');
-    const modal = new bootstrap.Modal(document.getElementById('editPoModal'));
-    document.getElementById('editPoModal').addEventListener('shown.bs.modal', function handler() {
-        clearTimeout(t1); clearTimeout(t2);
-        document.getElementById('epDate').value = capturedDate;
-        this.removeEventListener('shown.bs.modal', handler);
-    });
-    modal.show();
+    new bootstrap.Modal(document.getElementById('editPoModal')).show();
 }
 </script>
 @endpush
