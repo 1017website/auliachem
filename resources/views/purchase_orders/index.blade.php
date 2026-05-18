@@ -62,6 +62,7 @@
                             <th class="py-2">Customer</th>
                             <th class="py-2">Supplier</th>
                             <th class="py-2">Item(s)</th>
+                            <th class="py-2">Sales PIC</th>
                             <th class="py-2">Revenue</th>
                             <th class="py-2">HPP</th>
                             <th class="py-2">Gross Profit</th>
@@ -83,6 +84,15 @@
                             <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->supplier?->supplier_name ?? '-' }}</td>
                             <td class="py-2">
                                 @foreach($po->items->take(2) as $item)
+                                <div style="font-size:11px">{{ $item->product_name }} <span style="color:#9ca3af">({{ number_format($item->qty,0,'.','.') }} {{ $item->unit }})</span></div>
+                                @endforeach
+                                @if($po->items->count() > 2)
+                                <div style="font-size:10px;color:#9ca3af">+{{ $po->items->count()-2 }} item lagi</div>
+                                @endif
+                            </td>
+                            <td class="py-2" style="font-size:12px">
+                                <div style="font-weight:600">{{ $po->salesUser?->name ?? '-' }}</div>
+                            </td>
                                 <div style="font-size:11px">{{ $item->product_name }} <span style="color:#9ca3af">({{ number_format($item->qty,0,'.','.') }} {{ $item->unit }})</span></div>
                                 @endforeach
                                 @if($po->items->count() > 2)

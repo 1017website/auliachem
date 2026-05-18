@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PurchaseOrder extends Model
 {
     protected $fillable = [
-        'po_number','customer_id','supplier_id','lead_id',
+        'po_number','customer_id','supplier_id','lead_id','user_id',
         'currency','status','order_date','notes'
     ];
 
@@ -18,6 +18,7 @@ class PurchaseOrder extends Model
     public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
     public function supplier(): BelongsTo { return $this->belongsTo(Supplier::class); }
     public function lead(): BelongsTo     { return $this->belongsTo(Lead::class); }
+    public function salesUser(): BelongsTo { return $this->belongsTo(\App\Models\User::class, 'user_id'); }
     public function items(): HasMany      { return $this->hasMany(PurchaseOrderItem::class); }
 
     /** Total Revenue = SUM(qty × sell_price) */

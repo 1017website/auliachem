@@ -19,7 +19,7 @@ class PurchaseOrderController extends Controller
         $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate   = $request->get('end_date',   now()->endOfMonth()->format('Y-m-d'));
 
-        $query = PurchaseOrder::with(['customer', 'supplier', 'lead', 'items'])
+        $query = PurchaseOrder::with(['customer', 'supplier', 'lead', 'items', 'salesUser'])
             ->whereBetween('order_date', [$startDate, $endDate]);
         if ($status && $status !== 'all') $query->where('status', $status);
         if ($search) {
@@ -73,11 +73,19 @@ class PurchaseOrderController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
+            // Ambil user_id dari lead jika ada, fallback ke user login
+            $userId = null;
+            if ($request->lead_id) {
+                $userId = \App\Models\Lead::find($request->lead_id)?->user_id;
+            }
+            $userId = $userId ?? auth()->id();
+
             $po = PurchaseOrder::create([
                 'po_number'   => PurchaseOrder::generatePoNumber(),
                 'customer_id' => $request->customer_id,
                 'supplier_id' => $request->supplier_id,
                 'lead_id'     => $request->lead_id,
+                'user_id'     => $userId,
                 'currency'    => $request->currency,
                 'status'      => $request->status,
                 'order_date'  => $request->order_date,
