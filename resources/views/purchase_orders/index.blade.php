@@ -519,21 +519,32 @@
                 setSelect2('epSupplier', po.supplier_id);
                 setSelect2('epLead',     po.lead_id);
 
-                // Clear & rebuild items
                 const body = document.getElementById('editItemsBody');
                 body.innerHTML = '';
                 itemIndex = 1000;
                 po.items.forEach(item => addItemRow('editItemsBody', item));
                 recalcTotal('editItemsBody');
 
-                // Show modal dulu, set date setelah fully rendered
-                const modal = new bootstrap.Modal(document.getElementById('editPoModal'));
-                modal.show();
+                // Simpan date ke attribute dulu
+                const targetDate = (po.order_date || '').substring(0, 10);
+                document.getElementById('epDate').dataset.pendingDate = targetDate;
 
-                document.getElementById('editPoModal').addEventListener('shown.bs.modal', function handler() {
-                    document.getElementById('epDate').value = (po.order_date || '').substring(0, 10);
-                    this.removeEventListener('shown.bs.modal', handler);
-                }, { once: true });
+                const modalEl = document.getElementById('editPoModal');
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+                // Hapus listener lama sebelum pasang baru
+                const oldHandler = modalEl._shownHandler;
+                if (oldHandler) modalEl.removeEventListener('shown.bs.modal', oldHandler);
+
+                const shownHandler = function () {
+                    const d = document.getElementById('epDate').dataset.pendingDate || '';
+                    document.getElementById('epDate').value = d;
+                };
+
+                modalEl._shownHandler = shownHandler;
+                modalEl.addEventListener('shown.bs.modal', shownHandler, { once: true });
+
+                modal.show();
             }
         </script>
     @endpush
