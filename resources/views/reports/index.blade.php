@@ -34,15 +34,17 @@
 
     /* Tabel */
     .table-responsive { overflow: visible !important; }
-    .report-table { width: 100% !important; border-collapse: collapse !important; font-size: 10px !important; }
+    .report-table { width: 100% !important; border-collapse: collapse !important; font-size: 8px !important; }
     .report-table th {
         background: #1e3a5f !important;
         color: #fff !important;
-        padding: 5px 7px !important;
+        padding: 4px 5px !important;
+        font-size: 8px !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
-    .report-table td { padding: 4px 7px !important; border-bottom: 1px solid #e5e7eb !important; }
+    .report-table td { padding: 3px 5px !important; border-bottom: 1px solid #e5e7eb !important; font-size: 8px !important; }
+    .report-table a { color: #0f1d35 !important; text-decoration: none !important; }
     .card { border: none !important; box-shadow: none !important; }
     .card-body { padding: 0 !important; }
 
@@ -55,7 +57,7 @@
     .row.g-3 { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
     .col { flex: 1 !important; min-width: 120px !important; }
 
-    @page { size: A4 landscape; margin: 1cm; }
+    @page { size: A4 portrait; margin: 1.5cm 1cm; }
 }
 
 .print-header { display: none; }

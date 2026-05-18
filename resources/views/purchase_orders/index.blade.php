@@ -21,7 +21,7 @@
             @foreach([[$volumePo,'Volume PO','#111'],[$revenue,'Revenue','#2563eb'],[$grossProfit,'Gross Profit','#10b981']] as $s)
             <div class="text-center {{ !$loop->first ? 'ps-3' : '' }}" style="{{ !$loop->first ? 'border-left:1px solid var(--border-color)' : '' }}">
                 <div style="font-size:{{ $loop->index>=1?'1rem':'1.2rem' }};font-weight:800;color:{{ $s[2] }}">
-                    {{ $loop->index>=1 ? idrm($s[0]) : $s[0] }}
+                {{ $loop->index>=1 ? idr($s[0]) : $s[0] }}
                 </div>
                 <div style="font-size:.68rem;color:var(--text-muted)">{{ $s[1] }}</div>
             </div>
@@ -93,9 +93,9 @@
                             <td class="py-2" style="font-size:12px">
                                 <div style="font-weight:600">{{ $po->salesUser?->name ?? '-' }}</div>
                             </td>
-                            <td class="py-2" style="font-weight:600;color:var(--primary)">{{ idrm($po->total_revenue) }}</td>
-                            <td class="py-2" style="color:#dc2626;font-size:12px">{{ idrm($po->total_cost) }}</td>
-                            <td class="py-2" style="font-weight:600;color:#10b981">{{ idrm($po->gross_profit) }}</td>
+                            <td class="py-2" style="font-weight:600;color:var(--primary);white-space:nowrap">{{ idr($po->total_revenue) }}</td>
+                            <td class="py-2" style="color:#dc2626;font-size:12px;white-space:nowrap">{{ idr($po->total_cost) }}</td>
+                            <td class="py-2" style="font-weight:600;color:#10b981;white-space:nowrap">{{ idr($po->gross_profit) }}</td>
                             <td class="py-2" style="font-size:12px;color:#6b7280">{{ $po->gross_margin }}%</td>
                             <td class="py-2">
                                 <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:{{ $c[0] }};color:{{ $c[1] }}">{{ $po->status }}</span>
@@ -414,9 +414,29 @@ async function openEditPo(id) {
 
     document.getElementById('editPoForm').action = `/purchase-orders/${id}`;
     document.getElementById('editPoNumber').textContent = po.po_number;
-    document.getElementById('epCustomer').value = po.customer_id || '';
-    document.getElementById('epSupplier').value = po.supplier_id || '';
-    document.getElementById('epLead').value     = po.lead_id     || '';
+
+    // Set Select2 values properly
+    ['epCustomer','epSupplier','epLead'].forEach(elId => {
+        const el = document.getElementById(elId);
+        if (el && $(el).data('select2')) {
+            $(el).val(null).trigger('change');
+        }
+    });
+
+    const setSelect2 = (elId, val) => {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if ($(el).data('select2')) {
+            $(el).val(val || null).trigger('change');
+        } else {
+            el.value = val || '';
+        }
+    };
+
+    setSelect2('epCustomer', po.customer_id);
+    setSelect2('epSupplier', po.supplier_id);
+    setSelect2('epLead',     po.lead_id);
+
     document.getElementById('epDate').value     = po.order_date;
     document.getElementById('epStatus').value   = po.status;
     document.getElementById('epCurrency').value = po.currency;
@@ -425,7 +445,7 @@ async function openEditPo(id) {
     // Clear & rebuild items
     const body = document.getElementById('editItemsBody');
     body.innerHTML = '';
-    itemIndex = 1000; // avoid collision with add form
+    itemIndex = 1000;
     po.items.forEach(item => addItemRow('editItemsBody', item));
 
     recalcTotal('editItemsBody');
