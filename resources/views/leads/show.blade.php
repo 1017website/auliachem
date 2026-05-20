@@ -27,9 +27,9 @@
         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editLeadModal">
             <i class="fas fa-edit me-1"></i> Edit Lead
         </button>
-        <a href="{{ route('sales.activity') }}" class="btn btn-sm btn-primary">
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addActivityModal">
             <i class="fas fa-plus me-1"></i> Add Activity
-        </a>
+        </button>
     </div>
 </div>
 
@@ -38,6 +38,7 @@
 
     {{-- LEFT: Company Info --}}
     <div class="col-lg-4">
+        {{-- Info Perusahaan --}}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Informasi Company</span>
@@ -48,11 +49,8 @@
             <div class="card-body p-3">
                 @foreach([
                 ['icon'=>'building','label'=>'Nama Perusahaan','value'=>$lead->company_name],
-                ['icon'=>'user','label'=>'PIC','value'=>$lead->pic_name],
-                ['icon'=>'briefcase','label'=>'Jabatan','value'=>$lead->pic_position ?? '-'],
-                ['icon'=>'phone','label'=>'Phone','value'=>$lead->phone ?? '-'],
-                ['icon'=>'envelope','label'=>'Email','value'=>$lead->email ?? '-'],
                 ['icon'=>'industry','label'=>'Industry','value'=>$lead->industry ?? '-'],
+                ['icon'=>'map-marker-alt','label'=>'Lokasi','value'=>$lead->location ?? '-'],
                 ['icon'=>'globe','label'=>'Sumber Lead','value'=>$lead->lead_source ?? '-'],
                 ['icon'=>'user-tie','label'=>'Sales PIC','value'=>$lead->salesUser?->name ?? '-'],
                 ['icon'=>'calendar','label'=>'Dibuat','value'=>$lead->created_at->format('d M Y')],
@@ -68,27 +66,77 @@
             </div>
         </div>
 
-        @if($lead->product_interest)
+        {{-- Multi PIC --}}
         <div class="card mb-3">
-            <div class="card-header">Kebutuhan Produk</div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Daftar PIC</span>
+                <button class="btn btn-sm p-0" style="font-size:.75rem;color:var(--primary);background:none;border:none" data-bs-toggle="modal" data-bs-target="#addLeadPicModal">
+                    <i class="fas fa-plus me-1"></i> Tambah PIC
+                </button>
+            </div>
             <div class="card-body p-3">
-                @foreach([
-                ['icon'=>'flask','label'=>'Product Interest','value'=>$lead->product_interest],
-                ['icon'=>'box','label'=>'Volume Estimate','value'=>$lead->volume_estimate ?? '-'],
-                ['icon'=>'chart-bar','label'=>'Volume','value'=>$lead->volume_estimate ?? '-'],
-                ['icon'=>'clock','label'=>'Timeline','value'=>$lead->timeline ?? '-'],
-                ] as $f)
-                <div class="d-flex gap-2 mb-2">
-                    <i class="fas fa-{{ $f['icon'] }}" style="width:16px;color:var(--text-muted);font-size:.75rem;flex-shrink:0;margin-top:2px"></i>
-                    <div>
-                        <div style="font-size:.68rem;color:var(--text-muted)">{{ $f['label'] }}</div>
-                        <div style="font-size:.78rem">{{ $f['value'] }}</div>
+                {{-- PIC utama (dari lead) --}}
+                <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f3f4f6">
+                    <div style="width:30px;height:30px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-user" style="color:#2563eb;font-size:.65rem"></i>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:.8rem;font-weight:600">{{ $lead->pic_name }}
+                            <span style="font-size:.65rem;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
+                        </div>
+                        @if($lead->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $lead->pic_position }}</div>@endif
+                        @if($lead->phone)<div style="font-size:.72rem">{{ $lead->phone }}</div>@endif
+                        @if($lead->email)<div style="font-size:.72rem;color:var(--primary)">{{ $lead->email }}</div>@endif
                     </div>
                 </div>
-                @endforeach
+                {{-- PIC tambahan --}}
+                @forelse($lead->pics as $pic)
+                <div class="d-flex align-items-start gap-2 mb-2">
+                    <div style="width:30px;height:30px;background:#f3f4f6;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-user" style="color:#6b7280;font-size:.65rem"></i>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:.8rem;font-weight:600">{{ $pic->pic_name }}</div>
+                        @if($pic->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $pic->pic_position }}</div>@endif
+                        @if($pic->phone)<div style="font-size:.72rem">{{ $pic->phone }}</div>@endif
+                        @if($pic->email)<div style="font-size:.72rem;color:var(--primary)">{{ $pic->email }}</div>@endif
+                    </div>
+                    <form method="POST" action="{{ route('leads.pics.destroy', [$lead, $pic]) }}" onsubmit="return confirm('Hapus PIC {{ addslashes($pic->pic_name) }}?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
+                    </form>
+                </div>
+                @empty
+                <div style="font-size:.78rem;color:var(--text-muted)">Belum ada PIC tambahan.</div>
+                @endforelse
             </div>
         </div>
-        @endif
+
+        {{-- Produk --}}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Kebutuhan Produk</span>
+                <button class="btn btn-sm p-0" style="font-size:.75rem;color:var(--primary);background:none;border:none" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                    <i class="fas fa-plus me-1"></i> Tambah
+                </button>
+            </div>
+            <div class="card-body p-3">
+                @forelse($lead->products as $prod)
+                <div class="d-flex align-items-center justify-content-between mb-2 pb-2" style="border-bottom:1px solid #f9fafb">
+                    <div>
+                        <div style="font-size:.82rem;font-weight:600">{{ $prod->product_name }}</div>
+                        <div style="font-size:.72rem;color:var(--text-muted)">{{ number_format($prod->qty, 0, ',', '.') }} {{ $prod->unit }}</div>
+                    </div>
+                    <form method="POST" action="{{ route('leads.products.destroy', [$lead, $prod]) }}" onsubmit="return confirm('Hapus produk {{ addslashes($prod->product_name) }}?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
+                    </form>
+                </div>
+                @empty
+                <div style="font-size:.78rem;color:var(--text-muted)">Belum ada produk ditambahkan.</div>
+                @endforelse
+            </div>
+        </div>
     </div>
 
     {{-- MIDDLE: Activity --}}
@@ -96,9 +144,9 @@
         <div class="card mb-3">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <span>Activity Timeline</span>
-                <a href="{{ route('sales.activity') }}" class="btn btn-sm btn-outline-secondary" style="font-size:.72rem">
+                <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                     <i class="fas fa-plus me-1"></i> Add Activity
-                </a>
+                </button>
             </div>
             <div class="card-body p-3">
                 <div class="activity-timeline">
@@ -204,7 +252,6 @@
             <div class="card-body p-3">
                 @foreach([
                 ['label'=>'Lead Score','value'=>($lead->lead_score ?? 0) . ' / 100'],
-                ['label'=>'Potensi Revenue','value'=>idr($lead->potensi_revenue)],
                 ['label'=>'Probability','value'=>($lead->probability ?? 0) . '%'],
                 ['label'=>'Expected Closing','value'=>$lead->expected_closing ? $lead->expected_closing->format('M Y') : '-'],
                 ['label'=>'Competitor','value'=>$lead->competitor ?? '-'],
@@ -217,6 +264,17 @@
             </div>
         </div>
 
+        {{-- Hapus Lead --}}
+        <div class="card">
+            <div class="card-body p-3">
+                <form method="POST" action="{{ route('leads.destroy', $lead) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus lead {{ addslashes($lead->company_name) }}? Tindakan ini tidak dapat dibatalkan.')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                        <i class="fas fa-trash me-1"></i> Hapus Lead Ini
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -239,24 +297,32 @@
                             <input type="text" name="company_name" class="form-control" value="{{ $lead->company_name }}" required>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label">Industry</label>
+                            <input type="text" name="industry" class="form-control" value="{{ $lead->industry }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Lokasi</label>
+                            <input type="text" name="location" class="form-control" value="{{ $lead->location }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Alamat</label>
+                            <input type="text" name="address" class="form-control" value="{{ $lead->address }}">
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label">PIC Name <span class="text-danger">*</span></label>
                             <input type="text" name="pic_name" class="form-control" value="{{ $lead->pic_name }}" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Jabatan</label>
+                        <div class="col-md-6">
+                            <label class="form-label">Jabatan PIC</label>
                             <input type="text" name="pic_position" class="form-control" value="{{ $lead->pic_position }}">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">Phone</label>
                             <input type="text" name="phone" class="form-control" value="{{ $lead->phone }}">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">Email</label>
                             <input type="email" name="email" class="form-control" value="{{ $lead->email }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Industry</label>
-                            <input type="text" name="industry" class="form-control" value="{{ $lead->industry }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Sumber Lead</label>
@@ -267,21 +333,9 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Product Interest</label>
-                            <input type="text" name="product_interest" class="form-control" value="{{ $lead->product_interest }}" placeholder="Solvent, Resin, Pigment, dll">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Volume Estimate</label>
-                            <input type="text" name="volume_estimate" class="form-control" value="{{ $lead->volume_estimate }}" placeholder="Estimasi volume (kg, ton, dll)">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Target Supplier</label>
+                        <div class="col-md-6">
+                            <label class="form-label">Competitor / Supplier Existing</label>
                             <input type="text" name="competitor" class="form-control" value="{{ $lead->competitor }}" placeholder="Supplier yang sedang digunakan">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Potensi Revenue (IDR)</label>
-                            <input type="text" name="potensi_revenue" class="form-control idr-input" value="{{ idr_input($lead->potensi_revenue) }}" placeholder="Contoh: 100.000.000">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Probability (%)</label>
@@ -291,12 +345,8 @@
                             <label class="form-label">Expected Closing</label>
                             <input type="date" name="expected_closing" class="form-control" value="{{ $lead->expected_closing?->format('Y-m-d') }}">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             @include('components.sales-pic-field', ['selectedId' => $lead->user_id])
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Competitor</label>
-                            <input type="text" name="competitor" class="form-control" value="{{ $lead->competitor }}">
                         </div>
                     </div>
                 </div>
@@ -309,7 +359,65 @@
     </div>
 </div>
 
+{{-- 2. Add Activity Modal --}}
+<div class="modal fade" id="addActivityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold">Add Activity — {{ $lead->company_name }}</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('leads.activity.store', $lead) }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label">Jenis <span class="text-danger">*</span></label>
+                            <select name="type" class="form-select" required>
+                                <option>Call</option><option>Visit</option><option>Email</option><option>Note</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Done">Done</option>
+                                <option value="Planned">Planned</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Subject <span class="text-danger">*</span></label>
+                            <input type="text" name="subject" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Tanggal & Waktu</label>
+                            <input type="datetime-local" name="activity_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Sales PIC</label>
+                            <select name="user_id" class="form-select" required>
+                                @foreach($salesUsers as $su)
+                                <option value="{{ $su->id }}" {{ $lead->user_id == $su->id ? 'selected' : '' }}>{{ $su->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Keterangan</label>
+                            <textarea name="description" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Simpan Activity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {{-- 3. Edit Catatan Internal Modal --}}
+<div class="modal fade" id="editCatatanModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -374,10 +482,6 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Potensi Revenue</label>
-                            <input type="text" name="potensi_revenue" class="form-control idr-input" value="{{ idr_input($lead->potensi_revenue) }}" placeholder="Contoh: 100.000.000">
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label">Probability (%)</label>
                             <input type="number" name="probability" class="form-control" min="0" max="100" value="{{ $lead->probability }}">
                         </div>
@@ -385,8 +489,8 @@
                             <label class="form-label">Expected Closing</label>
                             <input type="date" name="expected_closing" class="form-control" value="{{ $lead->expected_closing?->format('Y-m-d') }}">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Competitor</label>
+                        <div class="col-md-12">
+                            <label class="form-label">Competitor / Supplier Existing</label>
                             <input type="text" name="competitor" class="form-control" value="{{ $lead->competitor }}">
                         </div>
                     </div>
@@ -394,6 +498,86 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- 6. Add Produk Modal --}}
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold">Tambah Produk</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('leads.products.store', $lead) }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
+                            <input type="text" name="product_name" class="form-control" required placeholder="Contoh: Solvent IPA">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Qty / Volume</label>
+                            <input type="number" name="qty" class="form-control" step="0.001" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Satuan</label>
+                            <select name="unit" class="form-select">
+                                <option value="ton">ton</option>
+                                <option value="kg">kg</option>
+                                <option value="liter">liter</option>
+                                <option value="drum">drum</option>
+                                <option value="pcs">pcs</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- 7. Add PIC Modal --}}
+<div class="modal fade" id="addLeadPicModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold">Tambah PIC</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('leads.pics.store', $lead) }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label">Nama PIC <span class="text-danger">*</span></label>
+                            <input type="text" name="pic_name" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Jabatan</label>
+                            <input type="text" name="pic_position" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Simpan PIC</button>
                 </div>
             </form>
         </div>

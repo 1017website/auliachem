@@ -1232,13 +1232,16 @@
             <a href="{{ route('customers.index') }}" class="sidebar-item {{ request()->routeIs('customers.*') ? 'active' : '' }}">
                 <i class="fas fa-building si-icon"></i><span>Database Customer</span>
             </a>
+            @if(auth()->user()->canAccess('suppliers'))
             <a href="{{ route('suppliers.index') }}" class="sidebar-item {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
                 <i class="fas fa-industry si-icon"></i><span>Database Supplier</span>
             </a>
+            @endif
+            @if(auth()->user()->canAccess('purchase_orders'))
             <a href="{{ route('purchase-orders.index') }}" class="sidebar-item {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}">
                 <i class="fas fa-file-invoice si-icon"></i><span>Purchase Orders</span>
             </a>
-
+            @endif
             <div class="sidebar-section">Analytics</div>
             @if(auth()->user()->canAccess('analytics'))
             <a href="{{ route('analytics.index') }}" class="sidebar-item {{ request()->routeIs('analytics.*') ? 'active' : '' }}">

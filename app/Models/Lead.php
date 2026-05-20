@@ -10,9 +10,9 @@ class Lead extends Model
 {
     protected $fillable = [
         'lead_code','customer_id','company_name','pic_name','pic_position',
-        'phone','email','address','industry','pipeline_stage','temperature',
+        'phone','email','address','industry','location','pipeline_stage','temperature',
         'product_interest','volume_estimate','timeline','notes_kebutuhan',
-        'catatan_internal','potensi_revenue','probability','lead_score',
+        'catatan_internal','probability','lead_score',
         'lead_source','competitor','expected_closing','user_id',
         'next_follow_up','next_follow_up_time','next_follow_up_notes'
     ];
@@ -20,7 +20,6 @@ class Lead extends Model
     protected $casts = [
         'expected_closing' => 'date',
         'next_follow_up'   => 'date',
-        'potensi_revenue'  => 'decimal:0',
         'lead_score'       => 'decimal:1',
     ];
 
@@ -29,6 +28,9 @@ class Lead extends Model
     public function customer(): BelongsTo   { return $this->belongsTo(Customer::class); }
     public function activities(): HasMany   { return $this->hasMany(Activity::class); }
     public function purchaseOrders(): HasMany { return $this->hasMany(PurchaseOrder::class); }
+    public function products(): HasMany     { return $this->hasMany(LeadProduct::class); }
+    public function pics(): HasMany         { return $this->hasMany(LeadPic::class); }
+    public function primaryPic(): HasMany   { return $this->hasMany(LeadPic::class)->where('is_primary', true); }
 
     public function getPipelineStageColorAttribute(): string
     {

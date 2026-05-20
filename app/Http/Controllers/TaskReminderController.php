@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\Lead;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -36,11 +37,12 @@ class TaskReminderController extends Controller
         $totalDone     = Activity::where('status', 'Done')->count();
 
         $salesUsers = User::orderBy('name')->get();
+        $customers  = Customer::where('status', 'Existing')->orderBy('company_name')->get();
 
         return view('tasks.index', compact(
             'tasks', 'filter', 'salesId', 'type',
             'totalToday', 'totalOverdue', 'totalUpcoming', 'totalDone',
-            'salesUsers'
+            'salesUsers', 'customers'
         ));
     }
 
@@ -68,6 +70,11 @@ class TaskReminderController extends Controller
 
     public function update(Request $request, Activity $activity)
     {
+        // Edit tidak bisa jika masih Pending
+        if ($activity->status === 'Pending') {
+            return redirect()->back()->with('error', 'Task yang masih Pending tidak dapat diedit.');
+        }
+
         $activity->update($request->validate([
             'status'  => 'required|in:Planned,Pending,Done,Overdue',
             'subject' => 'sometimes|string|max:255',

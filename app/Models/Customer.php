@@ -10,7 +10,7 @@ class Customer extends Model
 {
     protected $fillable = [
         'company_name','pic_name','pic_position','phone','email','address',
-        'industry','location','status','value_tag','user_id','customer_since','logo','notes'
+        'industry','location','status','value_tag','user_id','customer_since','logo','notes','products'
     ];
 
     protected $casts = ['customer_since' => 'date'];
@@ -20,6 +20,7 @@ class Customer extends Model
     public function leads(): HasMany          { return $this->hasMany(Lead::class); }
     public function activities(): HasMany     { return $this->hasMany(Activity::class); }
     public function purchaseOrders(): HasMany { return $this->hasMany(PurchaseOrder::class); }
+    public function pics(): HasMany           { return $this->hasMany(CustomerPic::class); }
 
     public function getTotalRevenueAttribute(): float
     {

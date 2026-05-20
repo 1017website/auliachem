@@ -48,7 +48,6 @@
                             <th>PIC / Jabatan</th>
                             <th>Pipeline Stage</th>
                             <th>Product Interest</th>
-                            <th>Potensi Revenue</th>
                             <th>Sales PIC</th>
                             <th>Next Follow Up</th>
                             <th>Action</th>
@@ -85,9 +84,19 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div style="font-size:.8rem">{{ $lead->product_interest ?? "-" }}</div>
+                                    <div style="font-size:.8rem">
+                                        @if($lead->products->count())
+                                            @foreach($lead->products->take(2) as $p)
+                                                <div>{{ $p->product_name }} <span style="color:var(--text-muted);font-size:.7rem">{{ number_format($p->qty, 0, ',', '.') }} {{ $p->unit }}</span></div>
+                                            @endforeach
+                                            @if($lead->products->count() > 2)
+                                                <div style="font-size:.7rem;color:var(--text-muted)">+{{ $lead->products->count() - 2 }} lainnya</div>
+                                            @endif
+                                        @else
+                                            -
+                                        @endif
+                                    </div>
                                 </td>
-                                <td style="font-weight:600;color:var(--primary)">{{ idrm($lead->potensi_revenue) }}</td>
                                 <td style="font-size:.78rem">{{ $lead->salesUser?->name }}</td>
                                 <td style="font-size:.78rem">
                                     @if($lead->next_follow_up)
@@ -106,7 +115,7 @@
                                             <i class="fas fa-eye" style="font-size:.7rem"></i>
                                         </a>
                                         <form method="POST" action="{{ route('leads.destroy', $lead) }}"
-                                            onsubmit="return confirm('Hapus lead ini?')">
+                                            onsubmit="return confirmDelete('Hapus lead {{ addslashes($lead->company_name) }}?')">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
                                                 <i class="fas fa-trash" style="font-size:.7rem"></i>
@@ -137,34 +146,46 @@
                     <h6 class="modal-title fw-bold">Add Lead Baru</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="POST" action="{{ route('leads.store') }}">
+                <form method="POST" action="{{ route('leads.store') }}" id="addLeadForm">
                     @csrf
                     <div class="modal-body">
-                        {{-- Tampilkan error validasi --}}
                         @if($errors->any())
                             <div class="alert alert-danger alert-sm py-2 mb-3">
                                 <ul class="mb-0 ps-3" style="font-size:.8rem">
-                                    @foreach($errors->all() as $e)
-                                        <li>{{ $e }}</li>
-                                    @endforeach
+                                    @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
                                 </ul>
                             </div>
                         @endif
                         <div class="row g-3">
                             <div class="col-6">
                                 <label class="form-label">Company Name *</label>
-                                <input type="text" name="company_name" class="form-control"
-                                    value="{{ old('company_name') }}" required>
+                                <input type="text" name="company_name" class="form-control" value="{{ old('company_name') }}" required>
                             </div>
                             <div class="col-6">
-                                <label class="form-label">PIC Name *</label>
-                                <input type="text" name="pic_name" class="form-control" value="{{ old('pic_name') }}"
-                                    required>
+                                <label class="form-label">Industry</label>
+                                <input type="text" name="industry" class="form-control" value="{{ old('industry') }}" placeholder="Misal: Manufaktur, Retail">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Lokasi</label>
+                                <input type="text" name="location" class="form-control" value="{{ old('location') }}" placeholder="Kota/Wilayah">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Alamat</label>
+                                <input type="text" name="address" class="form-control" value="{{ old('address') }}">
+                            </div>
+                            {{-- PIC Utama --}}
+                            <div class="col-12">
+                                <div style="font-size:.78rem;font-weight:600;color:var(--primary);margin-bottom:4px">
+                                    <i class="fas fa-user me-1"></i> PIC Utama
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Nama PIC *</label>
+                                <input type="text" name="pic_name" class="form-control" value="{{ old('pic_name') }}" required>
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Jabatan PIC</label>
-                                <input type="text" name="pic_position" class="form-control"
-                                    value="{{ old('pic_position') }}" placeholder="Misal: Direktur, Procurement Manager">
+                                <input type="text" name="pic_position" class="form-control" value="{{ old('pic_position') }}" placeholder="Direktur, Procurement...">
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Phone</label>
@@ -174,36 +195,19 @@
                                 <label class="form-label">Email</label>
                                 <input type="email" name="email" class="form-control" value="{{ old('email') }}">
                             </div>
-                            <div class="col-6">
-                                <label class="form-label">Industry</label>
-                                <input type="text" name="industry" class="form-control" value="{{ old('industry') }}"
-                                    placeholder="Misal: Manufaktur, Retail">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Product Interest</label>
-                                <input type="text" name="product_interest" class="form-control"
-                                    value="{{ old('product_interest') }}"
-                                    placeholder="Contoh: Solvent, Resin, Pigment, dll">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Volume Estimate</label>
-                                <input type="text" name="volume_estimate" class="form-control" value="{{ old('route') }}"
-                                    placeholder="Estimasi volume (kg, ton, dll)">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Potensi Revenue</label>
-                                <input type="text" name="potensi_revenue" class="form-control idr-input"
-                                    value="{{ old('potensi_revenue') }}" placeholder="Contoh: 100.000.000">
-                            </div>
+                            {{-- Sales Info --}}
                             <div class="col-6">
                                 <label class="form-label">Lead Source</label>
                                 <select name="lead_source" class="form-select">
                                     <option value="">- Pilih -</option>
-                                    @foreach(['Referral', 'Website', 'Cold Call', 'Email Campaign', 'Lainnya'] as $src)
-                                        <option value="{{ $src }}" {{ old('lead_source') == $src ? 'selected' : '' }}>{{ $src }}
-                                        </option>
+                                    @foreach(['Referral', 'Website', 'Cold Call', 'Email Campaign', 'Social Media', 'Exhibition', 'Lainnya'] as $src)
+                                        <option value="{{ $src }}" {{ old('lead_source') == $src ? 'selected' : '' }}>{{ $src }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Expected Closing</label>
+                                <input type="date" name="expected_closing" class="form-control" value="{{ old('expected_closing') }}">
                             </div>
                             <div class="col-12">
                                 @include('components.sales-pic-field')
@@ -211,8 +215,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                            data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-sm btn-primary">Simpan Lead</button>
                     </div>
                 </form>
@@ -266,12 +269,31 @@
 
 @push('scripts')
     <script>
-        // Auto-reopen modal Add Lead jika ada error validasi
+        function confirmDelete(msg) {
+            return confirm(msg || 'Apakah Anda yakin ingin menghapus data ini?');
+        }
+
+        // Auto-reopen modal Add Lead jika ada error validasi (preserve data)
         @if($errors->any())
             document.addEventListener('DOMContentLoaded', function () {
                 var modal = new bootstrap.Modal(document.getElementById('addLeadModal'));
                 modal.show();
             });
         @endif
+
+        // Prevent data loss - warn sebelum close modal jika ada isian
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('addLeadForm');
+            const modalEl = document.getElementById('addLeadModal');
+            if (!form || !modalEl) return;
+            modalEl.addEventListener('hide.bs.modal', function(e) {
+                const inputs = form.querySelectorAll('input[type=text],input[type=email],textarea');
+                let hasData = false;
+                inputs.forEach(i => { if (i.value.trim()) hasData = true; });
+                if (hasData && !confirm('Data yang sudah diisi akan hilang. Tutup form?')) {
+                    e.preventDefault();
+                }
+            });
+        });
     </script>
 @endpush

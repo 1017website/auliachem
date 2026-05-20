@@ -126,8 +126,12 @@
                                     )">
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
+                                <button class="btn btn-sm btn-outline-info" style="padding:3px 7px" title="Produk"
+                                    onclick="openProductModal({{ $s->id }}, '{{ addslashes($s->supplier_name) }}')">
+                                    <i class="fas fa-boxes" style="font-size:.7rem"></i>
+                                </button>
                                 <form method="POST" action="{{ route('suppliers.destroy', $s) }}" class="d-inline"
-                                    onsubmit="return confirm('Hapus supplier {{ addslashes($s->supplier_name) }}?')">
+                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus supplier {{ addslashes($s->supplier_name) }}? Tindakan ini tidak dapat dibatalkan.')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
                                         <i class="fas fa-trash"></i>
@@ -319,6 +323,51 @@
     </div>
 </div>
 
+{{-- Modal Produk Supplier --}}
+<div class="modal fade" id="supplierProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold">Produk Supplier — <span id="spModalName"></span></h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {{-- List produk existing --}}
+                <div id="spProductList" class="mb-3"></div>
+                {{-- Form tambah produk --}}
+                <div style="background:#f9fafb;border-radius:8px;padding:12px">
+                    <div style="font-size:.78rem;font-weight:600;margin-bottom:8px">Tambah Produk</div>
+                    <form id="addSupplierProductForm" method="POST">
+                        @csrf
+                        <div class="row g-2">
+                            <div class="col-5">
+                                <input type="text" name="product_name" class="form-control form-control-sm" placeholder="Nama produk *" required>
+                            </div>
+                            <div class="col-3">
+                                <select name="unit" class="form-select form-select-sm">
+                                    <option value="ton">ton</option>
+                                    <option value="kg">kg</option>
+                                    <option value="liter">liter</option>
+                                    <option value="drum">drum</option>
+                                    <option value="pcs">pcs</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-plus me-1"></i> Tambah
+                                </button>
+                            </div>
+                            <div class="col-12">
+                                <input type="text" name="description" class="form-control form-control-sm" placeholder="Keterangan (opsional)">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 function toggleOrigin(mode) {
@@ -342,6 +391,37 @@ function openEditSupplier(id, name, sourceType, pic, phone, email, category, ori
     document.getElementById('esRating').value       = rating;
     toggleOrigin('edit');
     new bootstrap.Modal(document.getElementById('editSupplierModal')).show();
+}
+
+// Supplier Products (AJAX via form submit → reload)
+const supplierProducts = @json($suppliers->pluck('products', 'id'));
+
+function openProductModal(supplierId, supplierName) {
+    document.getElementById('spModalName').textContent = supplierName;
+    document.getElementById('addSupplierProductForm').action = `/suppliers/${supplierId}/products`;
+
+    // Render existing products
+    const products = supplierProducts[supplierId] || [];
+    const list = document.getElementById('spProductList');
+    if (products.length === 0) {
+        list.innerHTML = '<div style="font-size:.8rem;color:#9ca3af">Belum ada produk.</div>';
+    } else {
+        list.innerHTML = products.map(p => `
+            <div class="d-flex align-items-center justify-content-between mb-2 pb-2" style="border-bottom:1px solid #f3f4f6">
+                <div>
+                    <div style="font-size:.82rem;font-weight:600">${p.product_name}</div>
+                    <div style="font-size:.72rem;color:#6b7280">${p.unit}${p.description ? ' · ' + p.description : ''}</div>
+                </div>
+                <form method="POST" action="/suppliers/${supplierId}/products/${p.id}" onsubmit="return confirm('Hapus produk ${p.product_name}?')" style="display:inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" style="color:#ef4444;background:none;border:none;cursor:pointer"><i class="fas fa-times"></i></button>
+                </form>
+            </div>
+        `).join('');
+    }
+
+    new bootstrap.Modal(document.getElementById('supplierProductModal')).show();
 }
 </script>
 @endpush

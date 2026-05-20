@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Lead;
 use App\Models\User;
 use App\Models\Activity;
+use App\Models\LeadProduct;
+use App\Models\LeadPic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -35,20 +37,13 @@ class LeadsController extends Controller
 
     public function show(Lead $lead)
     {
-        $lead->load(['salesUser', 'activities.salesUser']);
+        $lead->load(['salesUser', 'activities.salesUser', 'products', 'pics']);
         $salesUsers = User::orderBy('name')->get();
         return view('leads.show', compact('lead', 'salesUsers'));
     }
 
     public function store(Request $request)
     {
-        // Strip format IDR (titik pemisah ribuan) sebelum validasi
-        if ($request->filled('potensi_revenue')) {
-            $request->merge([
-                'potensi_revenue' => str_replace(['.', ','], ['', '.'], $request->potensi_revenue)
-            ]);
-        }
-
         $validated = $request->validate([
             'company_name'    => 'required|string|max:255',
             'pic_name'        => 'required|string|max:255',
@@ -57,13 +52,10 @@ class LeadsController extends Controller
             'email'           => 'nullable|email|max:255',
             'address'         => 'nullable|string',
             'industry'        => 'nullable|string|max:100',
+            'location'        => 'nullable|string|max:255',
             'pipeline_stage'  => 'nullable|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
-            'product_interest' => 'nullable|string|max:255',
-            'route'           => 'nullable|string|max:255',
-            
             'volume_estimate' => 'nullable|string|max:100',
-            'potensi_revenue' => 'nullable|numeric|min:0',
             'probability'     => 'nullable|integer|min:0|max:100',
             'lead_source'     => 'nullable|string|max:100',
             'competitor'      => 'nullable|string|max:255',
@@ -97,13 +89,6 @@ class LeadsController extends Controller
 
     public function update(Request $request, Lead $lead)
     {
-        // Strip format IDR (titik pemisah ribuan) sebelum validasi
-        if ($request->filled('potensi_revenue')) {
-            $request->merge([
-                'potensi_revenue' => str_replace(['.', ','], ['', '.'], $request->potensi_revenue)
-            ]);
-        }
-
         $validated = $request->validate([
             'company_name'    => 'sometimes|string|max:255',
             'pic_name'        => 'sometimes|string|max:255',
@@ -112,13 +97,10 @@ class LeadsController extends Controller
             'email'           => 'nullable|email|max:255',
             'address'         => 'nullable|string',
             'industry'        => 'nullable|string|max:100',
+            'location'        => 'nullable|string|max:255',
             'pipeline_stage'  => 'sometimes|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
-            'product_interest' => 'nullable|string|max:255',
-            'route'           => 'nullable|string|max:255',
-            
             'volume_estimate' => 'nullable|string|max:100',
-            'potensi_revenue' => 'nullable|numeric|min:0',
             'probability'     => 'nullable|integer|min:0|max:100',
             'lead_source'     => 'nullable|string|max:100',
             'competitor'      => 'nullable|string|max:255',
@@ -142,7 +124,7 @@ class LeadsController extends Controller
             Notification::sendAll(
                 'deal_won',
                 'Deal Won: ' . $lead->company_name,
-                $lead->company_name . ' berhasil di-close oleh ' . auth()->user()->name . ' — ' . idrm($lead->potensi_revenue),
+                $lead->company_name . ' berhasil di-close oleh ' . auth()->user()->name,
                 route('leads.show', $lead)
             );
         }
@@ -167,13 +149,11 @@ class LeadsController extends Controller
      * Sync lead ke database customer otomatis berdasarkan pipeline stage:
      * - Identifying / Approaching / Follow Up → Potential
      * - Closing / Won → Existing
-     * - Lost → hapus dari customer jika ada (opsional: biarkan)
+     * - Lost → tetap sebagai Potential
      */
     public static function syncToCustomer(Lead $lead): void
     {
         $stage = $lead->pipeline_stage;
-
-        // Lost: tetap di customer sebagai Potential agar bisa di-follow up kembali
         $status = in_array($stage, ['Won', 'Maintaining']) ? 'Existing' : 'Potential';
 
         $customerData = [
@@ -184,6 +164,7 @@ class LeadsController extends Controller
             'email'        => $lead->email,
             'address'      => $lead->address,
             'industry'     => $lead->industry,
+            'location'     => $lead->location ?? null,
             'status'       => $status,
             'user_id'      => $lead->user_id,
         ];
@@ -191,7 +172,6 @@ class LeadsController extends Controller
         if ($lead->customer_id) {
             $existing = \App\Models\Customer::find($lead->customer_id);
             if ($existing) {
-                // Jika baru jadi Existing, set customer_since
                 if ($status === 'Existing' && $existing->status !== 'Existing') {
                     $customerData['customer_since'] = now()->toDateString();
                 }
@@ -219,6 +199,53 @@ class LeadsController extends Controller
     {
         $lead->delete();
         return redirect()->route('leads.index')->with('success', 'Lead dihapus.');
+    }
+
+    // ── Lead Products ──
+    public function storeProduct(Request $request, Lead $lead)
+    {
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'qty'          => 'nullable|numeric|min:0',
+            'unit'         => 'required|string|max:50',
+        ]);
+        $lead->products()->create([
+            'product_name' => $request->product_name,
+            'qty'          => $request->qty ?? 0,
+            'unit'         => $request->unit,
+        ]);
+        return redirect()->back()->with('success', 'Produk ditambahkan.');
+    }
+
+    public function destroyProduct(Lead $lead, LeadProduct $product)
+    {
+        $product->delete();
+        return redirect()->back()->with('success', 'Produk dihapus.');
+    }
+
+    // ── Lead PICs ──
+    public function storePic(Request $request, Lead $lead)
+    {
+        $request->validate([
+            'pic_name'     => 'required|string|max:255',
+            'pic_position' => 'nullable|string|max:100',
+            'phone'        => 'nullable|string|max:20',
+            'email'        => 'nullable|email|max:255',
+        ]);
+        $lead->pics()->create([
+            'pic_name'     => $request->pic_name,
+            'pic_position' => $request->pic_position,
+            'phone'        => $request->phone,
+            'email'        => $request->email,
+            'is_primary'   => $lead->pics()->count() === 0,
+        ]);
+        return redirect()->back()->with('success', 'PIC ditambahkan.');
+    }
+
+    public function destroyPic(Lead $lead, LeadPic $pic)
+    {
+        $pic->delete();
+        return redirect()->back()->with('success', 'PIC dihapus.');
     }
 
     // ── Add Activity ke Lead ──

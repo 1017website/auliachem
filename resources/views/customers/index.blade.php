@@ -15,9 +15,6 @@
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                     <i class="fas fa-plus me-1"></i> Add Customer
                 </button>
-                {{-- <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importCustomerModal">
-                    <i class="fas fa-upload me-1"></i> Import
-                </button> --}}
                 <a href="{{ route('customers.export') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-download me-1"></i> Export Excel
                 </a>
@@ -85,7 +82,7 @@
                     <thead>
                         <tr>
                             <th>No.</th><th>Company</th><th>Contact</th><th>Industry</th>
-                            <th>Status</th><th>Sales PIC</th><th>Last Activity</th><th>Total Revenue</th><th>Action</th>
+                            <th>Status</th><th>Sales PIC</th><th>Last Activity</th><th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -115,9 +112,6 @@
                                     <div style="color:var(--text-muted)">{{ $cust->activities->sortByDesc('activity_at')->first()->type }}</div>
                                 @else<span style="color:#d1d5db">-</span>@endif
                             </td>
-                            <td style="font-size:.78rem;font-weight:600;color:var(--primary)">
-                                {{ $cust->total_revenue > 0 ? idrm($cust->total_revenue) : '-' }}
-                            </td>
                             <td>
                                 <div class="d-flex gap-1">
                                     <a href="{{ route('customers.index', array_merge(request()->query(), ['selected_id'=>$cust->id])) }}"
@@ -125,11 +119,11 @@
                                         <i class="fas fa-eye" style="font-size:.7rem"></i>
                                     </a>
                                     <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px"
-                                        onclick="openEditModal({{ $cust->id }},'{{ addslashes($cust->company_name) }}','{{ addslashes($cust->pic_name) }}','{{ $cust->phone }}','{{ $cust->email }}','{{ $cust->industry }}','{{ $cust->location }}','{{ $cust->status }}','{{ $cust->sales_user_id }}')">
+                                        onclick="openEditModal({{ $cust->id }},'{{ addslashes($cust->company_name) }}','{{ addslashes($cust->pic_name) }}','{{ $cust->pic_position }}','{{ $cust->phone }}','{{ $cust->email }}','{{ $cust->industry }}','{{ $cust->location }}','{{ $cust->address }}','{{ $cust->status }}','{{ $cust->user_id }}','{{ addslashes($cust->notes) }}','{{ addslashes($cust->products) }}')">
                                         <i class="fas fa-edit" style="font-size:.7rem"></i>
                                     </button>
                                     <form method="POST" action="{{ route('customers.destroy', $cust) }}" class="d-inline"
-                                        onsubmit="return confirm('Hapus {{ addslashes($cust->company_name) }}?')">
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus customer {{ addslashes($cust->company_name) }}? Tindakan ini tidak dapat dibatalkan.')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
                                             <i class="fas fa-trash" style="font-size:.7rem"></i>
@@ -139,7 +133,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="9" class="text-center py-4" style="color:var(--text-muted)">
+                        <tr><td colspan="8" class="text-center py-4" style="color:var(--text-muted)">
                             <i class="fas fa-building" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.2"></i>
                             Tidak ada data customer.
                         </td></tr>
@@ -179,19 +173,36 @@
 
                 <ul class="nav nav-tabs mb-3" style="font-size:.75rem" id="custTabs">
                     <li class="nav-item"><a class="nav-link active" href="#" onclick="showTab('overview',this);return false" style="padding:6px 10px">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('pics',this);return false" style="padding:6px 10px">PICs</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('activity',this);return false" style="padding:6px 10px">Activity</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('transaction',this);return false" style="padding:6px 10px">PO</a></li>
                 </ul>
 
+                {{-- Tab Overview --}}
                 <div id="tab-overview">
                     @foreach([
-                        ['PIC',$selectedCustomer->pic_name],['Jabatan',$selectedCustomer->pic_position??'\-'],['Phone',$selectedCustomer->phone??'\-'],['Email',$selectedCustomer->email??'\-'],['Industry',$selectedCustomer->industry??'\-'],['Location',$selectedCustomer->location??'\-'],['Sales PIC',$selectedCustomer->salesUser?->name??'\-'],['Customer Since',$selectedCustomer->customer_since?->format('d M Y')??'\-'],
+                        ['PIC Utama',$selectedCustomer->pic_name],
+                        ['Jabatan',$selectedCustomer->pic_position??'-'],
+                        ['Phone',$selectedCustomer->phone??'-'],
+                        ['Email',$selectedCustomer->email??'-'],
+                        ['Industry',$selectedCustomer->industry??'-'],
+                        ['Location',$selectedCustomer->location??'-'],
+                        ['Sales PIC',$selectedCustomer->salesUser?->name??'-'],
+                        ['Customer Since',$selectedCustomer->customer_since?->format('d M Y')??'-'],
                     ] as $f)
                     <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid #f9fafb;font-size:.77rem">
                         <span style="color:var(--text-muted);min-width:90px">{{ $f[0] }}</span>
                         <span style="font-weight:500;text-align:right;max-width:55%">{{ $f[1] }}</span>
                     </div>
                     @endforeach
+
+                    @if($selectedCustomer->products)
+                    <div class="mt-2 pt-2" style="border-top:1px solid #f3f4f6">
+                        <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:4px">Produk</div>
+                        <div style="font-size:.78rem">{{ $selectedCustomer->products }}</div>
+                    </div>
+                    @endif
+
                     <div class="row g-2 mt-3 mb-3 text-center">
                         <div class="col-6">
                             <div style="background:#eff6ff;border-radius:8px;padding:10px">
@@ -205,20 +216,8 @@
                                 <div style="font-size:.65rem;color:var(--text-muted)">Total PO</div>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div style="background:#fefce8;border-radius:8px;padding:10px">
-                                <div style="font-size:.85rem;font-weight:700">{{ $selectedCustomer->purchaseOrders->count() > 0 ? \Carbon\Carbon::parse($selectedCustomer->purchaseOrders->sortByDesc('order_date')->first()->order_date)->diffForHumans() : '-' }}</div>
-                                <div style="font-size:.65rem;color:var(--text-muted)">Last Order</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div style="background:#faf5ff;border-radius:8px;padding:10px">
-                                <div style="font-size:.85rem;font-weight:700">{{ $selectedCustomer->activities->count() }}</div>
-                                <div style="font-size:.65rem;color:var(--text-muted)">Activities</div>
-                            </div>
-                        </div>
                     </div>
-                    <div class="row g-1">
+                    <div class="row g-1 mb-3">
                         @foreach([['phone','Log Call','#d1fae5','#059669',"quickActCust('Call')"],['building','Visit','#dbeafe','#2563eb',"quickActCust('Visit')"],['envelope','Email','#fef3c7','#d97706',"quickActCust('Email')"],['sticky-note','Note','#f3e8ff','#7c3aed',"quickActCust('Note')"]] as $qa)
                         <div class="col-3">
                             <div class="quick-action-btn" onclick="{{ $qa[4] }}" style="padding:8px 4px;cursor:pointer">
@@ -228,18 +227,83 @@
                         </div>
                         @endforeach
                     </div>
-                    <div class="d-flex gap-2 mt-3">
+                    <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-outline-secondary flex-fill" style="font-size:.75rem"
-                            onclick="openEditModal({{ $selectedCustomer->id }},'{{ addslashes($selectedCustomer->company_name) }}','{{ addslashes($selectedCustomer->pic_name) }}','{{ $selectedCustomer->phone }}','{{ $selectedCustomer->email }}','{{ $selectedCustomer->industry }}','{{ $selectedCustomer->location }}','{{ $selectedCustomer->status }}','{{ $selectedCustomer->sales_user_id }}')">
+                            onclick="openEditModal({{ $selectedCustomer->id }},'{{ addslashes($selectedCustomer->company_name) }}','{{ addslashes($selectedCustomer->pic_name) }}','{{ $selectedCustomer->pic_position }}','{{ $selectedCustomer->phone }}','{{ $selectedCustomer->email }}','{{ $selectedCustomer->industry }}','{{ $selectedCustomer->location }}','{{ $selectedCustomer->address }}','{{ $selectedCustomer->status }}','{{ $selectedCustomer->user_id }}','{{ addslashes($selectedCustomer->notes) }}','{{ addslashes($selectedCustomer->products) }}')">
                             <i class="fas fa-edit me-1"></i> Edit
                         </button>
-                        <form method="POST" action="{{ route('customers.destroy', $selectedCustomer) }}" class="flex-fill" onsubmit="return confirm('Hapus customer ini?')">
+                        <form method="POST" action="{{ route('customers.destroy', $selectedCustomer) }}" class="flex-fill"
+                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus {{ addslashes($selectedCustomer->company_name) }}? Tindakan ini tidak dapat dibatalkan.')">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-size:.75rem"><i class="fas fa-trash me-1"></i> Hapus</button>
                         </form>
                     </div>
+
+                    {{-- Transfer Sales (Admin only) --}}
+                    @if(auth()->user()->isAdmin())
+                    <div class="mt-3 pt-3" style="border-top:1px solid #f3f4f6">
+                        <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:8px">Pindah Sales PIC</div>
+                        <form method="POST" action="{{ route('customers.transfer-sales', $selectedCustomer) }}">
+                            @csrf @method('PATCH')
+                            <div class="d-flex gap-2">
+                                <select name="user_id" class="form-select form-select-sm flex-fill">
+                                    @foreach($salesUsers as $su)
+                                    <option value="{{ $su->id }}" {{ $selectedCustomer->user_id==$su->id ? 'selected' : '' }}>{{ $su->name }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-warning" style="font-size:.75rem;white-space:nowrap">Pindah</button>
+                            </div>
+                        </form>
+                    </div>
+                    @endif
                 </div>
 
+                {{-- Tab PICs --}}
+                <div id="tab-pics" style="display:none">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong style="font-size:.8rem">Daftar PIC</strong>
+                        <button class="btn btn-sm btn-primary" style="font-size:.72rem;padding:3px 8px" data-bs-toggle="modal" data-bs-target="#addCustPicModal">
+                            <i class="fas fa-plus me-1"></i> Add
+                        </button>
+                    </div>
+                    {{-- PIC Utama --}}
+                    <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f3f4f6">
+                        <div style="width:32px;height:32px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fas fa-user" style="color:#2563eb;font-size:.65rem"></i>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:.8rem;font-weight:600">{{ $selectedCustomer->pic_name }}
+                                <span style="font-size:.65rem;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
+                            </div>
+                            @if($selectedCustomer->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $selectedCustomer->pic_position }}</div>@endif
+                            @if($selectedCustomer->phone)<div style="font-size:.72rem">{{ $selectedCustomer->phone }}</div>@endif
+                            @if($selectedCustomer->email)<div style="font-size:.72rem;color:var(--primary)">{{ $selectedCustomer->email }}</div>@endif
+                        </div>
+                    </div>
+                    {{-- PIC tambahan --}}
+                    @forelse($selectedCustomer->pics as $pic)
+                    <div class="d-flex align-items-start gap-2 mb-2">
+                        <div style="width:32px;height:32px;background:#f3f4f6;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fas fa-user" style="color:#6b7280;font-size:.65rem"></i>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:.8rem;font-weight:600">{{ $pic->pic_name }}</div>
+                            @if($pic->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $pic->pic_position }}</div>@endif
+                            @if($pic->phone)<div style="font-size:.72rem">{{ $pic->phone }}</div>@endif
+                            @if($pic->email)<div style="font-size:.72rem;color:var(--primary)">{{ $pic->email }}</div>@endif
+                        </div>
+                        <form method="POST" action="{{ route('customers.pics.destroy', [$selectedCustomer, $pic]) }}"
+                            onsubmit="return confirm('Hapus PIC {{ addslashes($pic->pic_name) }}?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
+                        </form>
+                    </div>
+                    @empty
+                    <div class="text-center py-3" style="color:var(--text-muted);font-size:.8rem">Belum ada PIC tambahan.</div>
+                    @endforelse
+                </div>
+
+                {{-- Tab Activity --}}
                 <div id="tab-activity" style="display:none">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <strong style="font-size:.8rem">Activity History</strong>
@@ -264,8 +328,9 @@
                     @endforelse
                 </div>
 
+                {{-- Tab PO --}}
                 <div id="tab-transaction" style="display:none">
-                    <strong style="font-size:.8rem;display:block;margin-bottom:10px">Delivery Orders</strong>
+                    <strong style="font-size:.8rem;display:block;margin-bottom:10px">Purchase Orders</strong>
                     @forelse($selectedCustomer->purchaseOrders->sortByDesc('order_date') as $do)
                     <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f9fafb">
                         <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -292,66 +357,59 @@
 </div>
 
 {{-- MODALS --}}
+{{-- Add Customer --}}
 <div class="modal fade" id="addCustomerModal" tabindex="-1">
     <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header"><h6 class="modal-title fw-bold">Add Customer Baru</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <form method="POST" action="{{ route('customers.store') }}">@csrf
+        <form method="POST" action="{{ route('customers.store') }}" id="addCustomerForm">@csrf
             <div class="modal-body"><div class="row g-3">
+                <div class="col-12"><div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-building me-1"></i> Info Perusahaan</div></div>
                 <div class="col-md-6"><label class="form-label">Company Name <span class="text-danger">*</span></label><input type="text" name="company_name" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label">PIC Name <span class="text-danger">*</span></label><input type="text" name="pic_name" class="form-control" required></div>
-                <div class="col-md-4"><label class="form-label">Jabatan PIC</label><input type="text" name="pic_position" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Phone <span class="text-danger">*</span></label><input type="text" name="phone" class="form-control" required></div>
-                <div class="col-md-4"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Industry</label><input type="text" name="industry" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Location</label><input type="text" name="location" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Customer Since</label><input type="date" name="customer_since" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label">Industry</label><input type="text" name="industry" class="form-control" placeholder="Manufaktur, Retail, dll"></div>
+                <div class="col-md-6"><label class="form-label">Lokasi</label><input type="text" name="location" class="form-control" placeholder="Kota/Wilayah"></div>
+                <div class="col-md-6"><label class="form-label">Customer Since</label><input type="date" name="customer_since" class="form-control"></div>
                 <div class="col-12"><label class="form-label">Alamat</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+                <div class="col-12"><label class="form-label">Produk (yang pernah dibeli/diminati)</label><input type="text" name="products" class="form-control" placeholder="Contoh: Solvent IPA, Resin Epoxy"></div>
+                <div class="col-12 mt-2"><div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-user me-1"></i> PIC Utama</div></div>
+                <div class="col-md-6"><label class="form-label">Nama PIC <span class="text-danger">*</span></label><input type="text" name="pic_name" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Jabatan PIC</label><input type="text" name="pic_position" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label">Phone <span class="text-danger">*</span></label><input type="text" name="phone" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
                 <div class="col-md-6"><label class="form-label">Status <span class="text-danger">*</span></label>
                     <select name="status" class="form-select" required><option value="Potential">Potential</option><option value="Existing">Existing</option></select></div>
                 <div class="col-md-6">@include('components.sales-pic-field')</div>
+                <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
             </div></div>
             <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm">Simpan</button></div>
         </form>
     </div></div>
 </div>
 
+{{-- Edit Customer --}}
 <div class="modal fade" id="editCustomerModal" tabindex="-1">
     <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header"><h6 class="modal-title fw-bold">Edit Customer</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form method="POST" id="editCustomerForm">@csrf @method('PUT')
             <div class="modal-body"><div class="row g-3">
                 <div class="col-md-6"><label class="form-label">Company Name</label><input type="text" name="company_name" id="editCompanyName" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Industry</label><input type="text" name="industry" id="editIndustry" class="form-control"></div>
                 <div class="col-md-6"><label class="form-label">PIC Name</label><input type="text" name="pic_name" id="editPicName" class="form-control" required></div>
-                <div class="col-md-4"><label class="form-label">Phone</label><input type="text" name="phone" id="editPhone" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Email</label><input type="email" name="email" id="editEmail" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Industry</label><input type="text" name="industry" id="editIndustry" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Location</label><input type="text" name="location" id="editLocation" class="form-control"></div>
-                <div class="col-md-4"><label class="form-label">Status</label>
+                <div class="col-md-6"><label class="form-label">Jabatan PIC</label><input type="text" name="pic_position" id="editPicPosition" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="phone" id="editPhone" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" id="editEmail" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label">Location</label><input type="text" name="location" id="editLocation" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label">Status</label>
                     <select name="status" id="editStatus" class="form-select"><option value="Potential">Potential</option><option value="Existing">Existing</option></select></div>
-                <div class="col-md-4">@include('components.sales-pic-field', ['fieldId' => 'editSalesPIC'])</div>
+                <div class="col-md-6">@include('components.sales-pic-field', ['fieldId' => 'editSalesPIC'])</div>
+                <div class="col-md-6"><label class="form-label">Produk</label><input type="text" name="products" id="editProducts" class="form-control" placeholder="Produk yang pernah dibeli/diminati"></div>
+                <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" id="editNotes" class="form-control" rows="2"></textarea></div>
             </div></div>
             <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm">Simpan</button></div>
         </form>
     </div></div>
 </div>
 
-<div class="modal fade" id="importCustomerModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h6 class="modal-title fw-bold">Import Customer dari CSV</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <form method="POST" action="{{ route('customers.import') }}" enctype="multipart/form-data">@csrf
-            <div class="modal-body">
-                <div class="mb-3 p-3" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb">
-                    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px"><i class="fas fa-info-circle text-primary me-1"></i> Format CSV</div>
-                    <div style="font-size:11px;color:#6b7280">Kolom: <strong>Company Name, PIC Name, Position, Phone, Email, Industry, Location, Status, Sales PIC, Customer Since</strong></div>
-                    <a href="{{ route('customers.template') }}" class="btn btn-sm btn-outline-primary mt-2" style="font-size:11px"><i class="fas fa-download me-1"></i> Download Template</a>
-                </div>
-                <div><label class="form-label">File CSV <span class="text-danger">*</span></label><input type="file" name="file" class="form-control" accept=".csv,.txt" required></div>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-upload me-1"></i> Import</button></div>
-        </form>
-    </div></div>
-</div>
-
+{{-- Add Activity (Customer) --}}
 @if($selectedCustomer)
 <div class="modal fade" id="addCustActivityModal" tabindex="-1">
     <div class="modal-dialog"><div class="modal-content">
@@ -366,11 +424,27 @@
                 <div class="col-6"><label class="form-label">Tanggal & Waktu</label><input type="datetime-local" name="activity_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}"></div>
                 <div class="col-6"><label class="form-label">Sales PIC</label>
                     <select name="user_id" class="form-select" required>
-                        @foreach($salesUsers as $su)<option value="{{ $su->id }}" {{ $selectedCustomer->sales_user_id==$su->id?'selected':'' }}>{{ $su->name }}</option>@endforeach
+                        @foreach($salesUsers as $su)<option value="{{ $su->id }}" {{ $selectedCustomer->user_id==$su->id?'selected':'' }}>{{ $su->name }}</option>@endforeach
                     </select></div>
                 <div class="col-12"><label class="form-label">Keterangan</label><textarea name="description" class="form-control" rows="2"></textarea></div>
             </div></div>
             <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm">Simpan</button></div>
+        </form>
+    </div></div>
+</div>
+
+{{-- Add PIC (Customer) --}}
+<div class="modal fade" id="addCustPicModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h6 class="modal-title fw-bold">Tambah PIC — {{ $selectedCustomer->company_name }}</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form method="POST" action="{{ route('customers.pics.store', $selectedCustomer) }}">@csrf
+            <div class="modal-body"><div class="row g-3">
+                <div class="col-6"><label class="form-label">Nama PIC <span class="text-danger">*</span></label><input type="text" name="pic_name" class="form-control" required></div>
+                <div class="col-6"><label class="form-label">Jabatan</label><input type="text" name="pic_position" class="form-control"></div>
+                <div class="col-6"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control"></div>
+                <div class="col-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
+            </div></div>
+            <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm">Simpan PIC</button></div>
         </form>
     </div></div>
 </div>
@@ -383,21 +457,24 @@
 function showTab(tab, el) {
     document.querySelectorAll('#custTabs .nav-link').forEach(a => a.classList.remove('active'));
     el.classList.add('active');
-    ['overview','activity','transaction'].forEach(t => {
+    ['overview','pics','activity','transaction'].forEach(t => {
         const d = document.getElementById('tab-'+t);
         if(d) d.style.display = t===tab?'block':'none';
     });
 }
-function openEditModal(id,company,pic,phone,email,industry,location,status,salesId) {
+function openEditModal(id,company,pic,picPos,phone,email,industry,location,address,status,salesId,notes,products) {
     document.getElementById('editCustomerForm').action = `/customers/${id}`;
     document.getElementById('editCompanyName').value = company;
     document.getElementById('editPicName').value = pic;
+    document.getElementById('editPicPosition').value = picPos || '';
     document.getElementById('editPhone').value = phone;
     document.getElementById('editEmail').value = email;
     document.getElementById('editIndustry').value = industry;
-    document.getElementById('editLocation').value = location;
+    document.getElementById('editLocation').value = location || '';
     document.getElementById('editStatus').value = status;
     document.getElementById('editSalesPIC').value = salesId;
+    document.getElementById('editNotes').value = notes || '';
+    document.getElementById('editProducts').value = products || '';
     new bootstrap.Modal(document.getElementById('editCustomerModal')).show();
 }
 function quickActCust(type) {
@@ -406,5 +483,19 @@ function quickActCust(type) {
     const m = document.getElementById('addCustActivityModal');
     if(m) new bootstrap.Modal(m).show();
 }
+// Prevent data loss add customer modal
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addCustomerForm');
+    const modalEl = document.getElementById('addCustomerModal');
+    if (!form || !modalEl) return;
+    modalEl.addEventListener('hide.bs.modal', function(e) {
+        const inputs = form.querySelectorAll('input[type=text],input[type=email],textarea');
+        let hasData = false;
+        inputs.forEach(i => { if (i.value.trim()) hasData = true; });
+        if (hasData && !confirm('Data yang sudah diisi akan hilang. Tutup form?')) {
+            e.preventDefault();
+        }
+    });
+});
 </script>
 @endpush

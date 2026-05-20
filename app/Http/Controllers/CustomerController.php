@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\CustomerPic;
 use App\Models\User;
 use App\Models\Activity;
 use Illuminate\Http\Request;
@@ -36,7 +37,7 @@ class CustomerController extends Controller
         $salesUsers        = User::orderBy('name')->get();
 
         $selectedCustomer = $request->get('selected_id')
-            ? Customer::with(['salesUser','purchaseOrders','activities.salesUser','leads'])->find($request->get('selected_id'))
+            ? Customer::with(['salesUser','purchaseOrders','activities.salesUser','leads','pics'])->find($request->get('selected_id'))
             : null;
 
         return view('customers.index', compact(
@@ -57,9 +58,10 @@ class CustomerController extends Controller
             'location'       => 'nullable|string|max:255',
             'address'        => 'nullable|string',
             'status'         => 'required|in:Existing,Potential',
-            'user_id'  => 'required|exists:users,id',
+            'user_id'        => 'required|exists:users,id',
             'customer_since' => 'nullable|date',
             'notes'          => 'nullable|string',
+            'products'       => 'nullable|string',
         ]);
         if (auth()->user()->isSalesExecutive()) {
             $validated['user_id'] = auth()->id();
@@ -80,9 +82,10 @@ class CustomerController extends Controller
             'location'       => 'nullable|string|max:255',
             'address'        => 'nullable|string',
             'status'         => 'sometimes|in:Existing,Potential',
-            'user_id'  => 'sometimes|exists:users,id',
+            'user_id'        => 'sometimes|exists:users,id',
             'customer_since' => 'nullable|date',
             'notes'          => 'nullable|string',
+            'products'       => 'nullable|string',
         ]);
         $customer->update($validated);
         return redirect()->back()->with('success', 'Data customer diupdate.');
@@ -92,6 +95,40 @@ class CustomerController extends Controller
     {
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer dihapus.');
+    }
+
+    // ── Customer PICs ──
+    public function storePic(Request $request, Customer $customer)
+    {
+        $request->validate([
+            'pic_name'     => 'required|string|max:255',
+            'pic_position' => 'nullable|string|max:100',
+            'phone'        => 'nullable|string|max:20',
+            'email'        => 'nullable|email|max:255',
+        ]);
+        $customer->pics()->create([
+            'pic_name'     => $request->pic_name,
+            'pic_position' => $request->pic_position,
+            'phone'        => $request->phone,
+            'email'        => $request->email,
+            'is_primary'   => $customer->pics()->count() === 0,
+        ]);
+        return redirect()->back()->with('success', 'PIC ditambahkan.');
+    }
+
+    public function destroyPic(Customer $customer, CustomerPic $pic)
+    {
+        $pic->delete();
+        return redirect()->back()->with('success', 'PIC dihapus.');
+    }
+
+    // ── Transfer Sales (Admin only) ──
+    public function transferSales(Request $request, Customer $customer)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+        $request->validate(['user_id' => 'required|exists:users,id']);
+        $customer->update(['user_id' => $request->user_id]);
+        return redirect()->back()->with('success', 'Sales PIC berhasil dipindah.');
     }
 
     public function export()

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Models\SupplierProduct;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
@@ -14,7 +15,7 @@ class SupplierController extends Controller
         $relationshipStatus = $request->get('relationship_status');
         $search             = $request->get('search');
 
-        $query = Supplier::with('purchaseOrders');
+        $query = Supplier::with(['purchaseOrders', 'products']);
         if ($sourceType         && $sourceType         !== 'all') $query->where('source_type', $sourceType);
         if ($status             && $status             !== 'all') $query->where('status', $status);
         if ($relationshipStatus && $relationshipStatus !== 'all') $query->where('relationship_status', $relationshipStatus);
@@ -35,7 +36,7 @@ class SupplierController extends Controller
         $potentialSupplier   = Supplier::where('relationship_status', 'Potential')->count();
 
         $selectedSupplier = $request->get('selected_id')
-            ? Supplier::with('purchaseOrders')->find($request->get('selected_id'))
+            ? Supplier::with(['purchaseOrders', 'products'])->find($request->get('selected_id'))
             : null;
 
         return view('suppliers.index', compact(
@@ -100,6 +101,28 @@ class SupplierController extends Controller
     {
         $supplier->delete();
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil dihapus.');
+    }
+
+    // ── Supplier Products ──
+    public function storeProduct(Request $request, Supplier $supplier)
+    {
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'unit'         => 'required|string|max:50',
+            'description'  => 'nullable|string',
+        ]);
+        $supplier->products()->create([
+            'product_name' => $request->product_name,
+            'unit'         => $request->unit,
+            'description'  => $request->description,
+        ]);
+        return redirect()->back()->with('success', 'Produk ditambahkan.');
+    }
+
+    public function destroyProduct(Supplier $supplier, SupplierProduct $product)
+    {
+        $product->delete();
+        return redirect()->back()->with('success', 'Produk dihapus.');
     }
 
     public function export(Request $request)

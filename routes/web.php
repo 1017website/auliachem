@@ -60,6 +60,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads/template',         [LeadsController::class, 'template'])->name('leads.template');
     Route::post('/leads/import',          [LeadsController::class, 'import'])->name('leads.import');
     Route::post('/leads/{lead}/activity', [LeadsController::class, 'storeActivity'])->name('leads.activity.store');
+    Route::post('/leads/{lead}/products', [LeadsController::class, 'storeProduct'])->name('leads.products.store');
+    Route::delete('/leads/{lead}/products/{product}', [LeadsController::class, 'destroyProduct'])->name('leads.products.destroy');
+    Route::post('/leads/{lead}/pics',     [LeadsController::class, 'storePic'])->name('leads.pics.store');
+    Route::delete('/leads/{lead}/pics/{pic}', [LeadsController::class, 'destroyPic'])->name('leads.pics.destroy');
     Route::resource('leads', LeadsController::class);
     Route::get('/pipeline', [PipelineController::class, 'index'])->name('pipeline.index');
 
@@ -75,16 +79,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers/template',             [CustomerController::class, 'template'])->name('customers.template');
     Route::post('/customers/import',              [CustomerController::class, 'import'])->name('customers.import');
     Route::post('/customers/{customer}/activity', [CustomerController::class, 'storeActivity'])->name('customers.activity.store');
+    Route::post('/customers/{customer}/pics',     [CustomerController::class, 'storePic'])->name('customers.pics.store');
+    Route::delete('/customers/{customer}/pics/{pic}', [CustomerController::class, 'destroyPic'])->name('customers.pics.destroy');
+    Route::patch('/customers/{customer}/transfer-sales', [CustomerController::class, 'transferSales'])->name('customers.transfer-sales');
     Route::resource('customers', CustomerController::class);
 
-    // Suppliers (pengganti Vendors)
-    Route::get('/suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
-    Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
+    // Suppliers & Purchase Orders (Admin & Sales Manager only)
+    Route::middleware('role:Admin,Sales Manager')->group(function () {
+        Route::get('/suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
+        Route::post('/suppliers/{supplier}/products', [SupplierController::class, 'storeProduct'])->name('suppliers.products.store');
+        Route::delete('/suppliers/{supplier}/products/{product}', [SupplierController::class, 'destroyProduct'])->name('suppliers.products.destroy');
+        Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
 
-    // Purchase Orders (pengganti Delivery Orders)
-    Route::get('/purchase-orders/export', [PurchaseOrderController::class, 'export'])->name('purchase-orders.export');
-    Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
-    Route::resource('purchase-orders', PurchaseOrderController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('/purchase-orders/export', [PurchaseOrderController::class, 'export'])->name('purchase-orders.export');
+        Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
+        Route::resource('purchase-orders', PurchaseOrderController::class)->only(['index', 'store', 'update', 'destroy']);
+    });
 
     // ── Manager & Admin only ───────────────────────
     Route::middleware('role:Admin,Sales Manager')->group(function () {
