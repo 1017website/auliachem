@@ -20,7 +20,13 @@ class CustomerController extends Controller
         $query = Customer::with(['salesUser', 'purchaseOrders', 'activities']);
         if ($status && $status !== 'all')     $query->where('status', $status);
         if ($industry && $industry !== 'all') $query->where('industry', $industry);
-        if ($salesId)  $query->where('user_id', $salesId);
+
+        // Sales Executive hanya lihat customer miliknya
+        if (auth()->user()->isSalesExecutive()) {
+            $query->where('user_id', auth()->id());
+        } elseif ($salesId) {
+            $query->where('user_id', $salesId);
+        }
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('company_name', 'like', "%$search%")
@@ -62,11 +68,27 @@ class CustomerController extends Controller
             'customer_since' => 'nullable|date',
             'notes'          => 'nullable|string',
             'products'       => 'nullable|string',
+            'pics'                => 'nullable|array',
+            'pics.*.pic_name'     => 'required_with:pics|string|max:255',
+            'pics.*.pic_position' => 'nullable|string|max:100',
+            'pics.*.phone'        => 'nullable|string|max:20',
+            'pics.*.email'        => 'nullable|email|max:255',
         ]);
         if (auth()->user()->isSalesExecutive()) {
             $validated['user_id'] = auth()->id();
         }
-        Customer::create($validated);
+        $picsData = $validated['pics'] ?? [];
+        unset($validated['pics']);
+        $customer = Customer::create($validated);
+        foreach ($picsData as $i => $pic) {
+            $customer->pics()->create([
+                'pic_name'     => $pic['pic_name'],
+                'pic_position' => $pic['pic_position'] ?? null,
+                'phone'        => $pic['phone'] ?? null,
+                'email'        => $pic['email'] ?? null,
+                'is_primary'   => $i === 0,
+            ]);
+        }
         return redirect()->route('customers.index')->with('success', 'Customer berhasil ditambahkan.');
     }
 

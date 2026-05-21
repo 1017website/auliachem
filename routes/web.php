@@ -89,6 +89,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
         Route::post('/suppliers/{supplier}/products', [SupplierController::class, 'storeProduct'])->name('suppliers.products.store');
         Route::delete('/suppliers/{supplier}/products/{product}', [SupplierController::class, 'destroyProduct'])->name('suppliers.products.destroy');
+        Route::post('/suppliers/{supplier}/pics', [SupplierController::class, 'storePic'])->name('suppliers.pics.store');
+        Route::delete('/suppliers/{supplier}/pics/{pic}', [SupplierController::class, 'destroyPic'])->name('suppliers.pics.destroy');
         Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
 
         Route::get('/purchase-orders/export', [PurchaseOrderController::class, 'export'])->name('purchase-orders.export');
@@ -101,11 +103,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/analytics',      [AnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/reports',        [ReportsController::class, 'index'])->name('reports.index');
         Route::get('/reports/export', [ReportsController::class, 'export'])->name('reports.export');
-        Route::resource('users', UserController::class)->except(['create', 'edit', 'show']);
     });
 
     // ── Admin only ─────────────────────────────────
     Route::middleware('role:Admin')->group(function () {
+        Route::resource('users', UserController::class)->except(['create', 'edit', 'show']);
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/settings/delete-image', [SettingsController::class, 'deleteLogo'])->name('settings.delete-image');

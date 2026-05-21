@@ -70,14 +70,11 @@ class TaskReminderController extends Controller
 
     public function update(Request $request, Activity $activity)
     {
-        // Edit tidak bisa jika masih Pending
-        if ($activity->status === 'Pending') {
-            return redirect()->back()->with('error', 'Task yang masih Pending tidak dapat diedit.');
-        }
-
         $activity->update($request->validate([
-            'status'  => 'required|in:Planned,Pending,Done,Overdue',
-            'subject' => 'sometimes|string|max:255',
+            'status'      => 'required|in:Planned,Pending,Done,Overdue',
+            'subject'     => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'due_date'    => 'nullable|date',
         ]));
         return redirect()->back()->with('success', 'Task diupdate.');
     }

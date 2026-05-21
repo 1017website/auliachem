@@ -251,12 +251,21 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Client / Company <span class="text-danger">*</span></label>
-                        <select name="lead_id" class="form-select" id="actLeadSelect" onchange="onLeadChange(this)">
+                        <select name="client_ref" class="form-select" id="actLeadSelect" onchange="onLeadChange(this)">
                             <option value="">Pilih atau cari client</option>
+                            <optgroup label="— Leads —">
                             @foreach(\App\Models\Lead::orderBy('company_name')->get() as $lead)
-                            <option value="{{ $lead->id }}" data-stage="{{ $lead->pipeline_stage }}">{{ $lead->company_name }}</option>
+                            <option value="lead:{{ $lead->id }}" data-type="lead" data-id="{{ $lead->id }}" data-stage="{{ $lead->pipeline_stage }}">{{ $lead->company_name }} (Lead)</option>
                             @endforeach
+                            </optgroup>
+                            <optgroup label="— Customer Existing —">
+                            @foreach(\App\Models\Customer::where('status','Existing')->orderBy('company_name')->get() as $cust)
+                            <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-stage="">{{ $cust->company_name }} (Existing)</option>
+                            @endforeach
+                            </optgroup>
                         </select>
+                        <input type="hidden" name="lead_id" id="actLeadHidden" value="">
+                        <input type="hidden" name="customer_id" id="actCustomerHidden" value="">
                     </div>
 
                     {{-- Pipeline Stage — muncul setelah lead dipilih --}}
@@ -359,15 +368,32 @@ function openActivityModal(type) {
     function onLeadChange(sel) {
         const wrap = document.getElementById('stageWrap');
         const stSel = document.getElementById('actStageSelect');
-        if (sel.value) {
+        const leadHidden = document.getElementById('actLeadHidden');
+        const custHidden = document.getElementById('actCustomerHidden');
+
+        if (!sel.value) {
+            wrap.style.display = 'none';
+            leadHidden.value = '';
+            custHidden.value = '';
+            return;
+        }
+
+        const opt = sel.options[sel.selectedIndex];
+        const type = opt.dataset.type;
+        const id   = opt.dataset.id;
+
+        if (type === 'lead') {
+            leadHidden.value = id;
+            custHidden.value = '';
             wrap.style.display = 'block';
-            const stage = sel.options[sel.selectedIndex].dataset.stage;
+            const stage = opt.dataset.stage;
             if (stage) {
-                for (let o of stSel.options) {
-                    o.selected = o.value === stage;
-                }
+                for (let o of stSel.options) o.selected = o.value === stage;
             }
         } else {
+            // Customer Existing — tidak ada stage pipeline
+            leadHidden.value = '';
+            custHidden.value = id;
             wrap.style.display = 'none';
         }
     }

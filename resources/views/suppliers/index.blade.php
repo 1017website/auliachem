@@ -233,6 +233,24 @@
                             <label class="form-label">Alamat</label>
                             <textarea name="address" class="form-control" rows="2"></textarea>
                         </div>
+
+                        {{-- Inline PICs --}}
+                        <div class="col-12 mt-2">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-users me-1"></i> PIC Perusahaan</div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addSupPicRow('addSupPicsContainer')"><i class="fas fa-plus me-1"></i> Add PIC</button>
+                            </div>
+                            <div id="addSupPicsContainer"></div>
+                        </div>
+
+                        {{-- Inline Products --}}
+                        <div class="col-12 mt-1">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-box me-1"></i> Produk Supplier</div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addSupProductRow('addSupProductsContainer')"><i class="fas fa-plus me-1"></i> Add Produk</button>
+                            </div>
+                            <div id="addSupProductsContainer"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -313,6 +331,26 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Inline PICs (edit) --}}
+                    <div class="mt-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-users me-1"></i> PIC Perusahaan</div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addSupPicRow('editSupPicsContainer')"><i class="fas fa-plus me-1"></i> Add PIC</button>
+                        </div>
+                        <div id="editSupPicsContainer"></div>
+                        <div id="editSupPicsExisting" class="mt-2"></div>
+                    </div>
+
+                    {{-- Inline Products (edit) --}}
+                    <div class="mt-2">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-box me-1"></i> Produk Supplier</div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addSupProductRow('editSupProductsContainer')"><i class="fas fa-plus me-1"></i> Add Produk</button>
+                        </div>
+                        <div id="editSupProductsExisting" class="mt-1 mb-2"></div>
+                        <div id="editSupProductsContainer"></div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
@@ -390,7 +428,45 @@ function openEditSupplier(id, name, sourceType, pic, phone, email, category, ori
     document.getElementById('esPreferred').checked  = preferred == '1';
     document.getElementById('esRating').value       = rating;
     toggleOrigin('edit');
+
+    // Reset & load existing PICs
+    const editSupPicsExisting = document.getElementById('editSupPicsExisting');
+    const editSupProductsExisting = document.getElementById('editSupProductsExisting');
+    const editSupPicsContainer = document.getElementById('editSupPicsContainer');
+    const editSupProductsContainer = document.getElementById('editSupProductsContainer');
+    editSupPicsContainer.innerHTML = '';
+    editSupProductsContainer.innerHTML = '';
+    editSupPicsExisting.innerHTML = '<div style="font-size:.75rem;color:#9ca3af"><i>PICs existing dikelola dari panel detail supplier.</i></div>';
+    editSupProductsExisting.innerHTML = '<div style="font-size:.75rem;color:#9ca3af"><i>Produk existing dikelola dari panel detail supplier.</i></div>';
+
     new bootstrap.Modal(document.getElementById('editSupplierModal')).show();
+}
+
+// ── Inline Supplier PIC rows ──
+let supPicIdx = 0;
+function addSupPicRow(containerId) {
+    const i = supPicIdx++;
+    const html = `<div class="row g-2 mb-2 align-items-center" id="supPic_${i}">
+        <div class="col-4"><input type="text" name="pics[${i}][pic_name]" class="form-control form-control-sm" placeholder="Nama PIC *" required></div>
+        <div class="col-3"><input type="text" name="pics[${i}][pic_position]" class="form-control form-control-sm" placeholder="Jabatan"></div>
+        <div class="col-2"><input type="text" name="pics[${i}][phone]" class="form-control form-control-sm" placeholder="Phone"></div>
+        <div class="col-2"><input type="email" name="pics[${i}][email]" class="form-control form-control-sm" placeholder="Email"></div>
+        <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('supPic_${i}').remove()"><i class="fas fa-times"></i></button></div>
+    </div>`;
+    document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
+}
+
+// ── Inline Supplier Product rows ──
+let supProdIdx = 0;
+function addSupProductRow(containerId) {
+    const i = supProdIdx++;
+    const html = `<div class="row g-2 mb-2 align-items-center" id="supProd_${i}">
+        <div class="col-5"><input type="text" name="products[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" required></div>
+        <div class="col-3"><input type="text" name="products[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)"></div>
+        <div class="col-3"><input type="text" name="products[${i}][description]" class="form-control form-control-sm" placeholder="Keterangan"></div>
+        <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('supProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
+    </div>`;
+    document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
 }
 
 // Supplier Products (AJAX via form submit → reload)

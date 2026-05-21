@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use App\Models\SupplierProduct;
+use App\Models\SupplierPic;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
@@ -15,7 +17,7 @@ class SupplierController extends Controller
         $relationshipStatus = $request->get('relationship_status');
         $search             = $request->get('search');
 
-        $query = Supplier::with(['purchaseOrders', 'products']);
+        $query = Supplier::with(['purchaseOrders', 'products', 'pics']);
         if ($sourceType         && $sourceType         !== 'all') $query->where('source_type', $sourceType);
         if ($status             && $status             !== 'all') $query->where('status', $status);
         if ($relationshipStatus && $relationshipStatus !== 'all') $query->where('relationship_status', $relationshipStatus);
@@ -36,7 +38,7 @@ class SupplierController extends Controller
         $potentialSupplier   = Supplier::where('relationship_status', 'Potential')->count();
 
         $selectedSupplier = $request->get('selected_id')
-            ? Supplier::with(['purchaseOrders', 'products'])->find($request->get('selected_id'))
+            ? Supplier::with(['purchaseOrders', 'products', 'pics'])->find($request->get('selected_id'))
             : null;
 
         return view('suppliers.index', compact(
@@ -64,10 +66,46 @@ class SupplierController extends Controller
             'is_preferred'        => 'boolean',
             'rating'              => 'nullable|numeric|min:0|max:5',
             'supplier_since'      => 'nullable|date',
+            // inline pics & products
+            'pics'                => 'nullable|array',
+            'pics.*.pic_name'     => 'required_with:pics|string|max:255',
+            'pics.*.pic_position' => 'nullable|string|max:100',
+            'pics.*.phone'        => 'nullable|string|max:20',
+            'pics.*.email'        => 'nullable|email|max:255',
+            'products'            => 'nullable|array',
+            'products.*.product_name' => 'required_with:products|string|max:255',
+            'products.*.unit'     => 'nullable|string|max:50',
+            'products.*.description' => 'nullable|string',
         ]);
+
         $validated['is_preferred'] = $request->boolean('is_preferred');
         $validated['rating']       = $validated['rating'] ?? 0;
-        Supplier::create($validated);
+
+        DB::transaction(function () use ($request, $validated) {
+            $pics     = $validated['pics'] ?? [];
+            $products = $validated['products'] ?? [];
+            unset($validated['pics'], $validated['products']);
+
+            $supplier = Supplier::create($validated);
+
+            foreach ($pics as $i => $pic) {
+                $supplier->pics()->create([
+                    'pic_name'     => $pic['pic_name'],
+                    'pic_position' => $pic['pic_position'] ?? null,
+                    'phone'        => $pic['phone'] ?? null,
+                    'email'        => $pic['email'] ?? null,
+                    'is_primary'   => $i === 0,
+                ]);
+            }
+
+            foreach ($products as $prod) {
+                $supplier->products()->create([
+                    'product_name' => $prod['product_name'],
+                    'unit'         => $prod['unit'] ?? 'ton',
+                    'description'  => $prod['description'] ?? null,
+                ]);
+            }
+        });
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
     }
@@ -89,10 +127,52 @@ class SupplierController extends Controller
             'relationship_status' => 'sometimes|in:Potential,Existing',
             'is_preferred'        => 'boolean',
             'rating'              => 'nullable|numeric|min:0|max:5',
+            'pics'                => 'nullable|array',
+            'pics.*.pic_name'     => 'required_with:pics|string|max:255',
+            'pics.*.pic_position' => 'nullable|string|max:100',
+            'pics.*.phone'        => 'nullable|string|max:20',
+            'pics.*.email'        => 'nullable|email|max:255',
+            'products'            => 'nullable|array',
+            'products.*.product_name' => 'required_with:products|string|max:255',
+            'products.*.unit'     => 'nullable|string|max:50',
+            'products.*.description' => 'nullable|string',
         ]);
+
         $validated['is_preferred'] = $request->boolean('is_preferred');
         if (array_key_exists('rating', $validated)) $validated['rating'] = $validated['rating'] ?? 0;
-        $supplier->update($validated);
+
+        DB::transaction(function () use ($request, $validated, $supplier) {
+            $pics     = $validated['pics'] ?? null;
+            $products = $validated['products'] ?? null;
+            unset($validated['pics'], $validated['products']);
+
+            $supplier->update($validated);
+
+            // Jika ada data pics/products yang dikirim, replace semuanya
+            if ($pics !== null) {
+                $supplier->pics()->delete();
+                foreach ($pics as $i => $pic) {
+                    $supplier->pics()->create([
+                        'pic_name'     => $pic['pic_name'],
+                        'pic_position' => $pic['pic_position'] ?? null,
+                        'phone'        => $pic['phone'] ?? null,
+                        'email'        => $pic['email'] ?? null,
+                        'is_primary'   => $i === 0,
+                    ]);
+                }
+            }
+
+            if ($products !== null) {
+                $supplier->products()->delete();
+                foreach ($products as $prod) {
+                    $supplier->products()->create([
+                        'product_name' => $prod['product_name'],
+                        'unit'         => $prod['unit'] ?? 'ton',
+                        'description'  => $prod['description'] ?? null,
+                    ]);
+                }
+            }
+        });
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
     }
@@ -101,6 +181,31 @@ class SupplierController extends Controller
     {
         $supplier->delete();
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil dihapus.');
+    }
+
+    // ── Supplier PICs (via detail panel, tetap ada untuk backward compat) ──
+    public function storePic(Request $request, Supplier $supplier)
+    {
+        $request->validate([
+            'pic_name'     => 'required|string|max:255',
+            'pic_position' => 'nullable|string|max:100',
+            'phone'        => 'nullable|string|max:20',
+            'email'        => 'nullable|email|max:255',
+        ]);
+        $supplier->pics()->create([
+            'pic_name'     => $request->pic_name,
+            'pic_position' => $request->pic_position,
+            'phone'        => $request->phone,
+            'email'        => $request->email,
+            'is_primary'   => $supplier->pics()->count() === 0,
+        ]);
+        return redirect()->back()->with('success', 'PIC ditambahkan.');
+    }
+
+    public function destroyPic(Supplier $supplier, SupplierPic $pic)
+    {
+        $pic->delete();
+        return redirect()->back()->with('success', 'PIC dihapus.');
     }
 
     // ── Supplier Products ──

@@ -173,7 +173,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Supplier</label>
-                                <select name="supplier_id" class="form-select">
+                                <select name="supplier_id" class="form-select" id="addSupplierSelect" onchange="onSupplierChange(this,'addItemsBody')">
                                     <option value="">-- Pilih Supplier --</option>
                                     @foreach($suppliers as $s)
                                         <option value="{{ $s->id }}">{{ $s->supplier_name }} ({{ $s->source_type }})</option>
@@ -456,14 +456,79 @@
                 document.getElementById(prefix + 'TotalProfit').style.color = profit >= 0 ? '#10b981' : '#dc2626';
             }
 
+            // Map supplier_id → products dari controller
+            const supplierProductsMap = @json($supplierProducts->groupBy('supplier_id'));
+
+            function onSupplierChange(sel, bodyId) {
+                // Reset dropdown produk di semua rows body tersebut
+                const supplierId = sel.value;
+                const body = document.getElementById(bodyId);
+                if (!body) return;
+                body.querySelectorAll('.po-product-select').forEach(function(s) {
+                    const products = supplierId && supplierProductsMap[supplierId] ? supplierProductsMap[supplierId] : [];
+                    const hiddenName = s.getAttribute('data-hidden-name');
+                    const unitInput  = s.closest('tr').querySelector('.po-unit-input');
+                    // Rebuild options
+                    s.innerHTML = '<option value="">-- Pilih atau ketik --</option>';
+                    products.forEach(p => {
+                        const o = document.createElement('option');
+                        o.value = p.product_name;
+                        o.dataset.unit = p.unit || '';
+                        o.textContent = p.product_name;
+                        s.appendChild(o);
+                    });
+                    // Tambah opsi manual jika belum ada
+                    const manualOpt = document.createElement('option');
+                    manualOpt.value = '__manual__';
+                    manualOpt.textContent = '+ Ketik manual...';
+                    s.appendChild(manualOpt);
+                });
+            }
+
+            function onProductSelect(sel) {
+                const tr = sel.closest('tr');
+                const hiddenInput = tr.querySelector('.po-product-hidden');
+                const unitInput = tr.querySelector('.po-unit-input');
+                if (sel.value === '__manual__') {
+                    hiddenInput.value = '';
+                    const manual = prompt('Nama produk:');
+                    if (manual) hiddenInput.value = manual;
+                    sel.value = '';
+                } else {
+                    hiddenInput.value = sel.value;
+                    const opt = sel.options[sel.selectedIndex];
+                    if (opt && opt.dataset.unit && unitInput) {
+                        unitInput.value = opt.dataset.unit;
+                    }
+                }
+            }
+
             function addItemRow(bodyId, data = {}) {
                 const idx = itemIndex++;
                 const body = document.getElementById(bodyId);
                 const prefix = bodyId === 'addItemsBody' ? 'items' : 'items';
+                // Cari supplier yang dipilih
+                const supSel = bodyId === 'addItemsBody' ? document.getElementById('addSupplierSelect') : document.getElementById('epSupplier');
+                const supplierId = supSel ? supSel.value : null;
+                const products = supplierId && supplierProductsMap[supplierId] ? supplierProductsMap[supplierId] : [];
+
+                // Build product options
+                let productOptions = '<option value="">-- Pilih atau ketik --</option>';
+                products.forEach(p => {
+                    const sel = data.product_name === p.product_name ? 'selected' : '';
+                    productOptions += `<option value="${p.product_name}" data-unit="${p.unit||''}" ${sel}>${p.product_name}</option>`;
+                });
+                productOptions += '<option value="__manual__">+ Ketik manual...</option>';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                <td><input type="text" name="${prefix}[${idx}][product_name]" class="form-control form-control-sm" value="${data.product_name || ''}" required></td>
-                <td><input type="text" name="${prefix}[${idx}][unit]" class="form-control form-control-sm" value="${data.unit || 'kg'}"></td>
+                <td>
+                    <input type="hidden" name="${prefix}[${idx}][product_name]" class="po-product-hidden" value="${data.product_name || ''}">
+                    <select class="form-select form-select-sm po-product-select" onchange="onProductSelect(this)" data-hidden-name="${prefix}[${idx}][product_name]">
+                        ${productOptions}
+                    </select>
+                </td>
+                <td><input type="text" name="${prefix}[${idx}][unit]" class="form-control form-control-sm po-unit-input" value="${data.unit || 'kg'}"></td>
                 <td><input type="number" name="${prefix}[${idx}][qty]" class="form-control form-control-sm item-qty" step="0.001" min="0" value="${data.qty || ''}" required oninput="calcRow(this)"></td>
                 <td>
                     <input type="hidden" name="${prefix}[${idx}][buy_price]" class="item-buy-hidden" value="${data.buy_price || 0}">

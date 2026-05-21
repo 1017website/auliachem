@@ -62,6 +62,17 @@ class LeadsController extends Controller
             'expected_closing' => 'nullable|date',
             'user_id'         => 'required|exists:users,id',
             'notes_kebutuhan' => 'nullable|string',
+            // inline pics
+            'pics'                => 'nullable|array',
+            'pics.*.pic_name'     => 'required_with:pics|string|max:255',
+            'pics.*.pic_position' => 'nullable|string|max:100',
+            'pics.*.phone'        => 'nullable|string|max:20',
+            'pics.*.email'        => 'nullable|email|max:255',
+            // inline products
+            'products'                => 'nullable|array',
+            'products.*.product_name' => 'required_with:products|string|max:255',
+            'products.*.qty'          => 'nullable|numeric|min:0',
+            'products.*.unit'         => 'nullable|string|max:50',
         ]);
 
         $validated['lead_code']      = Lead::generateLeadCode();
@@ -71,7 +82,31 @@ class LeadsController extends Controller
             $validated['user_id'] = auth()->id();
         }
 
+        $picsData     = $validated['pics'] ?? [];
+        $productsData = $validated['products'] ?? [];
+        unset($validated['pics'], $validated['products']);
+
         $lead = Lead::create($validated);
+
+        // Simpan inline PICs
+        foreach ($picsData as $i => $pic) {
+            $lead->pics()->create([
+                'pic_name'     => $pic['pic_name'],
+                'pic_position' => $pic['pic_position'] ?? null,
+                'phone'        => $pic['phone'] ?? null,
+                'email'        => $pic['email'] ?? null,
+                'is_primary'   => $i === 0,
+            ]);
+        }
+
+        // Simpan inline Products
+        foreach ($productsData as $prod) {
+            $lead->products()->create([
+                'product_name' => $prod['product_name'],
+                'qty'          => $prod['qty'] ?? 0,
+                'unit'         => $prod['unit'] ?? 'ton',
+            ]);
+        }
 
         // Auto-sync ke database customer
         self::syncToCustomer($lead);

@@ -379,6 +379,24 @@
                     <select name="status" class="form-select" required><option value="Potential">Potential</option><option value="Existing">Existing</option></select></div>
                 <div class="col-md-6">@include('components.sales-pic-field')</div>
                 <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+
+                {{-- Tambahan PICs --}}
+                <div class="col-12 mt-1">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-users me-1"></i> PIC Tambahan</div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addCustPicRow('addCustPicsContainer')"><i class="fas fa-plus me-1"></i> Add PIC</button>
+                    </div>
+                    <div id="addCustPicsContainer"></div>
+                </div>
+
+                {{-- Kebutuhan Produk --}}
+                <div class="col-12 mt-1">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-box me-1"></i> Kebutuhan Produk</div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addCustProductRow('addCustProductsContainer')"><i class="fas fa-plus me-1"></i> Add Produk</button>
+                    </div>
+                    <div id="addCustProductsContainer"></div>
+                </div>
             </div></div>
             <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm">Simpan</button></div>
         </form>
@@ -403,6 +421,24 @@
                 <div class="col-md-6">@include('components.sales-pic-field', ['fieldId' => 'editSalesPIC'])</div>
                 <div class="col-md-6"><label class="form-label">Produk</label><input type="text" name="products" id="editProducts" class="form-control" placeholder="Produk yang pernah dibeli/diminati"></div>
                 <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" id="editNotes" class="form-control" rows="2"></textarea></div>
+
+                {{-- Tambahan PICs (edit) --}}
+                <div class="col-12 mt-1">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-users me-1"></i> PIC Tambahan</div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addCustPicRow('editCustPicsContainer')"><i class="fas fa-plus me-1"></i> Add PIC</button>
+                    </div>
+                    <div id="editCustPicsContainer"></div>
+                </div>
+
+                {{-- Kebutuhan Produk (edit) --}}
+                <div class="col-12 mt-1">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-box me-1"></i> Kebutuhan Produk</div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addCustProductRow('editCustProductsContainer')"><i class="fas fa-plus me-1"></i> Add Produk</button>
+                    </div>
+                    <div id="editCustProductsContainer"></div>
+                </div>
             </div></div>
             <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm">Simpan</button></div>
         </form>
@@ -462,6 +498,32 @@ function showTab(tab, el) {
         if(d) d.style.display = t===tab?'block':'none';
     });
 }
+// ── Inline PIC rows (Customer) ──
+let custPicIdx = 0;
+function addCustPicRow(containerId) {
+    const i = custPicIdx++;
+    const html = `<div class="row g-2 mb-2 align-items-center" id="custPic_${i}">
+        <div class="col-4"><input type="text" name="pics[${i}][pic_name]" class="form-control form-control-sm" placeholder="Nama PIC *" required></div>
+        <div class="col-3"><input type="text" name="pics[${i}][pic_position]" class="form-control form-control-sm" placeholder="Jabatan"></div>
+        <div class="col-2"><input type="text" name="pics[${i}][phone]" class="form-control form-control-sm" placeholder="Phone"></div>
+        <div class="col-2"><input type="email" name="pics[${i}][email]" class="form-control form-control-sm" placeholder="Email"></div>
+        <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custPic_${i}').remove()"><i class="fas fa-times"></i></button></div>
+    </div>`;
+    document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
+}
+
+// ── Inline Product rows (Customer) ──
+let custProdIdx = 0;
+function addCustProductRow(containerId) {
+    const i = custProdIdx++;
+    const html = `<div class="row g-2 mb-2 align-items-center" id="custProd_${i}">
+        <div class="col-6"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" required></div>
+        <div class="col-5"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan / keterangan"></div>
+        <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
+    </div>`;
+    document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
+}
+
 function openEditModal(id,company,pic,picPos,phone,email,industry,location,address,status,salesId,notes,products) {
     document.getElementById('editCustomerForm').action = `/customers/${id}`;
     document.getElementById('editCompanyName').value = company;

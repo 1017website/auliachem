@@ -212,6 +212,28 @@
                             <div class="col-12">
                                 @include('components.sales-pic-field')
                             </div>
+
+                            {{-- Tambahan PICs --}}
+                            <div class="col-12 mt-1">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div style="font-size:.78rem;font-weight:600;color:var(--primary)">
+                                        <i class="fas fa-users me-1"></i> PIC Tambahan
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addLeadPicRow()"><i class="fas fa-plus me-1"></i> Add PIC</button>
+                                </div>
+                                <div id="leadPicsContainer"></div>
+                            </div>
+
+                            {{-- Kebutuhan Produk --}}
+                            <div class="col-12 mt-1">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div style="font-size:.78rem;font-weight:600;color:var(--primary)">
+                                        <i class="fas fa-box me-1"></i> Kebutuhan Produk
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:2px 8px" onclick="addLeadProductRow()"><i class="fas fa-plus me-1"></i> Add Produk</button>
+                                </div>
+                                <div id="leadProductsContainer"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -271,6 +293,33 @@
     <script>
         function confirmDelete(msg) {
             return confirm(msg || 'Apakah Anda yakin ingin menghapus data ini?');
+        }
+
+        // ── Inline PIC rows ──
+        let leadPicIdx = 0;
+        function addLeadPicRow() {
+            const i = leadPicIdx++;
+            const html = `<div class="row g-2 mb-2 align-items-center" id="leadPic_${i}">
+                <div class="col-4"><input type="text" name="pics[${i}][pic_name]" class="form-control form-control-sm" placeholder="Nama PIC *" required></div>
+                <div class="col-3"><input type="text" name="pics[${i}][pic_position]" class="form-control form-control-sm" placeholder="Jabatan"></div>
+                <div class="col-2"><input type="text" name="pics[${i}][phone]" class="form-control form-control-sm" placeholder="Phone"></div>
+                <div class="col-2"><input type="email" name="pics[${i}][email]" class="form-control form-control-sm" placeholder="Email"></div>
+                <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('leadPic_${i}').remove()"><i class="fas fa-times"></i></button></div>
+            </div>`;
+            document.getElementById('leadPicsContainer').insertAdjacentHTML('beforeend', html);
+        }
+
+        // ── Inline Product rows ──
+        let leadProdIdx = 0;
+        function addLeadProductRow() {
+            const i = leadProdIdx++;
+            const html = `<div class="row g-2 mb-2 align-items-center" id="leadProd_${i}">
+                <div class="col-5"><input type="text" name="products[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" required></div>
+                <div class="col-3"><input type="number" name="products[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.01"></div>
+                <div class="col-3"><input type="text" name="products[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)"></div>
+                <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('leadProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
+            </div>`;
+            document.getElementById('leadProductsContainer').insertAdjacentHTML('beforeend', html);
         }
 
         // Auto-reopen modal Add Lead jika ada error validasi (preserve data)

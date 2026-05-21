@@ -21,6 +21,7 @@ class Supplier extends Model
 
     public function purchaseOrders(): HasMany { return $this->hasMany(PurchaseOrder::class); }
     public function products(): HasMany       { return $this->hasMany(SupplierProduct::class); }
+    public function pics(): HasMany           { return $this->hasMany(SupplierPic::class); }
 
     public function isExisting(): bool  { return $this->relationship_status === 'Existing'; }
     public function isPotential(): bool { return $this->relationship_status === 'Potential'; }
