@@ -238,35 +238,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="addItemsBody">
-                                    {{-- Row pertama default --}}
-                                    <tr>
-                                        <td><input type="text" name="items[0][product_name]"
-                                                class="form-control form-control-sm" required></td>
-                                        <td><input type="text" name="items[0][unit]" class="form-control form-control-sm"
-                                                placeholder="kg" value="kg"></td>
-                                        <td><input type="number" name="items[0][qty]"
-                                                class="form-control form-control-sm item-qty" step="0.001" min="0" required
-                                                oninput="calcRow(this)"></td>
-                                        <td>
-                                            <input type="hidden" name="items[0][buy_price]" class="item-buy-hidden"
-                                                value="0">
-                                            <input type="text" class="form-control form-control-sm item-buy" placeholder="0"
-                                                oninput="syncHidden(this,'item-buy-hidden');calcRow(this)"
-                                                onblur="formatPriceInput(this)">
-                                        </td>
-                                        <td>
-                                            <input type="hidden" name="items[0][sell_price]" class="item-sell-hidden"
-                                                value="0">
-                                            <input type="text" class="form-control form-control-sm item-sell"
-                                                placeholder="0" oninput="syncHidden(this,'item-sell-hidden');calcRow(this)"
-                                                onblur="formatPriceInput(this)">
-                                        </td>
-                                        <td class="item-profit text-end"
-                                            style="font-weight:600;color:#10b981;vertical-align:middle">Rp 0</td>
-                                        <td><button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="removeRow(this)" style="padding:2px 6px"><i
-                                                    class="fas fa-times"></i></button></td>
-                                    </tr>
+                                    {{-- Diisi via JS addItemRow() saat modal dibuka --}}
                                 </tbody>
                                 <tfoot>
                                     <tr style="background:#f8f9fa;font-weight:700">
@@ -611,6 +583,28 @@
 
                 modal.show();
             }
+
+            // ── Init modal Add PO: tambah 1 row kosong saat modal dibuka, reset saat ditutup ──
+            document.addEventListener('DOMContentLoaded', function () {
+                const addModal = document.getElementById('addPoModal');
+                if (!addModal) return;
+
+                addModal.addEventListener('show.bs.modal', function () {
+                    const body = document.getElementById('addItemsBody');
+                    if (body && body.querySelectorAll('tr').length === 0) {
+                        addItemRow('addItemsBody');
+                    }
+                });
+
+                addModal.addEventListener('hidden.bs.modal', function () {
+                    // Reset tbody dan supplier select saat modal ditutup
+                    const body = document.getElementById('addItemsBody');
+                    if (body) body.innerHTML = '';
+                    const supSel = document.getElementById('addSupplierSelect');
+                    if (supSel) supSel.value = '';
+                    itemIndex = 0;
+                });
+            });
         </script>
     @endpush
 @endsection
