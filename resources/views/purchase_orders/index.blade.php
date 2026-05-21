@@ -164,7 +164,7 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label">Customer</label>
-                                <select name="customer_id" id="addCustomerSelect" class="form-select" onchange="onCustomerChange(this,'addLeadSelect')">
+                                <select name="customer_id" id="addCustomerSelect" class="form-select" onchange="onCustomerChange(this,'addLeadDisplay')">
                                     <option value="">-- Pilih Customer --</option>
                                     @foreach($customers as $c)
                                         <option value="{{ $c->id }}" data-name="{{ strtolower(trim($c->company_name)) }}">{{ $c->company_name }}</option>
@@ -182,12 +182,9 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Linked Lead</label>
-                                <select id="addLeadSelect" class="form-select" onchange="syncLeadHidden('addLeadSelect','addLeadHidden')">
-                                    <option value="">-- Pilih Lead --</option>
-                                    @foreach($leads as $l)
-                                        <option value="{{ $l->id }}" data-customer="{{ $l->customer_id ?? '' }}" data-name="{{ strtolower(trim($l->company_name)) }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" id="addLeadDisplay" class="form-control"
+                                    placeholder="Otomatis dari Customer" readonly
+                                    style="background:#f9fafb;cursor:default;color:#374151">
                                 <input type="hidden" name="lead_id" id="addLeadHidden" value="">
                             </div>
                             <div class="col-md-3">
@@ -275,7 +272,7 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label">Customer</label>
-                                <select name="customer_id" id="epCustomer" class="form-select" onchange="onCustomerChange(this,'epLead')">
+                                <select name="customer_id" id="epCustomer" class="form-select" onchange="onCustomerChange(this,'epLeadDisplay')">
                                     <option value="">-- Pilih Customer --</option>
                                     @foreach($customers as $c)
                                         <option value="{{ $c->id }}" data-name="{{ strtolower(trim($c->company_name)) }}">{{ $c->company_name }}</option>
@@ -293,12 +290,9 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Linked Lead</label>
-                                <select id="epLead" class="form-select" onchange="syncLeadHidden('epLead','epLeadHidden')">
-                                    <option value="">-- Pilih Lead --</option>
-                                    @foreach($leads as $l)
-                                        <option value="{{ $l->id }}" data-customer="{{ $l->customer_id ?? '' }}" data-name="{{ strtolower(trim($l->company_name)) }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" id="epLeadDisplay" class="form-control"
+                                    placeholder="Otomatis dari Customer" readonly
+                                    style="background:#f9fafb;cursor:default;color:#374151">
                                 <input type="hidden" name="lead_id" id="epLeadHidden" value="">
                             </div>
                             <div class="col-md-3">
@@ -433,6 +427,16 @@
             // Map supplier_id → products dari controller
             const supplierProductsMap = @json($supplierProducts->groupBy('supplier_id'));
 
+            // Map customer_id & company_name → lead info untuk Linked Lead
+            const leadsByCustomerId = {};
+            const leadsByName       = {};
+            @foreach($leads as $l)
+            @if($l->customer_id)
+            leadsByCustomerId['{{ $l->customer_id }}'] = { id: {{ $l->id }}, label: '[{{ $l->lead_code }}] {{ addslashes($l->company_name) }}' };
+            @endif
+            leadsByName['{{ strtolower(trim($l->company_name)) }}'] = { id: {{ $l->id }}, label: '[{{ $l->lead_code }}] {{ addslashes($l->company_name) }}' };
+            @endforeach
+
             function onSupplierChange(sel, bodyId) {
                 // Reset dropdown produk di semua rows body tersebut
                 const supplierId = sel.value;
@@ -557,14 +561,29 @@
                 setSelect2('epCustomer', po.customer_id);
                 setSelect2('epSupplier', po.supplier_id);
 
-                // Filter lead sesuai customer — ini sudah auto-select juga
+                // Auto-fill linked lead berdasarkan customer
                 const epCustEl = document.getElementById('epCustomer');
-                if (epCustEl) onCustomerChange(epCustEl, 'epLead');
-                // Kalau lead dari PO tidak cocok filter (edge case), override paksa
+                if (epCustEl) onCustomerChange(epCustEl, 'epLeadDisplay');
+                // Override jika PO punya lead_id spesifik
                 if (po.lead_id) {
-                    setSelect2('epLead', po.lead_id);
-                    const epLeadHid = document.getElementById('epLeadHidden');
+                    const epLeadHid  = document.getElementById('epLeadHidden');
+                    const epLeadDisp = document.getElementById('epLeadDisplay');
                     if (epLeadHid) epLeadHid.value = po.lead_id;
+                    // Cari label lead
+                    let label = '';
+                    for (const key in leadsByCustomerId) {
+                        if (String(leadsByCustomerId[key].id) === String(po.lead_id)) {
+                            label = leadsByCustomerId[key].label; break;
+                        }
+                    }
+                    if (!label) {
+                        for (const key in leadsByName) {
+                            if (String(leadsByName[key].id) === String(po.lead_id)) {
+                                label = leadsByName[key].label; break;
+                            }
+                        }
+                    }
+                    if (epLeadDisp && label) epLeadDisp.value = label;
                 }
 
                 const body = document.getElementById('editItemsBody');
@@ -596,57 +615,31 @@
             }
 
             // ── Filter Linked Lead berdasarkan Customer yang dipilih ──
-            // Sync select value ke hidden input
-            function syncLeadHidden(selectId, hiddenId) {
-                const sel = document.getElementById(selectId);
-                const hid = document.getElementById(hiddenId);
-                if (sel && hid) hid.value = sel.value;
-            }
-
-            function onCustomerChange(custSel, leadSelectId) {
+            function onCustomerChange(custSel, displayId) {
                 const customerId   = String(custSel.value || '').trim();
                 const customerName = String(custSel.options[custSel.selectedIndex]?.dataset?.name || '').trim();
-                const leadSel      = document.getElementById(leadSelectId);
-                const hiddenId     = leadSelectId === 'addLeadSelect' ? 'addLeadHidden' : 'epLeadHidden';
-                const leadHid      = document.getElementById(hiddenId);
-                if (!leadSel) return;
+                const isAdd        = displayId === 'addLeadDisplay';
+                const display      = document.getElementById(displayId);
+                const hiddenId     = isAdd ? 'addLeadHidden' : 'epLeadHidden';
+                const hidden       = document.getElementById(hiddenId);
 
                 if (!customerId) {
-                    // Tidak ada customer — tampil semua, unlock
-                    Array.from(leadSel.options).forEach(opt => opt.hidden = false);
-                    leadSel.value = '';
-                    leadSel.disabled = false;
-                    leadSel.style.cssText = '';
-                    if (leadHid) leadHid.value = '';
+                    if (display) { display.value = ''; display.placeholder = 'Otomatis dari Customer'; }
+                    if (hidden)  hidden.value = '';
                     return;
                 }
 
-                // Filter + auto-select
-                let matchedOpt = null;
-                Array.from(leadSel.options).forEach(opt => {
-                    if (!opt.value) { opt.hidden = false; return; }
-                    const optCustId   = String(opt.dataset.customer || '').trim();
-                    const optLeadName = String(opt.dataset.name || '').trim();
-                    const matchById   = optCustId !== '' && optCustId === customerId;
-                    const matchByName = optCustId === '' && customerName !== '' && optLeadName === customerName;
-                    const isMatch     = matchById || matchByName;
-                    opt.hidden = !isMatch;
-                    if (isMatch && !matchedOpt) matchedOpt = opt;
-                });
+                // Cari lead: by customer_id dulu, fallback by nama
+                let lead = leadsByCustomerId[customerId]
+                        || leadsByName[customerName]
+                        || null;
 
-                if (matchedOpt) {
-                    leadSel.value = matchedOpt.value;
-                    if (leadHid) leadHid.value = matchedOpt.value;
-                    // Lock visual — tidak bisa diubah user
-                    leadSel.disabled = true;
-                    leadSel.style.opacity       = '0.65';
-                    leadSel.style.cursor        = 'not-allowed';
-                    leadSel.style.pointerEvents = 'none';
+                if (lead) {
+                    if (display) display.value = lead.label;
+                    if (hidden)  hidden.value  = lead.id;
                 } else {
-                    leadSel.value = '';
-                    if (leadHid) leadHid.value = '';
-                    leadSel.disabled = false;
-                    leadSel.style.cssText = '';
+                    if (display) { display.value = ''; display.placeholder = 'Tidak ada lead terkait'; }
+                    if (hidden)  hidden.value = '';
                 }
             }
 
