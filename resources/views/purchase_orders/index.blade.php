@@ -182,12 +182,13 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Linked Lead</label>
-                                <select name="lead_id" id="addLeadSelect" class="form-select">
+                                <select id="addLeadSelect" class="form-select" onchange="syncLeadHidden('addLeadSelect','addLeadHidden')">
                                     <option value="">-- Pilih Lead --</option>
                                     @foreach($leads as $l)
                                         <option value="{{ $l->id }}" data-customer="{{ $l->customer_id ?? '' }}" data-name="{{ strtolower(trim($l->company_name)) }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="lead_id" id="addLeadHidden" value="">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tgl Order <span class="text-danger">*</span></label>
@@ -292,12 +293,13 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Linked Lead</label>
-                                <select name="lead_id" id="epLead" class="form-select">
+                                <select id="epLead" class="form-select" onchange="syncLeadHidden('epLead','epLeadHidden')">
                                     <option value="">-- Pilih Lead --</option>
                                     @foreach($leads as $l)
                                         <option value="{{ $l->id }}" data-customer="{{ $l->customer_id ?? '' }}" data-name="{{ strtolower(trim($l->company_name)) }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="lead_id" id="epLeadHidden" value="">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tgl Order <span class="text-danger">*</span></label>
@@ -555,10 +557,15 @@
                 setSelect2('epCustomer', po.customer_id);
                 setSelect2('epSupplier', po.supplier_id);
 
-                // Filter lead dulu sesuai customer, baru set nilai lead
+                // Filter lead sesuai customer — ini sudah auto-select juga
                 const epCustEl = document.getElementById('epCustomer');
                 if (epCustEl) onCustomerChange(epCustEl, 'epLead');
-                setSelect2('epLead', po.lead_id);
+                // Kalau lead dari PO tidak cocok filter (edge case), override paksa
+                if (po.lead_id) {
+                    setSelect2('epLead', po.lead_id);
+                    const epLeadHid = document.getElementById('epLeadHidden');
+                    if (epLeadHid) epLeadHid.value = po.lead_id;
+                }
 
                 const body = document.getElementById('editItemsBody');
                 body.innerHTML = '';
@@ -589,34 +596,57 @@
             }
 
             // ── Filter Linked Lead berdasarkan Customer yang dipilih ──
+            // Sync select value ke hidden input
+            function syncLeadHidden(selectId, hiddenId) {
+                const sel = document.getElementById(selectId);
+                const hid = document.getElementById(hiddenId);
+                if (sel && hid) hid.value = sel.value;
+            }
+
             function onCustomerChange(custSel, leadSelectId) {
                 const customerId   = String(custSel.value || '').trim();
                 const customerName = String(custSel.options[custSel.selectedIndex]?.dataset?.name || '').trim();
                 const leadSel      = document.getElementById(leadSelectId);
+                const hiddenId     = leadSelectId === 'addLeadSelect' ? 'addLeadHidden' : 'epLeadHidden';
+                const leadHid      = document.getElementById(hiddenId);
                 if (!leadSel) return;
 
+                if (!customerId) {
+                    // Tidak ada customer — tampil semua, unlock
+                    Array.from(leadSel.options).forEach(opt => opt.hidden = false);
+                    leadSel.value = '';
+                    leadSel.disabled = false;
+                    leadSel.style.cssText = '';
+                    if (leadHid) leadHid.value = '';
+                    return;
+                }
+
+                // Filter + auto-select
+                let matchedOpt = null;
                 Array.from(leadSel.options).forEach(opt => {
-                    if (!opt.value) { opt.hidden = false; return; } // placeholder selalu tampil
-
-                    if (!customerId) {
-                        opt.hidden = false;
-                        return;
-                    }
-
+                    if (!opt.value) { opt.hidden = false; return; }
                     const optCustId   = String(opt.dataset.customer || '').trim();
                     const optLeadName = String(opt.dataset.name || '').trim();
-
-                    // Match by customer_id (primary) ATAU by company name (fallback untuk data lama yg customer_id masih null)
                     const matchById   = optCustId !== '' && optCustId === customerId;
                     const matchByName = optCustId === '' && customerName !== '' && optLeadName === customerName;
-
-                    opt.hidden = !(matchById || matchByName);
+                    const isMatch     = matchById || matchByName;
+                    opt.hidden = !isMatch;
+                    if (isMatch && !matchedOpt) matchedOpt = opt;
                 });
 
-                // Reset lead jika option terpilih sudah disembunyikan
-                const selectedOpt = leadSel.options[leadSel.selectedIndex];
-                if (selectedOpt && selectedOpt.hidden) {
+                if (matchedOpt) {
+                    leadSel.value = matchedOpt.value;
+                    if (leadHid) leadHid.value = matchedOpt.value;
+                    // Lock visual — tidak bisa diubah user
+                    leadSel.disabled = true;
+                    leadSel.style.opacity       = '0.65';
+                    leadSel.style.cursor        = 'not-allowed';
+                    leadSel.style.pointerEvents = 'none';
+                } else {
                     leadSel.value = '';
+                    if (leadHid) leadHid.value = '';
+                    leadSel.disabled = false;
+                    leadSel.style.cssText = '';
                 }
             }
 
