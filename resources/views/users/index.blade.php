@@ -117,13 +117,17 @@
                                 onclick="openEditUser({{ $user->id }},'{{ addslashes($user->name) }}','{{ $user->email }}','{{ $user->phone }}','{{ $user->position }}','{{ $user->role }}','{{ $user->status ?? 'Active' }}','{{ $user->target ?? 0 }}')">
                                 <i class="fas fa-edit"></i>
                             </button>
+                            @if($user->status === 'Active')
                             <form method="POST" action="{{ route('users.destroy', $user) }}" class="d-inline"
-                                onsubmit="return confirm('Hapus user {{ addslashes($user->name) }}?')">
+                                onsubmit="return confirm('Nonaktifkan user {{ addslashes($user->name) }}? User tidak akan bisa login.')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm" style="padding:4px 8px;border:1px solid #fecaca;border-radius:6px;font-size:11px;color:#dc2626">
-                                    <i class="fas fa-trash"></i>
+                                <button type="submit" class="btn btn-sm" style="padding:4px 8px;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#d97706" title="Nonaktifkan">
+                                    <i class="fas fa-user-slash"></i>
                                 </button>
                             </form>
+                            @else
+                            <span style="font-size:10px;color:#9ca3af;padding:4px 6px;border:1px solid #e5e7eb;border-radius:6px">Non-Active</span>
+                            @endif
                         </div>
                     </td>
                 </tr>
