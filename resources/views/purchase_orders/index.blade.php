@@ -66,10 +66,10 @@
                         <table class="table table-hover mb-0" style="font-size:13px">
                             <thead style="background:#f8f9fa">
                                 <tr>
+                                    <th class="px-3 py-2" style="width:28px"></th>
                                     <th class="px-3 py-2">No. PO</th>
                                     <th class="py-2">Customer</th>
                                     <th class="py-2">Supplier</th>
-                                    <th class="py-2">Item(s)</th>
                                     <th class="py-2">Sales PIC</th>
                                     <th class="py-2">Revenue</th>
                                     <th class="py-2">HPP</th>
@@ -86,52 +86,79 @@
                                         $sc = ['Done' => ['#d1fae5', '#059669'], 'In Progress' => ['#dbeafe', '#2563eb'], 'Cancelled' => ['#fee2e2', '#dc2626']];
                                         $c = $sc[$po->status] ?? ['#f3f4f6', '#6b7280'];
                                     @endphp
-                                    <tr>
-                                        <td class="px-3 py-2" style="font-weight:700;color:var(--primary)">{{ $po->po_number }}
+                                    <tr id="po-row-{{ $po->id }}">
+                                        <td class="px-3 py-2" style="text-align:center">
+                                            <button class="btn btn-sm" style="padding:2px 6px;border:none;background:none;color:#6b7280"
+                                                onclick="toggleDetail({{ $po->id }}, this)" title="Lihat detail item">
+                                                <i class="fas fa-chevron-right" style="font-size:10px;transition:.2s"></i>
+                                            </button>
                                         </td>
-                                        <td class="py-2">{{ $po->customer?->company_name ?? '-' }}</td>
-                                        <td class="py-2" style="color:#6b7280;font-size:12px">
-                                            {{ $po->supplier?->supplier_name ?? '-' }}</td>
-                                        <td class="py-2">
-                                            @foreach($po->items->take(2) as $item)
-                                                <div style="font-size:11px">{{ $item->product_name }} <span
-                                                        style="color:#9ca3af">({{ number_format($item->qty, 0, '.', '.') }}
-                                                        {{ $item->unit }})</span></div>
-                                            @endforeach
-                                            @if($po->items->count() > 2)
-                                                <div style="font-size:10px;color:#9ca3af">+{{ $po->items->count() - 2 }} item lagi
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td class="py-2" style="font-size:12px">
-                                            <div style="font-weight:600">{{ $po->salesUser?->name ?? '-' }}</div>
-                                        </td>
-                                        <td class="py-2" style="font-weight:600;color:var(--primary);white-space:nowrap">
-                                            {{ idr($po->total_revenue) }}</td>
-                                        <td class="py-2" style="color:#dc2626;font-size:12px;white-space:nowrap">
-                                            {{ idr($po->total_cost) }}</td>
-                                        <td class="py-2" style="font-weight:600;color:#10b981;white-space:nowrap">
-                                            {{ idr($po->gross_profit) }}</td>
+                                        <td class="px-3 py-2" style="font-weight:700;color:var(--primary)">{{ $po->po_number }}</td>
+                                        <td class="py-2" style="font-size:12px">{{ $po->customer?->company_name ?? '-' }}</td>
+                                        <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->supplier?->supplier_name ?? '-' }}</td>
+                                        <td class="py-2" style="font-size:12px;font-weight:600">{{ $po->salesUser?->name ?? '-' }}</td>
+                                        <td class="py-2" style="font-weight:600;color:var(--primary);white-space:nowrap">{{ idr($po->total_revenue) }}</td>
+                                        <td class="py-2" style="color:#dc2626;font-size:12px;white-space:nowrap">{{ idr($po->total_cost) }}</td>
+                                        <td class="py-2" style="font-weight:600;color:#10b981;white-space:nowrap">{{ idr($po->gross_profit) }}</td>
                                         <td class="py-2" style="font-size:12px;color:#6b7280">{{ $po->gross_margin }}%</td>
                                         <td class="py-2">
-                                            <span
-                                                style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:{{ $c[0] }};color:{{ $c[1] }}">{{ $po->status }}</span>
+                                            <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:{{ $c[0] }};color:{{ $c[1] }}">{{ $po->status }}</span>
                                         </td>
-                                        <td class="py-2" style="color:#6b7280;font-size:12px">
-                                            {{ $po->order_date?->format('d M Y') }}</td>
+                                        <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->order_date?->format('d M Y') }}</td>
                                         <td class="py-2">
-                                            <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px"
-                                                onclick="openEditPo({{ $po->id }})">
+                                            <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px" onclick="openEditPo({{ $po->id }})">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </button>
-                                            <form method="POST" action="{{ route('purchase-orders.destroy', $po) }}"
-                                                class="d-inline" onsubmit="return confirm('Hapus PO {{ $po->po_number }}?')">
+                                            <form method="POST" action="{{ route('purchase-orders.destroy', $po) }}" class="d-inline"
+                                                onsubmit="return confirm('Hapus PO {{ $po->po_number }}?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    style="padding:3px 7px">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
+                                        </td>
+                                    </tr>
+                                    {{-- Detail row (collapsed) --}}
+                                    <tr id="po-detail-{{ $po->id }}" style="display:none;background:#f8faff">
+                                        <td></td>
+                                        <td colspan="11" class="px-3 py-2">
+                                            <div style="font-size:11px;font-weight:600;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">
+                                                Detail Item — {{ $po->po_number }}
+                                                @if($po->notes) <span style="font-weight:400;color:#9ca3af;margin-left:8px"><i class="fas fa-sticky-note me-1"></i>{{ $po->notes }}</span> @endif
+                                            </div>
+                                            <table style="width:100%;font-size:12px;border-collapse:collapse">
+                                                <thead>
+                                                    <tr style="background:#e8f0fe">
+                                                        <th style="padding:5px 8px;text-align:left;font-size:11px;color:#3b4a6b">Produk</th>
+                                                        <th style="padding:5px 8px;text-align:center;font-size:11px;color:#3b4a6b">Satuan</th>
+                                                        <th style="padding:5px 8px;text-align:right;font-size:11px;color:#3b4a6b">Qty</th>
+                                                        <th style="padding:5px 8px;text-align:right;font-size:11px;color:#3b4a6b">Harga Beli</th>
+                                                        <th style="padding:5px 8px;text-align:right;font-size:11px;color:#3b4a6b">Harga Jual</th>
+                                                        <th style="padding:5px 8px;text-align:right;font-size:11px;color:#3b4a6b">Subtotal Revenue</th>
+                                                        <th style="padding:5px 8px;text-align:right;font-size:11px;color:#3b4a6b">Gross Profit</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($po->items as $item)
+                                                    <tr style="border-bottom:1px solid #e5e7eb">
+                                                        <td style="padding:5px 8px;font-weight:600">{{ $item->product_name }}</td>
+                                                        <td style="padding:5px 8px;text-align:center;color:#6b7280">{{ $item->unit }}</td>
+                                                        <td style="padding:5px 8px;text-align:right">{{ number_format($item->qty, 2, ',', '.') }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:#dc2626">{{ idr($item->buy_price) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:var(--primary)">{{ idr($item->sell_price) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;font-weight:600;color:var(--primary)">{{ idr($item->qty * $item->sell_price) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;font-weight:600;color:#10b981">{{ idr(($item->sell_price - $item->buy_price) * $item->qty) }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr style="background:#f0f4ff;font-weight:700">
+                                                        <td colspan="5" style="padding:5px 8px;text-align:right;font-size:11px;color:#6b7280">TOTAL</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:var(--primary)">{{ idr($po->total_revenue) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:#10b981">{{ idr($po->gross_profit) }}</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
                                         </td>
                                     </tr>
                                 @empty
@@ -297,7 +324,8 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tgl Order <span class="text-danger">*</span></label>
-                                <input type="date" name="order_date" id="epDate" class="form-control" required>
+                                <input type="date" name="order_date" id="epDate" class="form-control" required
+                                    readonly style="background:#f9fafb;cursor:default;color:#374151">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Status <span class="text-danger">*</span></label>
@@ -640,6 +668,20 @@
                 } else {
                     if (display) { display.value = ''; display.placeholder = 'Tidak ada lead terkait'; }
                     if (hidden)  hidden.value = '';
+                }
+            }
+
+            // ── Expand/collapse detail row PO ──
+            function toggleDetail(poId, btn) {
+                const detail = document.getElementById('po-detail-' + poId);
+                const icon   = btn.querySelector('i');
+                if (!detail) return;
+                if (detail.style.display === 'none') {
+                    detail.style.display = 'table-row';
+                    icon.style.transform = 'rotate(90deg)';
+                } else {
+                    detail.style.display = 'none';
+                    icon.style.transform = 'rotate(0deg)';
                 }
             }
 

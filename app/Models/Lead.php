@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lead extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'lead_code','customer_id','company_name','pic_name','pic_position',
         'phone','email','address','industry','location','pipeline_stage','temperature',
