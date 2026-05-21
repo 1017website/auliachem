@@ -44,7 +44,11 @@ class PurchaseOrderController extends Controller
 
         $customers = Customer::orderBy('company_name')->get(['id', 'company_name']);
         $suppliers = Supplier::where('status', 'Active')->orderBy('supplier_name')->get(['id', 'supplier_name', 'source_type']);
-        $leads     = Lead::whereIn('pipeline_stage', ['Closing', 'Won', 'Maintaining'])->orderBy('company_name')->get(['id', 'company_name', 'lead_code', 'customer_id']);
+        $leads = Lead::where(function($q) {
+                // Semua stage closing/won/maintaining ATAU lead yang sudah linked ke customer
+                $q->whereIn('pipeline_stage', ['Closing', 'Won', 'Maintaining'])
+                  ->orWhereNotNull('customer_id');
+            })->orderBy('company_name')->get(['id', 'company_name', 'lead_code', 'customer_id']);
 
         // Ambil semua products per supplier untuk dropdown PO items
         $supplierProducts = \App\Models\SupplierProduct::with('supplier')
