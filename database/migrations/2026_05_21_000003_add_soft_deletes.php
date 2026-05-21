@@ -9,7 +9,7 @@ return new class extends Migration
     // Tabel yang perlu soft delete
     private array $tables = [
         'leads', 'customers', 'suppliers',
-        'activities', 'purchase_orders', 'users',
+        'activities', 'purchase_orders',
     ];
 
     public function up(): void
