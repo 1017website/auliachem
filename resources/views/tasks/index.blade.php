@@ -158,16 +158,10 @@
 
         <!-- Actions -->
         <div class="d-flex gap-1">
-            @if($task->status !== 'Pending')
             <button class="btn btn-sm" style="padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;color:#6b7280"
                 onclick="openEditTask({{ $task->id }}, '{{ addslashes($task->subject) }}', '{{ $task->status }}')">
                 <i class="fas fa-edit"></i>
             </button>
-            @else
-            <button class="btn btn-sm" style="padding:4px 8px;border:1px solid #f3f4f6;border-radius:6px;font-size:11px;color:#d1d5db;cursor:not-allowed" disabled title="Selesaikan task terlebih dahulu">
-                <i class="fas fa-edit"></i>
-            </button>
-            @endif
             <form method="POST" action="{{ route('tasks.destroy', $task->id) }}"
                 onsubmit="return confirm('Apakah Anda yakin ingin menghapus task ini? Tindakan ini tidak dapat dibatalkan.')">
                 @csrf @method('DELETE')
