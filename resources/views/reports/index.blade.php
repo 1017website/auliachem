@@ -14,53 +14,100 @@
 .report-table td { padding:11px 12px;border-bottom:1px solid #f9fafb;color:#374151;vertical-align:middle; }
 .report-table tr:hover td { background:#fafbfc; }
 
+/* ── PRINT STYLES ── */
+.print-header { display: none; }
+.print-kpi-grid { display: none; }
+
 @media print {
-    /* Sembunyikan elemen UI */
-    .sidebar,
-    .topbar,
+    /* Sembunyikan semua elemen UI */
+    .sidebar, nav.sidebar,
+    .topbar, header,
     .report-filters-section,
     .report-tabs-section,
     .export-section,
     .pagination,
     nav[aria-label="pagination"],
-    a.report-tab { display: none !important; }
+    .card-footer,
+    a.report-tab,
+    button { display: none !important; }
 
-    /* Tampilkan print header */
-    .print-header { display: block !important; }
+    /* Tampilkan print-only elements */
+    .print-header   { display: block !important; }
+    .print-kpi-grid { display: grid !important; }
 
-    /* Reset layout */
-    body, html { background: #fff !important; }
-    .main-content, main { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    /* Reset body & layout */
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { background: #fff !important; font-family: Arial, sans-serif !important; font-size: 10pt; }
+    body > * { margin: 0 !important; padding: 0 !important; }
+    .main-content, main, .content-wrapper, #app { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+
+    /* Sembunyikan summary cards bawaan (kita ganti dengan print-kpi-grid) */
+    .row.g-3.mb-4 { display: none !important; }
+
+    /* Card wrapper */
+    .card { border: none !important; box-shadow: none !important; margin: 0 !important; }
+    .card-body { padding: 0 !important; }
+    .table-responsive { overflow: visible !important; }
 
     /* Tabel */
-    .table-responsive { overflow: visible !important; }
-    .report-table { width: 100% !important; border-collapse: collapse !important; font-size: 8px !important; }
+    .report-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 8pt !important;
+        margin-top: 6px !important;
+    }
+    .report-table thead tr { background: #1e3a5f !important; }
     .report-table th {
         background: #1e3a5f !important;
         color: #fff !important;
-        padding: 4px 5px !important;
-        font-size: 8px !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+        padding: 5px 6px !important;
+        font-size: 7.5pt !important;
+        font-weight: 700 !important;
+        border: 1px solid #1e3a5f !important;
+        white-space: nowrap;
     }
-    .report-table td { padding: 3px 5px !important; border-bottom: 1px solid #e5e7eb !important; font-size: 8px !important; }
-    .report-table a { color: #0f1d35 !important; text-decoration: none !important; }
-    .card { border: none !important; box-shadow: none !important; }
-    .card-body { padding: 0 !important; }
-
-    /* Summary cards */
-    .summary-card {
-        border: 1px solid #e5e7eb !important;
-        padding: 8px 10px !important;
-        page-break-inside: avoid;
+    .report-table td {
+        padding: 4px 6px !important;
+        border: 1px solid #d1d5db !important;
+        font-size: 8pt !important;
+        vertical-align: middle !important;
+        color: #111 !important;
     }
-    .row.g-3 { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
-    .col { flex: 1 !important; min-width: 120px !important; }
+    .report-table tr:nth-child(even) td { background: #f9fafb !important; }
+    .report-table a { color: #0f1d35 !important; text-decoration: none !important; font-weight: 600; }
 
-    @page { size: A4 portrait; margin: 1.5cm 1cm; }
+    /* Badges */
+    span[class*="badge"] {
+        border: 1px solid #ccc !important;
+        border-radius: 4px !important;
+        padding: 1px 5px !important;
+        font-size: 7pt !important;
+        font-weight: 600 !important;
+        background: #f3f4f6 !important;
+        color: #374151 !important;
+    }
+
+    /* Disclaimer */
+    .p-3.pt-0 { padding: 4px 0 0 0 !important; }
+
+    @page { size: A4 landscape; margin: 1.2cm 1cm; }
 }
 
-.print-header { display: none; }
+/* ── KPI grid khusus print ── */
+.print-kpi-grid {
+    display: none;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.print-kpi-grid .pkpi {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+}
+.print-kpi-grid .pkpi-label { font-size: 8pt; color: #6b7280; margin-bottom: 2px; }
+.print-kpi-grid .pkpi-value { font-size: 11pt; font-weight: 700; color: #0f1d35; }
 </style>
 @endpush
 
@@ -150,17 +197,32 @@
 </form>
 
 {{-- Print Header (hanya muncul saat print) --}}
-<div class="print-header" style="margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1e3a5f">
+<div class="print-header" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid #1e3a5f">
     <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-            <div style="font-size:18px;font-weight:700;color:#1e3a5f">{{ \App\Models\Setting::get('company_name', 'Chemical CRM') }}</div>
-            <div style="font-size:13px;color:#6b7280;margin-top:2px">Laporan: <strong>{{ ['sales'=>'Sales Report','customer'=>'Customer Report','pipeline'=>'Pipeline Report','performance'=>'Performance Report','po'=>'PO Report'][$reportType] ?? $reportType }}</strong></div>
+        <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:42px;height:42px;background:#1e3a5f;border-radius:8px;display:flex;align-items:center;justify-content:center">
+                <span style="color:#fff;font-weight:800;font-size:14pt">C</span>
+            </div>
+            <div>
+                <div style="font-size:14pt;font-weight:700;color:#1e3a5f">{{ \App\Models\Setting::get('company_name', 'Chemical CRM') }}</div>
+                <div style="font-size:9pt;color:#6b7280">Laporan: <strong>{{ ['sales'=>'Sales Report','customer'=>'Customer Report','pipeline'=>'Pipeline Report','performance'=>'Performance Report','po'=>'PO Report'][$reportType] ?? $reportType }}</strong></div>
+            </div>
         </div>
-        <div style="text-align:right;font-size:12px;color:#6b7280">
-            <div>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} – {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</div>
+        <div style="text-align:right;font-size:9pt;color:#6b7280;line-height:1.6">
+            <div>Periode: <strong>{{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}</strong> s/d <strong>{{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</strong></div>
             <div>Dicetak: {{ now()->format('d M Y, H:i') }}</div>
         </div>
     </div>
+</div>
+
+{{-- Print KPI Grid (hanya muncul saat print, menggantikan summary cards) --}}
+<div class="print-kpi-grid">
+    <div class="pkpi"><div class="pkpi-label">Total Revenue</div><div class="pkpi-value">{{ idrm($revenue) }}</div></div>
+    <div class="pkpi"><div class="pkpi-label">Gross Profit</div><div class="pkpi-value">{{ idrm($grossProfit ?? 0) }}</div></div>
+    <div class="pkpi"><div class="pkpi-label">Nett Profit</div><div class="pkpi-value">{{ idrm($nettProfit ?? 0) }}</div></div>
+    <div class="pkpi"><div class="pkpi-label">Avg Deal Value</div><div class="pkpi-value">{{ idrm($avgDealValue) }}</div></div>
+    <div class="pkpi"><div class="pkpi-label">Conversion Rate</div><div class="pkpi-value">{{ $conversionRate }}%</div></div>
+    <div class="pkpi"><div class="pkpi-label">Win Rate</div><div class="pkpi-value">{{ $winRate }}%</div></div>
 </div>
 
 {{-- Summary KPI --}}
@@ -200,6 +262,13 @@
     </div>
 
     <div class="card-body p-0 mt-3">
+        {{-- Section title saat print --}}
+        <div class="print-header" style="font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e5e7eb">
+            {{ ['sales'=>'Sales Report Detail','customer'=>'Customer Report','pipeline'=>'Pipeline Report','performance'=>'Performance Report','po'=>'PO Report'][$reportType] ?? 'Report Detail' }}
+            @if(method_exists($reportData,'total'))
+            <span style="font-size:9pt;color:#6b7280;font-weight:400"> — {{ $reportData->total() }} data</span>
+            @endif
+        </div>
         <div class="table-responsive">
 
         {{-- Sales Report --}}

@@ -253,13 +253,20 @@
                         <label class="form-label">Client / Company <span class="text-danger">*</span></label>
                         <select name="client_ref" class="form-select" id="actLeadSelect" onchange="onLeadChange(this)">
                             <option value="">Pilih atau cari client</option>
+                            @php
+                                // ID customer existing yang berasal dari leads (sudah punya customer_id)
+                                $existingCustomerCompanyNames = \App\Models\Customer::where('status','Existing')->pluck('company_name')->map(fn($n) => strtolower(trim($n)))->toArray();
+                                // Leads yang belum jadi customer existing
+                                $leadsNotExisting = \App\Models\Lead::orderBy('company_name')->get()->filter(fn($l) => !in_array(strtolower(trim($l->company_name)), $existingCustomerCompanyNames));
+                                $existingCustomers = \App\Models\Customer::where('status','Existing')->orderBy('company_name')->get();
+                            @endphp
                             <optgroup label="— Leads —">
-                            @foreach(\App\Models\Lead::orderBy('company_name')->get() as $lead)
+                            @foreach($leadsNotExisting as $lead)
                             <option value="lead:{{ $lead->id }}" data-type="lead" data-id="{{ $lead->id }}" data-stage="{{ $lead->pipeline_stage }}">{{ $lead->company_name }} (Lead)</option>
                             @endforeach
                             </optgroup>
                             <optgroup label="— Customer Existing —">
-                            @foreach(\App\Models\Customer::where('status','Existing')->orderBy('company_name')->get() as $cust)
+                            @foreach($existingCustomers as $cust)
                             <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-stage="">{{ $cust->company_name }} (Existing)</option>
                             @endforeach
                             </optgroup>
