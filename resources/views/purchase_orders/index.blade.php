@@ -167,7 +167,7 @@
                                 <select name="customer_id" id="addCustomerSelect" class="form-select" onchange="onCustomerChange(this,'addLeadSelect')">
                                     <option value="">-- Pilih Customer --</option>
                                     @foreach($customers as $c)
-                                        <option value="{{ $c->id }}">{{ $c->company_name }}</option>
+                                        <option value="{{ $c->id }}" data-name="{{ strtolower(trim($c->company_name)) }}">{{ $c->company_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -185,7 +185,7 @@
                                 <select name="lead_id" id="addLeadSelect" class="form-select">
                                     <option value="">-- Pilih Lead --</option>
                                     @foreach($leads as $l)
-                                        <option value="{{ $l->id }}" data-customer="{{ $l->customer_id }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
+                                        <option value="{{ $l->id }}" data-customer="{{ $l->customer_id ?? '' }}" data-name="{{ strtolower(trim($l->company_name)) }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -277,7 +277,7 @@
                                 <select name="customer_id" id="epCustomer" class="form-select" onchange="onCustomerChange(this,'epLead')">
                                     <option value="">-- Pilih Customer --</option>
                                     @foreach($customers as $c)
-                                        <option value="{{ $c->id }}">{{ $c->company_name }}</option>
+                                        <option value="{{ $c->id }}" data-name="{{ strtolower(trim($c->company_name)) }}">{{ $c->company_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -295,7 +295,7 @@
                                 <select name="lead_id" id="epLead" class="form-select">
                                     <option value="">-- Pilih Lead --</option>
                                     @foreach($leads as $l)
-                                        <option value="{{ $l->id }}" data-customer="{{ $l->customer_id }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
+                                        <option value="{{ $l->id }}" data-customer="{{ $l->customer_id ?? '' }}" data-name="{{ strtolower(trim($l->company_name)) }}">[{{ $l->lead_code }}] {{ $l->company_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -590,26 +590,32 @@
 
             // ── Filter Linked Lead berdasarkan Customer yang dipilih ──
             function onCustomerChange(custSel, leadSelectId) {
-                const customerId = custSel.value;
-                const leadSel    = document.getElementById(leadSelectId);
+                const customerId   = String(custSel.value || '').trim();
+                const customerName = String(custSel.options[custSel.selectedIndex]?.dataset?.name || '').trim();
+                const leadSel      = document.getElementById(leadSelectId);
                 if (!leadSel) return;
 
-                // Tampilkan semua option dulu
                 Array.from(leadSel.options).forEach(opt => {
-                    if (!opt.value) return; // skip placeholder
-                    const optCust = opt.dataset.customer;
+                    if (!opt.value) { opt.hidden = false; return; } // placeholder selalu tampil
+
                     if (!customerId) {
-                        // Tidak ada customer dipilih — tampil semua
                         opt.hidden = false;
-                    } else {
-                        // Sembunyikan lead yang customer_id-nya tidak cocok
-                        opt.hidden = optCust && optCust !== customerId;
+                        return;
                     }
+
+                    const optCustId   = String(opt.dataset.customer || '').trim();
+                    const optLeadName = String(opt.dataset.name || '').trim();
+
+                    // Match by customer_id (primary) ATAU by company name (fallback untuk data lama yg customer_id masih null)
+                    const matchById   = optCustId !== '' && optCustId === customerId;
+                    const matchByName = optCustId === '' && customerName !== '' && optLeadName === customerName;
+
+                    opt.hidden = !(matchById || matchByName);
                 });
 
-                // Reset pilihan lead jika yang terpilih sekarang disembunyikan
-                const currentOpt = leadSel.options[leadSel.selectedIndex];
-                if (currentOpt && currentOpt.hidden) {
+                // Reset lead jika option terpilih sudah disembunyikan
+                const selectedOpt = leadSel.options[leadSel.selectedIndex];
+                if (selectedOpt && selectedOpt.hidden) {
                     leadSel.value = '';
                 }
             }
