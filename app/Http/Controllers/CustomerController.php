@@ -7,6 +7,7 @@ use App\Models\CustomerPic;
 use App\Models\User;
 use App\Models\Activity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -17,7 +18,7 @@ class CustomerController extends Controller
         $search   = $request->get('search');
         $salesId  = $request->get('user_id');
 
-        $query = Customer::with(['salesUser', 'purchaseOrders', 'activities']);
+        $query = Customer::with(['salesUser', 'purchaseOrders', 'activities', 'pics']);
         if ($status && $status !== 'all')     $query->where('status', $status);
         if ($industry && $industry !== 'all') $query->where('industry', $industry);
 
@@ -108,9 +109,80 @@ class CustomerController extends Controller
             'customer_since' => 'nullable|date',
             'notes'          => 'nullable|string',
             'products'       => 'nullable|string',
+
+            'pics'                => 'nullable|array',
+            'pics.*.pic_name'     => 'nullable|string|max:255',
+            'pics.*.pic_position' => 'nullable|string|max:100',
+            'pics.*.phone'        => 'nullable|string|max:20',
+            'pics.*.email'        => 'nullable|email|max:255',
+
+            'products_list'                => 'nullable|array',
+            'products_list.*.product_name' => 'nullable|string|max:255',
+            'products_list.*.unit'         => 'nullable|string|max:100',
         ]);
-        $customer->update($validated);
-        return redirect()->back()->with('success', 'Data customer diupdate.');
+
+        DB::transaction(function () use ($validated, $customer, $request) {
+
+            if (auth()->user()->isSalesExecutive()) {
+                $validated['user_id'] = auth()->id();
+            }
+
+            $picsData = $validated['pics'] ?? [];
+            $productsList = $validated['products_list'] ?? [];
+
+            unset($validated['pics'], $validated['products_list']);
+
+            /**
+             * Jika edit modal mengirim products_list_submitted,
+             * maka daftar produk dari row edit dianggap sebagai data final,
+             * bukan ditambahkan lagi ke produk lama.
+             */
+            if ($request->has('products_list_submitted')) {
+                $finalProducts = [];
+
+                foreach ($productsList as $product) {
+                    $name = trim($product['product_name'] ?? '');
+                    $unit = trim($product['unit'] ?? '');
+
+                    if ($name !== '') {
+                        $finalProducts[] = $unit !== ''
+                            ? $name . ' (' . $unit . ')'
+                            : $name;
+                    }
+                }
+
+                $validated['products'] = implode(', ', $finalProducts);
+            }
+
+            $customer->update($validated);
+
+            /**
+             * Jika edit modal mengirim pics_submitted,
+             * maka PIC tambahan dari row edit dianggap sebagai data final.
+             * Jadi tidak duplicate setiap klik Simpan.
+             */
+            if ($request->has('pics_submitted')) {
+                $customer->pics()->delete();
+
+                foreach ($picsData as $pic) {
+                    $picName = trim($pic['pic_name'] ?? '');
+
+                    if ($picName === '') {
+                        continue;
+                    }
+
+                    $customer->pics()->create([
+                        'pic_name'     => $picName,
+                        'pic_position' => $pic['pic_position'] ?? null,
+                        'phone'        => $pic['phone'] ?? null,
+                        'email'        => $pic['email'] ?? null,
+                        'is_primary'   => false,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', 'Data customer berhasil diupdate.');
     }
 
     public function destroy(Customer $customer)

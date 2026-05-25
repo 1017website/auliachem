@@ -68,12 +68,12 @@ class SupplierController extends Controller
             'supplier_since'      => 'nullable|date',
             // inline pics & products
             'pics'                => 'nullable|array',
-            'pics.*.pic_name'     => 'required_with:pics|string|max:255',
+            'pics.*.pic_name'     => 'nullable|string|max:255',
             'pics.*.pic_position' => 'nullable|string|max:100',
             'pics.*.phone'        => 'nullable|string|max:20',
             'pics.*.email'        => 'nullable|email|max:255',
             'products'            => 'nullable|array',
-            'products.*.product_name' => 'required_with:products|string|max:255',
+            'products.*.product_name' => 'nullable|string|max:255',
             'products.*.unit'     => 'nullable|string|max:50',
             'products.*.description' => 'nullable|string',
         ]);
@@ -88,19 +88,32 @@ class SupplierController extends Controller
 
             $supplier = Supplier::create($validated);
 
-            foreach ($pics as $i => $pic) {
+            $picIndex = 0;
+            foreach ($pics as $pic) {
+                $picName = trim($pic['pic_name'] ?? '');
+                if ($picName === '') {
+                    continue;
+                }
+
                 $supplier->pics()->create([
-                    'pic_name'     => $pic['pic_name'],
+                    'pic_name'     => $picName,
                     'pic_position' => $pic['pic_position'] ?? null,
                     'phone'        => $pic['phone'] ?? null,
                     'email'        => $pic['email'] ?? null,
-                    'is_primary'   => $i === 0,
+                    'is_primary'   => $picIndex === 0,
                 ]);
+
+                $picIndex++;
             }
 
             foreach ($products as $prod) {
+                $productName = trim($prod['product_name'] ?? '');
+                if ($productName === '') {
+                    continue;
+                }
+
                 $supplier->products()->create([
-                    'product_name' => $prod['product_name'],
+                    'product_name' => $productName,
                     'unit'         => $prod['unit'] ?? 'ton',
                     'description'  => $prod['description'] ?? null,
                 ]);
@@ -128,12 +141,12 @@ class SupplierController extends Controller
             'is_preferred'        => 'boolean',
             'rating'              => 'nullable|numeric|min:0|max:5',
             'pics'                => 'nullable|array',
-            'pics.*.pic_name'     => 'required_with:pics|string|max:255',
+            'pics.*.pic_name'     => 'nullable|string|max:255',
             'pics.*.pic_position' => 'nullable|string|max:100',
             'pics.*.phone'        => 'nullable|string|max:20',
             'pics.*.email'        => 'nullable|email|max:255',
             'products'            => 'nullable|array',
-            'products.*.product_name' => 'required_with:products|string|max:255',
+            'products.*.product_name' => 'nullable|string|max:255',
             'products.*.unit'     => 'nullable|string|max:50',
             'products.*.description' => 'nullable|string',
         ]);
@@ -142,31 +155,47 @@ class SupplierController extends Controller
         if (array_key_exists('rating', $validated)) $validated['rating'] = $validated['rating'] ?? 0;
 
         DB::transaction(function () use ($request, $validated, $supplier) {
-            $pics     = $validated['pics'] ?? null;
-            $products = $validated['products'] ?? null;
+            $pics     = $validated['pics'] ?? [];
+            $products = $validated['products'] ?? [];
             unset($validated['pics'], $validated['products']);
 
             $supplier->update($validated);
 
-            // Jika ada data pics/products yang dikirim, replace semuanya
-            if ($pics !== null) {
+            // Jika edit modal mengirim marker, row PIC dianggap sebagai data final.
+            if ($request->has('pics_submitted')) {
                 $supplier->pics()->delete();
-                foreach ($pics as $i => $pic) {
+
+                $picIndex = 0;
+                foreach ($pics as $pic) {
+                    $picName = trim($pic['pic_name'] ?? '');
+                    if ($picName === '') {
+                        continue;
+                    }
+
                     $supplier->pics()->create([
-                        'pic_name'     => $pic['pic_name'],
+                        'pic_name'     => $picName,
                         'pic_position' => $pic['pic_position'] ?? null,
                         'phone'        => $pic['phone'] ?? null,
                         'email'        => $pic['email'] ?? null,
-                        'is_primary'   => $i === 0,
+                        'is_primary'   => $picIndex === 0,
                     ]);
+
+                    $picIndex++;
                 }
             }
 
-            if ($products !== null) {
+            // Jika edit modal mengirim marker, row produk dianggap sebagai data final.
+            if ($request->has('products_submitted')) {
                 $supplier->products()->delete();
+
                 foreach ($products as $prod) {
+                    $productName = trim($prod['product_name'] ?? '');
+                    if ($productName === '') {
+                        continue;
+                    }
+
                     $supplier->products()->create([
-                        'product_name' => $prod['product_name'],
+                        'product_name' => $productName,
                         'unit'         => $prod['unit'] ?? 'ton',
                         'description'  => $prod['description'] ?? null,
                     ]);

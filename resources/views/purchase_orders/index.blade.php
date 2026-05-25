@@ -324,8 +324,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tgl Order <span class="text-danger">*</span></label>
-                                <input type="date" name="order_date" id="epDate" class="form-control" required
-                                    readonly style="background:#f9fafb;cursor:default;color:#374151">
+                                <input type="date" name="order_date" id="epDate" class="form-control" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Status <span class="text-danger">*</span></label>
@@ -495,17 +494,57 @@
                 const tr = sel.closest('tr');
                 const hiddenInput = tr.querySelector('.po-product-hidden');
                 const unitInput = tr.querySelector('.po-unit-input');
+
+                if (!hiddenInput) return;
+
                 if (sel.value === '__manual__') {
-                    hiddenInput.value = '';
-                    const manual = prompt('Nama produk:');
-                    if (manual) hiddenInput.value = manual;
-                    sel.value = '';
-                } else {
-                    hiddenInput.value = sel.value;
-                    const opt = sel.options[sel.selectedIndex];
-                    if (opt && opt.dataset.unit && unitInput) {
-                        unitInput.value = opt.dataset.unit;
+                    const manual = prompt('Nama produk:', '');
+                    const productName = manual ? manual.trim() : '';
+
+                    if (productName !== '') {
+                        hiddenInput.value = productName;
+
+                        let existingOpt = Array.from(sel.options).find(o => o.value === productName);
+                        if (!existingOpt) {
+                            existingOpt = new Option(productName, productName, true, true);
+                            const manualOpt = Array.from(sel.options).find(o => o.value === '__manual__');
+                            if (manualOpt) {
+                                sel.insertBefore(existingOpt, manualOpt);
+                            } else {
+                                sel.appendChild(existingOpt);
+                            }
+                        }
+
+                        existingOpt.selected = true;
+                        sel.value = productName;
+
+                        if (unitInput && !unitInput.value) {
+                            unitInput.value = 'kg';
+                        }
+
+                        // Penting: trigger "change" penuh agar Select2 refresh tampilan text-nya.
+                        if (window.jQuery && $(sel).data('select2')) {
+                            $(sel).val(productName).trigger('change');
+                            $(sel).select2('close');
+                        }
+                    } else {
+                        hiddenInput.value = '';
+                        sel.value = '';
+
+                        if (window.jQuery && $(sel).data('select2')) {
+                            $(sel).val('').trigger('change');
+                            $(sel).select2('close');
+                        }
                     }
+
+                    return;
+                }
+
+                hiddenInput.value = sel.value || '';
+
+                const opt = sel.options[sel.selectedIndex];
+                if (opt && opt.dataset.unit && unitInput) {
+                    unitInput.value = opt.dataset.unit;
                 }
             }
 
@@ -520,16 +559,24 @@
 
                 // Build product options
                 let productOptions = '<option value="">-- Pilih atau ketik --</option>';
+                let productExists = false;
                 products.forEach(p => {
-                    const sel = data.product_name === p.product_name ? 'selected' : '';
-                    productOptions += `<option value="${p.product_name}" data-unit="${p.unit||''}" ${sel}>${p.product_name}</option>`;
+                    const selected = data.product_name === p.product_name ? 'selected' : '';
+                    if (data.product_name === p.product_name) productExists = true;
+                    productOptions += `<option value="${p.product_name}" data-unit="${p.unit||''}" ${selected}>${p.product_name}</option>`;
                 });
+
+                // Jika product berasal dari input manual / product lama, tetap tampilkan di dropdown saat edit.
+                if (data.product_name && !productExists) {
+                    productOptions += `<option value="${data.product_name}" selected>${data.product_name}</option>`;
+                }
+
                 productOptions += '<option value="__manual__">+ Ketik manual...</option>';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                 <td>
-                    <input type="hidden" name="${prefix}[${idx}][product_name]" class="po-product-hidden" value="${data.product_name || ''}">
+                    <input type="hidden" name="${prefix}[${idx}][product_name]" class="po-product-hidden" value="${data.product_name || ''}" required>
                     <select class="form-select form-select-sm po-product-select" onchange="onProductSelect(this)" data-hidden-name="${prefix}[${idx}][product_name]">
                         ${productOptions}
                     </select>
@@ -552,6 +599,37 @@
                 <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)" style="padding:2px 6px"><i class="fas fa-times"></i></button></td>
             `;
                 body.appendChild(tr);
+
+                // Row ditambahkan secara dinamis, jadi Select2 perlu di-init ulang khusus row baru.
+                if (typeof initSelect2 === 'function') {
+                    initSelect2(tr);
+                }
+
+                // Jika row berasal dari edit / manual product, paksa Select2 menampilkan value yang sudah ada.
+                if (data.product_name) {
+                    const productSelect = tr.querySelector('.po-product-select');
+                    const hiddenInput = tr.querySelector('.po-product-hidden');
+
+                    if (productSelect) {
+                        let opt = Array.from(productSelect.options).find(o => o.value === data.product_name);
+                        if (!opt) {
+                            opt = new Option(data.product_name, data.product_name, true, true);
+                            productSelect.appendChild(opt);
+                        }
+
+                        opt.selected = true;
+                        productSelect.value = data.product_name;
+                    }
+
+                    if (hiddenInput) {
+                        hiddenInput.value = data.product_name;
+                    }
+
+                    if (window.jQuery && productSelect && $(productSelect).data('select2')) {
+                        $(productSelect).val(data.product_name).trigger('change');
+                    }
+                }
+
                 if (data.qty && data.buy_price && data.sell_price) {
                     calcRow(tr.querySelector('.item-qty'));
                 }
@@ -563,6 +641,56 @@
                 if (body.querySelectorAll('tr').length <= 1) { alert('Minimal 1 item produk'); return; }
                 row.remove();
                 recalcTotal(body.id);
+            }
+
+            function normalizeDateForInput(value) {
+                if (!value) return '';
+                const str = String(value).trim();
+
+                // Jika dari backend sudah Y-m-d, langsung pakai.
+                const ymd = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+
+                // Fallback untuk format seperti "24 May 2026" / Date string browser.
+                const parsed = new Date(str);
+                if (!isNaN(parsed.getTime())) {
+                    const yyyy = parsed.getFullYear();
+                    const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+                    const dd = String(parsed.getDate()).padStart(2, '0');
+                    return `${yyyy}-${mm}-${dd}`;
+                }
+
+                return '';
+            }
+
+            function setDateInputValue(id, value) {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                const dateValue = normalizeDateForInput(value);
+
+                // Set native input value
+                el.value = dateValue;
+                el.setAttribute('value', dateValue);
+                el.dataset.pendingDate = dateValue;
+
+                // Jika project memakai Flatpickr / datepicker dengan altInput,
+                // value harus diset lewat instance agar UI ikut terisi.
+                if (el._flatpickr && dateValue) {
+                    el._flatpickr.setDate(dateValue, true, 'Y-m-d');
+                }
+
+                // Fallback untuk datepicker lain yang mendengar event input/change.
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Fallback khusus flatpickr altInput jika ada tapi instance belum sync.
+                if (el._flatpickr && el._flatpickr.altInput && dateValue) {
+                    el._flatpickr.altInput.value = el._flatpickr.formatDate(
+                        el._flatpickr.selectedDates[0] || new Date(dateValue),
+                        el._flatpickr.config.altFormat || 'd F Y'
+                    );
+                }
             }
 
             async function openEditPo(id) {
@@ -620,20 +748,21 @@
                 po.items.forEach(item => addItemRow('editItemsBody', item));
                 recalcTotal('editItemsBody');
 
-                // Simpan date ke attribute dulu
-                const targetDate = (po.order_date || '').substring(0, 10);
-                document.getElementById('epDate').dataset.pendingDate = targetDate;
+                // Tgl Order harus di-set langsung sebelum modal tampil dan setelah modal tampil.
+                // Ini menghindari case input date kosong karena re-render modal / plugin select2.
+                setDateInputValue('epDate', po.order_date);
 
                 const modalEl = document.getElementById('editPoModal');
                 const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-                // Hapus listener lama sebelum pasang baru
                 const oldHandler = modalEl._shownHandler;
                 if (oldHandler) modalEl.removeEventListener('shown.bs.modal', oldHandler);
 
                 const shownHandler = function () {
-                    const d = document.getElementById('epDate').dataset.pendingDate || '';
-                    document.getElementById('epDate').value = d;
+                    setDateInputValue('epDate', po.order_date);
+                    setTimeout(function () {
+                        setDateInputValue('epDate', po.order_date);
+                    }, 50);
                 };
 
                 modalEl._shownHandler = shownHandler;

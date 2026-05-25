@@ -116,14 +116,7 @@
                             <td class="py-2" style="font-size:12px">{{ $s->rating > 0 ? $s->rating : '-' }}</td>
                             <td class="py-2">
                                 <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px"
-                                    onclick="openEditSupplier(
-                                        {{ $s->id }},'{{ addslashes($s->supplier_name) }}',
-                                        '{{ $s->source_type }}','{{ addslashes($s->pic_name) }}',
-                                        '{{ $s->phone }}','{{ $s->email }}',
-                                        '{{ addslashes($s->product_category) }}','{{ $s->origin_country }}',
-                                        '{{ $s->status }}','{{ $s->relationship_status }}',
-                                        '{{ $s->is_preferred?1:0 }}','{{ $s->rating }}'
-                                    )">
+                                    onclick="openEditSupplier({{ $s->id }})">
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-info" style="padding:3px 7px" title="Produk"
@@ -272,6 +265,8 @@
             </div>
             <form method="POST" id="editSupplierForm">
                 @csrf @method('PUT')
+                <input type="hidden" name="pics_submitted" value="1">
+                <input type="hidden" name="products_submitted" value="1">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -406,6 +401,41 @@
     </div>
 </div>
 
+
+@php
+    $supplierEditData = $suppliers->mapWithKeys(function ($s) {
+        return [$s->id => [
+            'id' => $s->id,
+            'supplier_name' => $s->supplier_name,
+            'source_type' => $s->source_type,
+            'pic_name' => $s->pic_name,
+            'phone' => $s->phone,
+            'email' => $s->email,
+            'product_category' => $s->product_category,
+            'origin_country' => $s->origin_country,
+            'status' => $s->status,
+            'relationship_status' => $s->relationship_status,
+            'is_preferred' => (bool) $s->is_preferred,
+            'rating' => $s->rating,
+            'pics' => $s->pics->map(function ($pic) {
+                return [
+                    'pic_name' => $pic->pic_name,
+                    'pic_position' => $pic->pic_position,
+                    'phone' => $pic->phone,
+                    'email' => $pic->email,
+                ];
+            })->values(),
+            'products' => $s->products->map(function ($product) {
+                return [
+                    'product_name' => $product->product_name,
+                    'unit' => $product->unit,
+                    'description' => $product->description,
+                ];
+            })->values(),
+        ]];
+    });
+@endphp
+
 @push('scripts')
 <script>
 function toggleOrigin(mode) {
@@ -414,43 +444,73 @@ function toggleOrigin(mode) {
     wrap.style.display = sel.value === 'Import' ? 'block' : 'none';
 }
 
-function openEditSupplier(id, name, sourceType, pic, phone, email, category, origin, status, relationship, preferred, rating) {
+const supplierEditData = @json($supplierEditData);
+
+function openEditSupplier(id) {
+    const data = supplierEditData[id];
+    if (!data) return;
+
     document.getElementById('editSupplierForm').action = `/suppliers/${id}`;
-    document.getElementById('esName').value         = name;
-    document.getElementById('esSourceType').value   = sourceType;
-    document.getElementById('esOrigin').value       = origin || '';
-    document.getElementById('esCategory').value     = category || '';
-    document.getElementById('esPic').value          = pic;
-    document.getElementById('esPhone').value        = phone;
-    document.getElementById('esEmail').value        = email || '';
-    document.getElementById('esStatus').value       = status;
-    document.getElementById('esRelationship').value = relationship;
-    document.getElementById('esPreferred').checked  = preferred == '1';
-    document.getElementById('esRating').value       = rating;
+    document.getElementById('esName').value         = data.supplier_name || '';
+    document.getElementById('esSourceType').value   = data.source_type || 'Local';
+    document.getElementById('esOrigin').value       = data.origin_country || '';
+    document.getElementById('esCategory').value     = data.product_category || '';
+    document.getElementById('esPic').value          = data.pic_name || '';
+    document.getElementById('esPhone').value        = data.phone || '';
+    document.getElementById('esEmail').value        = data.email || '';
+    document.getElementById('esStatus').value       = data.status || 'Active';
+    document.getElementById('esRelationship').value = data.relationship_status || 'Potential';
+    document.getElementById('esPreferred').checked  = !!data.is_preferred;
+    document.getElementById('esRating').value       = data.rating || 0;
     toggleOrigin('edit');
 
-    // Reset & load existing PICs
     const editSupPicsExisting = document.getElementById('editSupPicsExisting');
     const editSupProductsExisting = document.getElementById('editSupProductsExisting');
     const editSupPicsContainer = document.getElementById('editSupPicsContainer');
     const editSupProductsContainer = document.getElementById('editSupProductsContainer');
+
+    editSupPicsExisting.innerHTML = '';
+    editSupProductsExisting.innerHTML = '';
     editSupPicsContainer.innerHTML = '';
     editSupProductsContainer.innerHTML = '';
-    editSupPicsExisting.innerHTML = '<div style="font-size:.75rem;color:#9ca3af"><i>PICs existing dikelola dari panel detail supplier.</i></div>';
-    editSupProductsExisting.innerHTML = '<div style="font-size:.75rem;color:#9ca3af"><i>Produk existing dikelola dari panel detail supplier.</i></div>';
+
+    (data.pics || []).forEach(function(pic) {
+        addSupPicRow('editSupPicsContainer', pic);
+    });
+
+    (data.products || []).forEach(function(product) {
+        addSupProductRow('editSupProductsContainer', product);
+    });
+
+    if ((data.pics || []).length === 0) {
+        editSupPicsExisting.innerHTML = '<div style="font-size:.75rem;color:#9ca3af"><i>Belum ada PIC tambahan.</i></div>';
+    }
+
+    if ((data.products || []).length === 0) {
+        editSupProductsExisting.innerHTML = '<div style="font-size:.75rem;color:#9ca3af"><i>Belum ada produk supplier.</i></div>';
+    }
 
     new bootstrap.Modal(document.getElementById('editSupplierModal')).show();
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 // ── Inline Supplier PIC rows ──
 let supPicIdx = 0;
-function addSupPicRow(containerId) {
+function addSupPicRow(containerId, data = {}) {
     const i = supPicIdx++;
     const html = `<div class="row g-2 mb-2 align-items-center" id="supPic_${i}">
-        <div class="col-4"><input type="text" name="pics[${i}][pic_name]" class="form-control form-control-sm" placeholder="Nama PIC *" required></div>
-        <div class="col-3"><input type="text" name="pics[${i}][pic_position]" class="form-control form-control-sm" placeholder="Jabatan"></div>
-        <div class="col-2"><input type="text" name="pics[${i}][phone]" class="form-control form-control-sm" placeholder="Phone"></div>
-        <div class="col-2"><input type="email" name="pics[${i}][email]" class="form-control form-control-sm" placeholder="Email"></div>
+        <div class="col-4"><input type="text" name="pics[${i}][pic_name]" class="form-control form-control-sm" placeholder="Nama PIC *" value="${escapeHtml(data.pic_name)}" required></div>
+        <div class="col-3"><input type="text" name="pics[${i}][pic_position]" class="form-control form-control-sm" placeholder="Jabatan" value="${escapeHtml(data.pic_position)}"></div>
+        <div class="col-2"><input type="text" name="pics[${i}][phone]" class="form-control form-control-sm" placeholder="Phone" value="${escapeHtml(data.phone)}"></div>
+        <div class="col-2"><input type="email" name="pics[${i}][email]" class="form-control form-control-sm" placeholder="Email" value="${escapeHtml(data.email)}"></div>
         <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('supPic_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
@@ -458,18 +518,19 @@ function addSupPicRow(containerId) {
 
 // ── Inline Supplier Product rows ──
 let supProdIdx = 0;
-function addSupProductRow(containerId) {
+function addSupProductRow(containerId, data = {}) {
     const i = supProdIdx++;
     const html = `<div class="row g-2 mb-2 align-items-center" id="supProd_${i}">
-        <div class="col-5"><input type="text" name="products[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" required></div>
-        <div class="col-3"><input type="text" name="products[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)"></div>
-        <div class="col-3"><input type="text" name="products[${i}][description]" class="form-control form-control-sm" placeholder="Keterangan"></div>
+        <div class="col-5"><input type="text" name="products[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(data.product_name)}" required></div>
+        <div class="col-3"><input type="text" name="products[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)" value="${escapeHtml(data.unit)}"></div>
+        <div class="col-3"><input type="text" name="products[${i}][description]" class="form-control form-control-sm" placeholder="Keterangan" value="${escapeHtml(data.description)}"></div>
         <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('supProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
 }
 
 // Supplier Products (AJAX via form submit → reload)
+const supplierPics = @json($suppliers->pluck('pics', 'id'));
 const supplierProducts = @json($suppliers->pluck('products', 'id'));
 
 function openProductModal(supplierId, supplierName) {

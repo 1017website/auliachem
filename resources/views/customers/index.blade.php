@@ -119,7 +119,7 @@
                                         <i class="fas fa-eye" style="font-size:.7rem"></i>
                                     </a>
                                     <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px"
-                                        onclick="openEditModal({{ $cust->id }},'{{ addslashes($cust->company_name) }}','{{ addslashes($cust->pic_name) }}','{{ $cust->pic_position }}','{{ $cust->phone }}','{{ $cust->email }}','{{ $cust->industry }}','{{ $cust->location }}','{{ $cust->address }}','{{ $cust->status }}','{{ $cust->user_id }}','{{ addslashes($cust->notes) }}','{{ addslashes($cust->products) }}')">
+                                        onclick="openEditModal({{ $cust->id }})">
                                         <i class="fas fa-edit" style="font-size:.7rem"></i>
                                     </button>
                                     <form method="POST" action="{{ route('customers.destroy', $cust) }}" class="d-inline"
@@ -229,7 +229,7 @@
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-outline-secondary flex-fill" style="font-size:.75rem"
-                            onclick="openEditModal({{ $selectedCustomer->id }},'{{ addslashes($selectedCustomer->company_name) }}','{{ addslashes($selectedCustomer->pic_name) }}','{{ $selectedCustomer->pic_position }}','{{ $selectedCustomer->phone }}','{{ $selectedCustomer->email }}','{{ $selectedCustomer->industry }}','{{ $selectedCustomer->location }}','{{ $selectedCustomer->address }}','{{ $selectedCustomer->status }}','{{ $selectedCustomer->user_id }}','{{ addslashes($selectedCustomer->notes) }}','{{ addslashes($selectedCustomer->products) }}')">
+                            onclick="openEditModal({{ $selectedCustomer->id }})">
                             <i class="fas fa-edit me-1"></i> Edit
                         </button>
                         <form method="POST" action="{{ route('customers.destroy', $selectedCustomer) }}" class="flex-fill"
@@ -408,6 +408,8 @@
     <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header"><h6 class="modal-title fw-bold">Edit Customer</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form method="POST" id="editCustomerForm">@csrf @method('PUT')
+            <input type="hidden" name="pics_submitted" value="1">
+            <input type="hidden" name="products_list_submitted" value="1">
             <div class="modal-body"><div class="row g-3">
                 <div class="col-md-6"><label class="form-label">Company Name</label><input type="text" name="company_name" id="editCompanyName" class="form-control" required></div>
                 <div class="col-md-6"><label class="form-label">Industry</label><input type="text" name="industry" id="editIndustry" class="form-control"></div>
@@ -490,6 +492,39 @@
 
 @push('scripts')
 <script>
+@php
+    $customerEditPayload = $customers->getCollection()
+        ->merge($selectedCustomer ? collect([$selectedCustomer]) : collect())
+        ->unique('id')
+        ->values()
+        ->mapWithKeys(function ($c) {
+            return [$c->id => [
+                'id' => $c->id,
+                'company_name' => $c->company_name,
+                'pic_name' => $c->pic_name,
+                'pic_position' => $c->pic_position,
+                'phone' => $c->phone,
+                'email' => $c->email,
+                'industry' => $c->industry,
+                'location' => $c->location,
+                'address' => $c->address,
+                'status' => $c->status,
+                'user_id' => (string) $c->user_id,
+                'notes' => $c->notes,
+                'products' => $c->products,
+                'pics' => $c->relationLoaded('pics')
+                    ? $c->pics->map(function ($p) {
+                        return [
+                            'pic_name' => $p->pic_name,
+                            'pic_position' => $p->pic_position,
+                            'phone' => $p->phone,
+                            'email' => $p->email,
+                        ];
+                    })->values()
+                    : [],
+            ]];
+        });
+@endphp
 function showTab(tab, el) {
     document.querySelectorAll('#custTabs .nav-link').forEach(a => a.classList.remove('active'));
     el.classList.add('active');
@@ -498,15 +533,45 @@ function showTab(tab, el) {
         if(d) d.style.display = t===tab?'block':'none';
     });
 }
+// ── Data untuk modal edit customer ──
+const customerEditData = @json($customerEditPayload);
+
+function safeValue(value) {
+    return value === null || value === undefined ? '' : value;
+}
+
+function splitProducts(products) {
+    products = safeValue(products).trim();
+    if (!products) return [];
+
+    return products.split(',').map(function(item) {
+        item = item.trim();
+        if (!item) return null;
+
+        const match = item.match(/^(.*?)\s*\((.*?)\)$/);
+        if (match) {
+            return {
+                product_name: match[1].trim(),
+                unit: match[2].trim()
+            };
+        }
+
+        return {
+            product_name: item,
+            unit: ''
+        };
+    }).filter(Boolean);
+}
+
 // ── Inline PIC rows (Customer) ──
 let custPicIdx = 0;
-function addCustPicRow(containerId) {
+function addCustPicRow(containerId, data = {}) {
     const i = custPicIdx++;
     const html = `<div class="row g-2 mb-2 align-items-center" id="custPic_${i}">
-        <div class="col-4"><input type="text" name="pics[${i}][pic_name]" class="form-control form-control-sm" placeholder="Nama PIC *" required></div>
-        <div class="col-3"><input type="text" name="pics[${i}][pic_position]" class="form-control form-control-sm" placeholder="Jabatan"></div>
-        <div class="col-2"><input type="text" name="pics[${i}][phone]" class="form-control form-control-sm" placeholder="Phone"></div>
-        <div class="col-2"><input type="email" name="pics[${i}][email]" class="form-control form-control-sm" placeholder="Email"></div>
+        <div class="col-4"><input type="text" name="pics[${i}][pic_name]" class="form-control form-control-sm" placeholder="Nama PIC *" value="${escapeHtml(safeValue(data.pic_name))}" required></div>
+        <div class="col-3"><input type="text" name="pics[${i}][pic_position]" class="form-control form-control-sm" placeholder="Jabatan" value="${escapeHtml(safeValue(data.pic_position))}"></div>
+        <div class="col-2"><input type="text" name="pics[${i}][phone]" class="form-control form-control-sm" placeholder="Phone" value="${escapeHtml(safeValue(data.phone))}"></div>
+        <div class="col-2"><input type="email" name="pics[${i}][email]" class="form-control form-control-sm" placeholder="Email" value="${escapeHtml(safeValue(data.email))}"></div>
         <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custPic_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
@@ -514,30 +579,83 @@ function addCustPicRow(containerId) {
 
 // ── Inline Product rows (Customer) ──
 let custProdIdx = 0;
-function addCustProductRow(containerId) {
+function addCustProductRow(containerId, data = {}) {
     const i = custProdIdx++;
     const html = `<div class="row g-2 mb-2 align-items-center" id="custProd_${i}">
-        <div class="col-6"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" required></div>
-        <div class="col-5"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan / keterangan"></div>
+        <div class="col-6"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(safeValue(data.product_name))}" required></div>
+        <div class="col-5"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan / keterangan" value="${escapeHtml(safeValue(data.unit))}"></div>
         <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
 }
 
-function openEditModal(id,company,pic,picPos,phone,email,industry,location,address,status,salesId,notes,products) {
-    document.getElementById('editCustomerForm').action = `/customers/${id}`;
-    document.getElementById('editCompanyName').value = company;
-    document.getElementById('editPicName').value = pic;
-    document.getElementById('editPicPosition').value = picPos || '';
-    document.getElementById('editPhone').value = phone;
-    document.getElementById('editEmail').value = email;
-    document.getElementById('editIndustry').value = industry;
-    document.getElementById('editLocation').value = location || '';
-    document.getElementById('editStatus').value = status;
-    document.getElementById('editSalesPIC').value = salesId;
-    document.getElementById('editNotes').value = notes || '';
-    document.getElementById('editProducts').value = products || '';
-    new bootstrap.Modal(document.getElementById('editCustomerModal')).show();
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function setSelectValue(selector, value) {
+    const $el = $(selector);
+    if (!$el.length) return;
+
+    value = safeValue(value).toString();
+
+    // Pastikan Select2 sudah aktif dulu, lalu trigger change agar tampilan ikut update.
+    if (!$el.data('select2') && typeof initSelect2 === 'function') {
+        initSelect2($el.closest('.modal'));
+    }
+
+    $el.val(value).trigger('change');
+}
+
+function openEditModal(id) {
+    const data = customerEditData[id];
+    if (!data) return;
+
+    const modalEl = document.getElementById('editCustomerModal');
+    const form = document.getElementById('editCustomerForm');
+
+    form.action = `/customers/${id}`;
+    document.getElementById('editCompanyName').value = safeValue(data.company_name);
+    document.getElementById('editPicName').value = safeValue(data.pic_name);
+    document.getElementById('editPicPosition').value = safeValue(data.pic_position);
+    document.getElementById('editPhone').value = safeValue(data.phone);
+    document.getElementById('editEmail').value = safeValue(data.email);
+    document.getElementById('editIndustry').value = safeValue(data.industry);
+    document.getElementById('editLocation').value = safeValue(data.location);
+    document.getElementById('editNotes').value = safeValue(data.notes);
+    document.getElementById('editProducts').value = safeValue(data.products);
+
+    setSelectValue('#editStatus', data.status);
+    setSelectValue('#editSalesPIC', data.user_id);
+
+    const picContainer = document.getElementById('editCustPicsContainer');
+    const productContainer = document.getElementById('editCustProductsContainer');
+    picContainer.innerHTML = '';
+    productContainer.innerHTML = '';
+
+    custPicIdx = 0;
+    custProdIdx = 0;
+
+    (data.pics || []).forEach(function(pic) {
+        addCustPicRow('editCustPicsContainer', pic);
+    });
+
+    splitProducts(data.products).forEach(function(product) {
+        addCustProductRow('editCustProductsContainer', product);
+    });
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    setTimeout(function() {
+        setSelectValue('#editStatus', data.status);
+        setSelectValue('#editSalesPIC', data.user_id);
+    }, 150);
 }
 function quickActCust(type) {
     const el = document.getElementById('custActType');
