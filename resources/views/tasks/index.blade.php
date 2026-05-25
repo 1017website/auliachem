@@ -99,8 +99,8 @@
 
         <select class="form-select form-select-sm" style="width:130px;font-size:12px;border-radius:8px" onchange="location.href=this.value">
             <option value="{{ route('tasks.index', array_merge(request()->query(), ['type'=>''])) }}">All Type</option>
-            @foreach(['Call','Visit','Email','Note','Task'] as $t)
-            <option value="{{ route('tasks.index', array_merge(request()->query(), ['type'=>$t])) }}" {{ $type === $t ? 'selected' : '' }}>{{ $t }}</option>
+            @foreach(['Call'=>'Call','Visit'=>'Visit','Email'=>'Email','Note'=>'Note','Others'=>'Task'] as $value => $label)
+            <option value="{{ route('tasks.index', array_merge(request()->query(), ['type'=>$value])) }}" {{ $type === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
 
@@ -159,7 +159,7 @@
         <!-- Actions -->
         <div class="d-flex gap-1">
             <button class="btn btn-sm" style="padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;color:#6b7280"
-                onclick="openEditTask({{ $task->id }}, '{{ addslashes($task->subject) }}', '{{ $task->status }}')">
+                onclick="openEditTask({{ $task->id }}, @js($task->subject), '{{ $task->status }}', '{{ $task->activity_at->format('Y-m-d\TH:i') }}', @js($task->description))">
                 <i class="fas fa-edit"></i>
             </button>
             <form method="POST" action="{{ route('tasks.destroy', $task->id) }}"
@@ -200,7 +200,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Jenis</label>
                             <select name="type" class="form-select" required>
-                                <option>Call</option><option>Visit</option><option>Email</option><option>Note</option><option>Task</option>
+                                <option value="Call">Call</option><option value="Visit">Visit</option><option value="Email">Email</option><option value="Note">Note</option><option value="Others">Task</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -268,9 +268,18 @@
                         <label class="form-label">Status</label>
                         <select name="status" id="editTaskStatus" class="form-select">
                             <option value="Planned">Planned</option>
+                            <option value="Pending">Pending</option>
                             <option value="Done">Done</option>
                             <option value="Overdue">Overdue</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal & Waktu</label>
+                        <input type="datetime-local" name="activity_at" id="editTaskActivityAt" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Keterangan</label>
+                        <textarea name="description" id="editTaskDescription" class="form-control" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -284,10 +293,12 @@
 
 @push('scripts')
 <script>
-function openEditTask(id, subject, status) {
+function openEditTask(id, subject, status, activityAt, description) {
     document.getElementById('editTaskForm').action = `/tasks/${id}`;
-    document.getElementById('editTaskSubject').value = subject;
-    document.getElementById('editTaskStatus').value = status;
+    document.getElementById('editTaskSubject').value = subject || '';
+    document.getElementById('editTaskStatus').value = status || 'Planned';
+    document.getElementById('editTaskActivityAt').value = activityAt || '';
+    document.getElementById('editTaskDescription').value = description || '';
     new bootstrap.Modal(document.getElementById('editTaskModal')).show();
 }
 // Prevent data loss

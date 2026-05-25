@@ -9,6 +9,7 @@ use App\Models\LeadProduct;
 use App\Models\LeadPic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Customer;
 
 use App\Models\Notification;
 
@@ -188,6 +189,8 @@ class LeadsController extends Controller
      */
     public static function syncToCustomer(Lead $lead): void
     {
+        $lead->loadMissing(['products', 'pics']);
+
         $stage = $lead->pipeline_stage;
         $status = in_array($stage, ['Won', 'Maintaining']) ? 'Existing' : 'Potential';
 
@@ -204,28 +207,85 @@ class LeadsController extends Controller
             'user_id'      => $lead->user_id,
         ];
 
+        $customer = null;
+
         if ($lead->customer_id) {
-            $existing = \App\Models\Customer::find($lead->customer_id);
-            if ($existing) {
-                if ($status === 'Existing' && $existing->status !== 'Existing') {
-                    $customerData['customer_since'] = now()->toDateString();
-                }
-                $existing->update($customerData);
+            $customer = Customer::find($lead->customer_id);
+            if ($customer && $status === 'Existing' && $customer->status !== 'Existing') {
+                $customerData['customer_since'] = now()->toDateString();
             }
+        }
+
+        if (!$customer) {
+            $customer = Customer::where('company_name', $lead->company_name)->first();
+            if ($customer && $status === 'Existing' && $customer->status !== 'Existing') {
+                $customerData['customer_since'] = now()->toDateString();
+            }
+        }
+
+        if (!$customer) {
+            if ($status === 'Existing') {
+                $customerData['customer_since'] = now()->toDateString();
+            }
+            $customer = Customer::create($customerData);
         } else {
-            $customer = \App\Models\Customer::where('company_name', $lead->company_name)->first();
-            if ($customer) {
-                if ($status === 'Existing' && $customer->status !== 'Existing') {
-                    $customerData['customer_since'] = now()->toDateString();
-                }
-                $customer->update($customerData);
-                $lead->updateQuietly(['customer_id' => $customer->id]);
-            } else {
-                if ($status === 'Existing') {
-                    $customerData['customer_since'] = now()->toDateString();
-                }
-                $customer = \App\Models\Customer::create($customerData);
-                $lead->updateQuietly(['customer_id' => $customer->id]);
+            $customer->update($customerData);
+        }
+
+        if ((int) $lead->customer_id !== (int) $customer->id) {
+            $lead->updateQuietly(['customer_id' => $customer->id]);
+        }
+
+        // Sync produk lead ke field produk customer tanpa menghapus produk manual customer.
+        $leadProducts = $lead->products->map(function ($product) {
+            $name = trim($product->product_name ?? '');
+            if ($name === '') {
+                return null;
+            }
+
+            $unit = trim($product->unit ?? '');
+            return $unit !== '' ? $name . ' (' . $unit . ')' : $name;
+        })->filter()->values()->all();
+
+        if (empty($leadProducts) && trim((string) $lead->product_interest) !== '') {
+            $leadProducts[] = trim((string) $lead->product_interest);
+        }
+
+        if (!empty($leadProducts)) {
+            $existingProducts = collect(explode(',', (string) $customer->products))
+                ->map(fn ($item) => trim($item))
+                ->filter()
+                ->values();
+
+            $mergedProducts = $existingProducts
+                ->merge($leadProducts)
+                ->unique(fn ($item) => mb_strtolower($item))
+                ->values()
+                ->implode(', ');
+
+            $customer->update(['products' => $mergedProducts]);
+        }
+
+        // Sync PIC tambahan dari lead. Tidak menghapus PIC customer yang sudah ada.
+        foreach ($lead->pics as $leadPic) {
+            $picName = trim($leadPic->pic_name ?? '');
+            if ($picName === '') {
+                continue;
+            }
+
+            $exists = $customer->pics()
+                ->where('pic_name', $picName)
+                ->when($leadPic->phone, fn ($q) => $q->where('phone', $leadPic->phone))
+                ->exists();
+
+            if (!$exists) {
+                $customer->pics()->create([
+                    'pic_name'     => $picName,
+                    'pic_position' => $leadPic->pic_position,
+                    'phone'        => $leadPic->phone,
+                    'email'        => $leadPic->email,
+                    'is_primary'   => false,
+                ]);
             }
         }
     }
@@ -254,6 +314,7 @@ class LeadsController extends Controller
 
     public function destroyProduct(Lead $lead, LeadProduct $product)
     {
+        abort_if((int) $product->lead_id !== (int) $lead->id, 404);
         $product->delete();
         return redirect()->back()->with('success', 'Produk dihapus.');
     }
@@ -279,6 +340,7 @@ class LeadsController extends Controller
 
     public function destroyPic(Lead $lead, LeadPic $pic)
     {
+        abort_if((int) $pic->lead_id !== (int) $lead->id, 404);
         $pic->delete();
         return redirect()->back()->with('success', 'PIC dihapus.');
     }
@@ -287,7 +349,7 @@ class LeadsController extends Controller
     public function storeActivity(Request $request, Lead $lead)
     {
         $validated = $request->validate([
-            'type'           => 'required|in:Call,Visit,Email,Note,Task',
+            'type'           => 'required|in:Call,Visit,Email,Note,Others',
             'subject'        => 'required|string|max:255',
             'description'    => 'nullable|string',
             'activity_at'    => 'required|date',
@@ -300,6 +362,7 @@ class LeadsController extends Controller
         if (auth()->user()->isSalesExecutive()) {
             $validated['user_id'] = auth()->id();
         }
+        $validated['sales_user_id'] = $validated['user_id'];
         Activity::create($validated);
 
         // Sync customer jika ada perubahan pipeline_stage dari activity

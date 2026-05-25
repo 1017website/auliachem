@@ -212,6 +212,7 @@ class CustomerController extends Controller
 
     public function destroyPic(Customer $customer, CustomerPic $pic)
     {
+        abort_if((int) $pic->customer_id !== (int) $customer->id, 404);
         $pic->delete();
         return redirect()->back()->with('success', 'PIC dihapus.');
     }
@@ -225,9 +226,38 @@ class CustomerController extends Controller
         return redirect()->back()->with('success', 'Sales PIC berhasil dipindah.');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        $customers = Customer::with(['salesUser'])->orderBy('company_name')->get();
+        $status   = $request->get('status');
+        $industry = $request->get('industry');
+        $search   = $request->get('search');
+        $salesId  = $request->get('user_id');
+
+        $query = Customer::with(['salesUser']);
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($industry && $industry !== 'all') {
+            $query->where('industry', $industry);
+        }
+
+        if (auth()->user()->isSalesExecutive()) {
+            $query->where('user_id', auth()->id());
+        } elseif ($salesId) {
+            $query->where('user_id', $salesId);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('company_name', 'like', "%{$search}%")
+                  ->orWhere('pic_name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $customers = $query->orderBy('company_name')->get();
         $headers   = ['Company Name','PIC Name','Position','Phone','Email','Industry','Location','Status','Sales PIC','Customer Since'];
         $rows      = $customers->map(fn($c) => [
             $c->company_name, $c->pic_name, $c->pic_position,
@@ -287,7 +317,7 @@ class CustomerController extends Controller
     public function storeActivity(Request $request, Customer $customer)
     {
         $validated = $request->validate([
-            'type'          => 'required|in:Call,Visit,Email,Note,Task',
+            'type'          => 'required|in:Call,Visit,Email,Note,Others',
             'subject'       => 'required|string|max:255',
             'description'   => 'nullable|string',
             'activity_at'   => 'required|date',
@@ -298,6 +328,7 @@ class CustomerController extends Controller
         if (auth()->user()->isSalesExecutive()) {
             $validated['user_id'] = auth()->id();
         }
+        $validated['sales_user_id'] = $validated['user_id'];
         Activity::create($validated);
         return redirect()->back()->with('success', 'Activity ditambahkan.');
     }

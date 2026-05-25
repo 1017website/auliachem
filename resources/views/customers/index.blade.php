@@ -15,7 +15,7 @@
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                     <i class="fas fa-plus me-1"></i> Add Customer
                 </button>
-                <a href="{{ route('customers.export') }}" class="btn btn-outline-secondary btn-sm">
+                <a href="{{ route('customers.export', request()->query()) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-download me-1"></i> Export Excel
                 </a>
             </div>
@@ -455,7 +455,7 @@
         <form method="POST" action="{{ route('customers.activity.store', $selectedCustomer) }}">@csrf
             <div class="modal-body"><div class="row g-3">
                 <div class="col-6"><label class="form-label">Jenis <span class="text-danger">*</span></label>
-                    <select name="type" id="custActType" class="form-select" required><option>Call</option><option>Visit</option><option>Email</option><option>Note</option><option>Task</option></select></div>
+                    <select name="type" id="custActType" class="form-select" required><option value="Call">Call</option><option value="Visit">Visit</option><option value="Email">Email</option><option value="Note">Note</option><option value="Others">Task</option></select></div>
                 <div class="col-6"><label class="form-label">Status</label>
                     <select name="status" class="form-select"><option value="Done">Done</option><option value="Planned">Planned</option><option value="Pending">Pending</option></select></div>
                 <div class="col-12"><label class="form-label">Subject <span class="text-danger">*</span></label><input type="text" name="subject" class="form-control" required></div>

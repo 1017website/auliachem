@@ -13,12 +13,12 @@ class TaskReminderController extends Controller
     public function index(Request $request)
     {
         $filter   = $request->get('filter', 'all');   // all | today | overdue | upcoming
-        $salesId  = $request->get('user_id');
+        $salesId  = $request->get('sales_user_id', $request->get('user_id'));
         $type     = $request->get('type');
 
         $query = Activity::with(['lead', 'customer', 'salesUser']);
 
-        if ($salesId) $query->where('user_id', $salesId);
+        if ($salesId) $query->where('sales_user_id', $salesId);
         if ($type)    $query->where('type', $type);
 
         match($filter) {
@@ -52,7 +52,7 @@ class TaskReminderController extends Controller
             'lead_id'        => 'nullable|exists:leads,id',
             'customer_id'    => 'nullable|exists:customers,id',
             'user_id'  => 'required|exists:users,id',
-            'type'           => 'required|in:Call,Visit,Email,Note,Task',
+            'type'           => 'required|in:Call,Visit,Email,Note,Others',
             'subject'        => 'required|string|max:255',
             'description'    => 'nullable|string',
             'activity_at'    => 'required|date',
@@ -74,7 +74,7 @@ class TaskReminderController extends Controller
             'status'      => 'required|in:Planned,Pending,Done,Overdue',
             'subject'     => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'due_date'    => 'nullable|date',
+            'activity_at'  => 'nullable|date',
         ]));
         return redirect()->back()->with('success', 'Task diupdate.');
     }

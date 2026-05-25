@@ -13,7 +13,7 @@
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
                 <i class="fas fa-plus me-1"></i> Tambah Supplier
             </button>
-            <a href="{{ route('suppliers.export') }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ route('suppliers.export', request()->query()) }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-download me-1"></i> Export Excel
             </a>
         </div>

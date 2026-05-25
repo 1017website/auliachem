@@ -233,6 +233,7 @@ class SupplierController extends Controller
 
     public function destroyPic(Supplier $supplier, SupplierPic $pic)
     {
+        abort_if((int) $pic->supplier_id !== (int) $supplier->id, 404);
         $pic->delete();
         return redirect()->back()->with('success', 'PIC dihapus.');
     }
@@ -255,13 +256,42 @@ class SupplierController extends Controller
 
     public function destroyProduct(Supplier $supplier, SupplierProduct $product)
     {
+        abort_if((int) $product->supplier_id !== (int) $supplier->id, 404);
         $product->delete();
         return redirect()->back()->with('success', 'Produk dihapus.');
     }
 
     public function export(Request $request)
     {
-        $suppliers = Supplier::all();
+        $sourceType         = $request->get('source_type');
+        $status             = $request->get('status');
+        $relationshipStatus = $request->get('relationship_status');
+        $search             = $request->get('search');
+
+        $query = Supplier::query();
+
+        if ($sourceType && $sourceType !== 'all') {
+            $query->where('source_type', $sourceType);
+        }
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($relationshipStatus && $relationshipStatus !== 'all') {
+            $query->where('relationship_status', $relationshipStatus);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('supplier_name', 'like', "%{$search}%")
+                  ->orWhere('pic_name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('product_category', 'like', "%{$search}%");
+            });
+        }
+
+        $suppliers = $query->orderBy('is_preferred', 'desc')->orderBy('rating', 'desc')->get();
         $headers   = ['Supplier Name', 'Source Type', 'PIC', 'Phone', 'Email', 'Product Category', 'Origin Country', 'Relationship', 'Status', 'Preferred', 'Rating'];
         $rows      = $suppliers->map(fn($s) => [
             $s->supplier_name, $s->source_type, $s->pic_name, $s->phone, $s->email,

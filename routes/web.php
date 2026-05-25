@@ -22,7 +22,7 @@ use App\Http\Controllers\UserController;
 // ── Artisan runner (shared hosting) ──
 Route::get('/run/{command}', [ArtisanController::class, 'run'])
     ->name('artisan.run')
-    ->middleware('throttle:10,1');
+    ->middleware(['auth', 'role:Admin,Sales Manager', 'throttle:10,1']);
 
 // ── Auth ──────────────────────────────────────────
 Route::middleware('guest')->group(function () {
