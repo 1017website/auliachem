@@ -259,6 +259,7 @@
                                 // Leads yang belum jadi customer existing
                                 $leadsNotExisting = \App\Models\Lead::orderBy('company_name')->get()->filter(fn($l) => !in_array(strtolower(trim($l->company_name)), $existingCustomerCompanyNames));
                                 $existingCustomers = \App\Models\Customer::where('status','Existing')->orderBy('company_name')->get();
+                                $potentialCustomers = \App\Models\Customer::where('status','Potential')->orderBy('company_name')->get();
                             @endphp
                             <optgroup label="— Leads —">
                             @foreach($leadsNotExisting as $lead)
@@ -268,6 +269,11 @@
                             <optgroup label="— Customer Existing —">
                             @foreach($existingCustomers as $cust)
                             <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-stage="">{{ $cust->company_name }} (Existing)</option>
+                            @endforeach
+                            </optgroup>
+                            <optgroup label="— Customer Potential —">
+                            @foreach($potentialCustomers as $cust)
+                            <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-stage="">{{ $cust->company_name }} (Potential)</option>
                             @endforeach
                             </optgroup>
                         </select>
@@ -398,7 +404,7 @@ function openActivityModal(type) {
                 for (let o of stSel.options) o.selected = o.value === stage;
             }
         } else {
-            // Customer Existing — tidak ada stage pipeline
+            // Customer Existing/Potential — tidak ada stage pipeline
             leadHidden.value = '';
             custHidden.value = id;
             wrap.style.display = 'none';

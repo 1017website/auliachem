@@ -73,6 +73,7 @@
                             <th class="py-2">PIC</th>
                             <th class="py-2">Phone</th>
                             <th class="py-2">Kategori Produk</th>
+                            <th class="py-2">Produk Supplier</th>
                             <th class="py-2">Source</th>
                             <th class="py-2">Relationship</th>
                             <th class="py-2">Status</th>
@@ -93,6 +94,14 @@
                             </td>
                             <td class="py-2" style="font-size:12px">{{ $s->phone }}</td>
                             <td class="py-2" style="font-size:12px">{{ $s->product_category ?? '-' }}</td>
+                            <td class="py-2" style="font-size:12px;max-width:220px">
+                                @php($productNames = $s->products->map(fn($p) => trim($p->product_name . ($p->unit ? ' (' . $p->unit . ')' : '')))->filter())
+                                @if($productNames->count())
+                                    <div title="{{ $productNames->implode(', ') }}">{{ Str::limit($productNames->implode(', '), 70) }}</div>
+                                @else
+                                    <span style="color:#9ca3af">-</span>
+                                @endif
+                            </td>
                             <td class="py-2">
                                 <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
                                     background:{{ $s->source_type==='Local'?'#dbeafe':'#ede9fe' }};
@@ -133,7 +142,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="9" class="text-center py-4" style="color:#9ca3af">Belum ada data supplier</td></tr>
+                        <tr><td colspan="10" class="text-center py-4" style="color:#9ca3af">Belum ada data supplier</td></tr>
                         @endforelse
                     </tbody>
                 </table>

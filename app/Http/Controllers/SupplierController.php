@@ -27,6 +27,7 @@ class SupplierController extends Controller
                 ->orWhere('pic_name',    'like', "%$search%")
                 ->orWhere('phone',       'like', "%$search%")
                 ->orWhere('product_category', 'like', "%$search%")
+                ->orWhereHas('products', fn($p) => $p->where('product_name', 'like', "%$search%"))
             );
         }
 
@@ -268,7 +269,7 @@ class SupplierController extends Controller
         $relationshipStatus = $request->get('relationship_status');
         $search             = $request->get('search');
 
-        $query = Supplier::query();
+        $query = Supplier::with('products');
 
         if ($sourceType && $sourceType !== 'all') {
             $query->where('source_type', $sourceType);
@@ -283,22 +284,34 @@ class SupplierController extends Controller
         }
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('supplier_name', 'like', "%{$search}%")
-                  ->orWhere('pic_name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('product_category', 'like', "%{$search}%");
-            });
+            $query->where(fn($q) => $q
+                ->where('supplier_name', 'like', "%$search%")
+                ->orWhere('pic_name', 'like', "%$search%")
+                ->orWhere('phone', 'like', "%$search%")
+                ->orWhere('product_category', 'like', "%$search%")
+                ->orWhereHas('products', fn($p) => $p->where('product_name', 'like', "%$search%"))
+            );
         }
 
         $suppliers = $query->orderBy('is_preferred', 'desc')->orderBy('rating', 'desc')->get();
-        $headers   = ['Supplier Name', 'Source Type', 'PIC', 'Phone', 'Email', 'Product Category', 'Origin Country', 'Relationship', 'Status', 'Preferred', 'Rating'];
-        $rows      = $suppliers->map(fn($s) => [
-            $s->supplier_name, $s->source_type, $s->pic_name, $s->phone, $s->email,
-            $s->product_category, $s->origin_country, $s->relationship_status,
-            $s->status, $s->is_preferred ? 'Yes' : 'No', $s->rating,
+
+        $headers = ['Supplier Name', 'Source Type', 'PIC', 'Phone', 'Email', 'Product Category', 'Produk Supplier', 'Origin Country', 'Relationship', 'Status', 'Preferred', 'Rating'];
+        $rows = $suppliers->map(fn($s) => [
+            $s->supplier_name,
+            $s->source_type,
+            $s->pic_name,
+            $s->phone,
+            $s->email,
+            $s->product_category,
+            $s->products->map(fn($p) => trim($p->product_name . ($p->unit ? ' (' . $p->unit . ')' : '')))->implode(', '),
+            $s->origin_country,
+            $s->relationship_status,
+            $s->status,
+            $s->is_preferred ? 'Yes' : 'No',
+            $s->rating,
         ])->toArray();
 
         return \App\Helpers\ExcelExport::download('suppliers-' . date('Ymd'), $headers, $rows, 'Suppliers');
     }
+
 }
