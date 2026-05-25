@@ -95,9 +95,20 @@
                             <td class="py-2" style="font-size:12px">{{ $s->phone }}</td>
                             <td class="py-2" style="font-size:12px">{{ $s->product_category ?? '-' }}</td>
                             <td class="py-2" style="font-size:12px;max-width:220px">
-                                @php($productNames = $s->products->map(fn($p) => trim($p->product_name . ($p->unit ? ' (' . $p->unit . ')' : '')))->filter())
-                                @if($productNames->count())
-                                    <div title="{{ $productNames->implode(', ') }}">{{ Str::limit($productNames->implode(', '), 70) }}</div>
+                                @php
+                                    $productNames = $s->products->map(function ($p) {
+                                        $name = trim($p->product_name ?? '');
+                                        $unit = trim($p->unit ?? '');
+
+                                        if ($name === '') {
+                                            return null;
+                                        }
+
+                                        return $unit !== '' ? $name . ' (' . $unit . ')' : $name;
+                                    })->filter()->values();
+                                @endphp
+                                @if($productNames->count() > 0)
+                                    <div title="{{ $productNames->implode(', ') }}">{{ \Illuminate\Support\Str::limit($productNames->implode(', '), 70) }}</div>
                                 @else
                                     <span style="color:#9ca3af">-</span>
                                 @endif
