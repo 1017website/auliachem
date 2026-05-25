@@ -82,7 +82,7 @@
                     <thead>
                         <tr>
                             <th>No.</th><th>Company</th><th>Contact</th><th>Industry</th>
-                            <th>Status</th><th>Sales PIC</th><th>Last Activity</th><th>Action</th>
+                            <th>Status</th><th>Sales PIC</th><th>Produk</th><th>Last Activity</th><th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,6 +106,28 @@
                             <td style="font-size:.75rem">{{ $cust->industry ?? '-' }}</td>
                             <td><span class="badge-{{ strtolower($cust->status) }}">{{ $cust->status }}</span></td>
                             <td style="font-size:.75rem">{{ $cust->salesUser?->name ?? '-' }}</td>
+                            <td style="font-size:.72rem;max-width:160px">
+                                @if($cust->products)
+                                    @php
+                                        $prods = is_array($cust->products)
+                                            ? $cust->products
+                                            : json_decode($cust->products, true);
+                                    @endphp
+                                    @if(is_array($prods) && count($prods))
+                                        <div style="display:flex;flex-wrap:wrap;gap:3px">
+                                            @foreach($prods as $p)
+                                                <span style="background:#eff6ff;color:#2563eb;padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
+                                                    {{ $p['name'] ?? $p['product_name'] ?? '' }}{{ !empty($p['unit']) ? ' ('.$p['unit'].')' : '' }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span style="color:#374151">{{ $cust->products }}</span>
+                                    @endif
+                                @else
+                                    <span style="color:#d1d5db">-</span>
+                                @endif
+                            </td>
                             <td style="font-size:.72rem">
                                 @if($cust->activities->count())
                                     <div>{{ $cust->activities->sortByDesc('activity_at')->first()->activity_at->format('d M Y') }}</div>
