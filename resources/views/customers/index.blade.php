@@ -107,23 +107,14 @@
                             <td><span class="badge-{{ strtolower($cust->status) }}">{{ $cust->status }}</span></td>
                             <td style="font-size:.75rem">{{ $cust->salesUser?->name ?? '-' }}</td>
                             <td style="font-size:.72rem;max-width:160px">
-                                @if($cust->products)
-                                    @php
-                                        $prods = is_array($cust->products)
-                                            ? $cust->products
-                                            : json_decode($cust->products, true);
-                                    @endphp
-                                    @if(is_array($prods) && count($prods))
-                                        <div style="display:flex;flex-wrap:wrap;gap:3px">
-                                            @foreach($prods as $p)
-                                                <span style="background:#eff6ff;color:#2563eb;padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
-                                                    {{ $p['name'] ?? $p['product_name'] ?? '' }}{{ !empty($p['unit']) ? ' ('.$p['unit'].')' : '' }}
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span style="color:#374151">{{ $cust->products }}</span>
-                                    @endif
+                                @if($cust->productItems && $cust->productItems->count())
+                                    <div style="display:flex;flex-wrap:wrap;gap:3px">
+                                        @foreach($cust->productItems as $p)
+                                            <span style="background:#eff6ff;color:#2563eb;padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
+                                                {{ $p->product_name }}{{ $p->unit ? ' ('.$p->unit.')' : '' }}
+                                            </span>
+                                        @endforeach
+                                    </div>
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
@@ -218,10 +209,15 @@
                     </div>
                     @endforeach
 
-                    @if($selectedCustomer->products)
+                    @if($selectedCustomer->productItems && $selectedCustomer->productItems->count())
                     <div class="mt-2 pt-2" style="border-top:1px solid #f3f4f6">
-                        <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:4px">Produk</div>
-                        <div style="font-size:.78rem">{{ $selectedCustomer->products }}</div>
+                        <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:4px">Kebutuhan Produk</div>
+                        @foreach($selectedCustomer->productItems as $cp)
+                        <div style="font-size:.78rem">
+                            • {{ $cp->product_name }}@if($cp->unit) <span style="color:var(--text-muted)">({{ $cp->unit }})</span>@endif
+                            @if($cp->description)<div style="font-size:.7rem;color:var(--text-muted);margin-left:10px">{{ $cp->description }}</div>@endif
+                        </div>
+                        @endforeach
                     </div>
                     @endif
 
@@ -385,20 +381,25 @@
         <div class="modal-header"><h6 class="modal-title fw-bold">Add Customer Baru</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form method="POST" action="{{ route('customers.store') }}" id="addCustomerForm">@csrf
             <div class="modal-body"><div class="row g-3">
+                <div class="col-12">
+                    <div class="alert alert-info py-2 mb-0" style="font-size:.74rem">
+                        <i class="fas fa-info-circle me-1"></i> Customer dari menu ini otomatis berstatus <strong>Existing</strong> dan akan langsung membuat <strong>Lead</strong> dengan stage <strong>Maintaining</strong>.
+                    </div>
+                </div>
                 <div class="col-12"><div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-building me-1"></i> Info Perusahaan</div></div>
                 <div class="col-md-6"><label class="form-label">Company Name <span class="text-danger">*</span></label><input type="text" name="company_name" class="form-control" required></div>
                 <div class="col-md-6"><label class="form-label">Industry</label><input type="text" name="industry" class="form-control" placeholder="Manufaktur, Retail, dll"></div>
                 <div class="col-md-6"><label class="form-label">Lokasi</label><input type="text" name="location" class="form-control" placeholder="Kota/Wilayah"></div>
                 <div class="col-md-6"><label class="form-label">Customer Since</label><input type="date" name="customer_since" class="form-control"></div>
                 <div class="col-12"><label class="form-label">Alamat</label><textarea name="address" class="form-control" rows="2"></textarea></div>
-                <div class="col-12"><label class="form-label">Produk (yang pernah dibeli/diminati)</label><input type="text" name="products" class="form-control" placeholder="Contoh: Solvent IPA, Resin Epoxy"></div>
                 <div class="col-12 mt-2"><div style="font-size:.78rem;font-weight:600;color:var(--primary)"><i class="fas fa-user me-1"></i> PIC Utama</div></div>
                 <div class="col-md-6"><label class="form-label">Nama PIC <span class="text-danger">*</span></label><input type="text" name="pic_name" class="form-control" required></div>
                 <div class="col-md-6"><label class="form-label">Jabatan PIC</label><input type="text" name="pic_position" class="form-control"></div>
                 <div class="col-md-6"><label class="form-label">Phone <span class="text-danger">*</span></label><input type="text" name="phone" class="form-control" required></div>
                 <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
-                <div class="col-md-6"><label class="form-label">Status <span class="text-danger">*</span></label>
-                    <select name="status" class="form-select" required><option value="Potential">Potential</option><option value="Existing">Existing</option></select></div>
+                <div class="col-md-6"><label class="form-label">Status</label>
+                    <input type="text" class="form-control" value="Existing" disabled>
+                    <input type="hidden" name="status" value="Existing"></div>
                 <div class="col-md-6">@include('components.sales-pic-field')</div>
                 <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
 
@@ -431,7 +432,7 @@
         <div class="modal-header"><h6 class="modal-title fw-bold">Edit Customer</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form method="POST" id="editCustomerForm">@csrf @method('PUT')
             <input type="hidden" name="pics_submitted" value="1">
-            <input type="hidden" name="products_list_submitted" value="1">
+            <input type="hidden" name="products_submitted" value="1">
             <div class="modal-body"><div class="row g-3">
                 <div class="col-md-6"><label class="form-label">Company Name</label><input type="text" name="company_name" id="editCompanyName" class="form-control" required></div>
                 <div class="col-md-6"><label class="form-label">Industry</label><input type="text" name="industry" id="editIndustry" class="form-control"></div>
@@ -441,9 +442,9 @@
                 <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" id="editEmail" class="form-control"></div>
                 <div class="col-md-6"><label class="form-label">Location</label><input type="text" name="location" id="editLocation" class="form-control"></div>
                 <div class="col-md-6"><label class="form-label">Status</label>
-                    <select name="status" id="editStatus" class="form-select"><option value="Potential">Potential</option><option value="Existing">Existing</option></select></div>
+                    <input type="text" id="editStatusDisplay" class="form-control" value="" disabled>
+                    <div class="form-text" style="font-size:.68rem">Status hanya berubah ke Existing via Sales Activity (stage Won/Closing).</div></div>
                 <div class="col-md-6">@include('components.sales-pic-field', ['fieldId' => 'editSalesPIC'])</div>
-                <div class="col-md-6"><label class="form-label">Produk</label><input type="text" name="products" id="editProducts" class="form-control" placeholder="Produk yang pernah dibeli/diminati"></div>
                 <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" id="editNotes" class="form-control" rows="2"></textarea></div>
 
                 {{-- Tambahan PICs (edit) --}}
@@ -534,6 +535,15 @@
                 'user_id' => (string) $c->user_id,
                 'notes' => $c->notes,
                 'products' => $c->products,
+                'product_items' => $c->relationLoaded('productItems')
+                    ? $c->productItems->map(function ($p) {
+                        return [
+                            'product_name' => $p->product_name,
+                            'unit' => $p->unit,
+                            'description' => $p->description,
+                        ];
+                    })->values()
+                    : [],
                 'pics' => $c->relationLoaded('pics')
                     ? $c->pics->map(function ($p) {
                         return [
@@ -599,14 +609,15 @@ function addCustPicRow(containerId, data = {}) {
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
 }
 
-// ── Inline Product rows (Customer) ──
+// ── Inline Product rows (Customer) — field: name, unit, description (sama dgn supplier) ──
 let custProdIdx = 0;
 function addCustProductRow(containerId, data = {}) {
     const i = custProdIdx++;
-    const html = `<div class="row g-2 mb-2 align-items-center" id="custProd_${i}">
-        <div class="col-6"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(safeValue(data.product_name))}" required></div>
-        <div class="col-5"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan / keterangan" value="${escapeHtml(safeValue(data.unit))}"></div>
-        <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
+    const html = `<div class="row g-2 mb-2 align-items-start" id="custProd_${i}">
+        <div class="col-md-4"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(safeValue(data.product_name))}" required></div>
+        <div class="col-md-3"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (mis. ton)" value="${escapeHtml(safeValue(data.unit))}"></div>
+        <div class="col-md-4"><input type="text" name="products_list[${i}][description]" class="form-control form-control-sm" placeholder="Keterangan" value="${escapeHtml(safeValue(data.description))}"></div>
+        <div class="col-md-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
 }
@@ -650,9 +661,8 @@ function openEditModal(id) {
     document.getElementById('editIndustry').value = safeValue(data.industry);
     document.getElementById('editLocation').value = safeValue(data.location);
     document.getElementById('editNotes').value = safeValue(data.notes);
-    document.getElementById('editProducts').value = safeValue(data.products);
+    document.getElementById('editStatusDisplay').value = safeValue(data.status);
 
-    setSelectValue('#editStatus', data.status);
     setSelectValue('#editSalesPIC', data.user_id);
 
     const picContainer = document.getElementById('editCustPicsContainer');
@@ -667,7 +677,7 @@ function openEditModal(id) {
         addCustPicRow('editCustPicsContainer', pic);
     });
 
-    splitProducts(data.products).forEach(function(product) {
+    (data.product_items || []).forEach(function(product) {
         addCustProductRow('editCustProductsContainer', product);
     });
 
@@ -675,7 +685,6 @@ function openEditModal(id) {
     modal.show();
 
     setTimeout(function() {
-        setSelectValue('#editStatus', data.status);
         setSelectValue('#editSalesPIC', data.user_id);
     }, 150);
 }

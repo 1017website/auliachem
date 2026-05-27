@@ -24,6 +24,9 @@ class Customer extends Model
     public function purchaseOrders(): HasMany { return $this->hasMany(PurchaseOrder::class); }
     public function pics(): HasMany           { return $this->hasMany(CustomerPic::class); }
 
+    // Kebutuhan produk (field disamakan dengan supplier_products: product_name, unit, description)
+    public function productItems(): HasMany   { return $this->hasMany(CustomerProduct::class); }
+
     public function getTotalRevenueAttribute(): float
     {
         return $this->purchaseOrders()

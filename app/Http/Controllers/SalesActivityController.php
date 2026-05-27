@@ -76,6 +76,7 @@ class SalesActivityController extends Controller
             'activity_at'    => 'required|date',
             'status'         => 'required|in:Done,Pending,Planned,Overdue',
             'next_follow_up' => 'nullable|date',
+            'pipeline_stage' => 'nullable|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'photo'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
         ]);
 
@@ -83,19 +84,43 @@ class SalesActivityController extends Controller
         $validated['user_id']       = auth()->id();
         $validated['sales_user_id'] = $validated['sales_user_id'] ?? auth()->id();
 
-        // Foto: compress ke maks 500KB sebelum simpan
-        unset($validated['photo']);
-        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $validated['photo'] = self::compressAndStore($request->file('photo'));
+        // Resolusi target: lead langsung, atau lead yang terhubung ke customer.
+        // Revisi #3: activity bisa dari (lead / customer potential) & (customer existing).
+        $targetLead = null;
+
+        if (!empty($validated['lead_id'])) {
+            $targetLead = Lead::find($validated['lead_id']);
+        } elseif (!empty($validated['customer_id'])) {
+            $customer = Customer::find($validated['customer_id']);
+            // Cari lead terbaru yang terhubung ke customer ini untuk update stage.
+            if ($customer) {
+                $targetLead = Lead::where('customer_id', $customer->id)
+                    ->orderByDesc('updated_at')
+                    ->first();
+            }
         }
 
-        // Update pipeline_stage lead jika dikirim
-        if (!empty($validated['lead_id']) && $request->filled('pipeline_stage')) {
-            $lead = \App\Models\Lead::find($validated['lead_id']);
-            if ($lead) {
-                $lead->update(['pipeline_stage' => $request->pipeline_stage]);
-                \App\Http\Controllers\LeadsController::syncToCustomer($lead->fresh());
+        // Update pipeline_stage bila dikirim & ada lead target.
+        // Revisi #4 & #5: validasi stage sesuai sumber dilakukan di server.
+        if ($request->filled('pipeline_stage') && $targetLead) {
+            $requested  = $request->pipeline_stage;
+            $isExisting = !empty($validated['customer_id'])
+                && optional(Customer::find($validated['customer_id']))->status === 'Existing';
+
+            $allowed = $isExisting
+                ? ['Follow Up', 'Won', 'Lost', 'Maintaining']                                  // customer existing
+                : ['Identifying', 'Approaching', 'Follow Up', 'Won', 'Lost', 'Maintaining'];   // lead / customer potential
+
+            if (in_array($requested, $allowed, true)) {
+                $targetLead->update(['pipeline_stage' => $requested]);
+                \App\Http\Controllers\LeadsController::syncToCustomer($targetLead->fresh());
             }
+        }
+
+        // Foto: compress ke maks 500KB sebelum simpan
+        unset($validated['photo'], $validated['pipeline_stage']);
+        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            $validated['photo'] = self::compressAndStore($request->file('photo'));
         }
 
         Activity::create($validated);

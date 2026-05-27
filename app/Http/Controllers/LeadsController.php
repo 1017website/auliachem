@@ -182,17 +182,24 @@ class LeadsController extends Controller
     }
 
     /**
-     * Sync lead ke database customer otomatis berdasarkan pipeline stage:
-     * - Identifying / Approaching / Follow Up → Potential
-     * - Closing / Won → Existing
-     * - Lost → tetap sebagai Potential
+     * Sync lead ke database customer otomatis berdasarkan pipeline stage.
+     *
+     * Revisi #2 — aturan status customer:
+     * - Customer naik ke "Existing" HANYA jika lead pernah/menjadi stage "Won" (= Closing).
+     * - Stage lain (Identifying/Approaching/Follow Up/Lost/Maintaining) TIDAK menaikkan
+     *   status. Saat membuat customer baru dari lead, defaultnya "Potential".
+     * - Status "Existing" yang sudah ada TIDAK PERNAH diturunkan kembali ke "Potential"
+     *   (mis. customer yang dibuat dari menu Customer sudah Existing sejak awal, atau
+     *   lead yang sudah pernah Won lalu pindah ke Maintaining).
      */
     public static function syncToCustomer(Lead $lead): void
     {
         $lead->loadMissing(['products', 'pics']);
 
         $stage = $lead->pipeline_stage;
-        $status = in_array($stage, ['Won', 'Maintaining']) ? 'Existing' : 'Potential';
+
+        // Hanya stage Won yang memenuhi syarat menaikkan customer ke Existing.
+        $wonNow = ($stage === 'Won');
 
         $customerData = [
             'company_name' => $lead->company_name,
@@ -203,7 +210,6 @@ class LeadsController extends Controller
             'address'      => $lead->address,
             'industry'     => $lead->industry,
             'location'     => $lead->location ?? null,
-            'status'       => $status,
             'user_id'      => $lead->user_id,
         ];
 
@@ -211,24 +217,28 @@ class LeadsController extends Controller
 
         if ($lead->customer_id) {
             $customer = Customer::find($lead->customer_id);
-            if ($customer && $status === 'Existing' && $customer->status !== 'Existing') {
-                $customerData['customer_since'] = now()->toDateString();
-            }
         }
 
         if (!$customer) {
             $customer = Customer::where('company_name', $lead->company_name)->first();
-            if ($customer && $status === 'Existing' && $customer->status !== 'Existing') {
-                $customerData['customer_since'] = now()->toDateString();
-            }
         }
 
         if (!$customer) {
-            if ($status === 'Existing') {
+            // Customer baru hasil sync lead: Existing hanya jika Won, selain itu Potential.
+            $customerData['status'] = $wonNow ? 'Existing' : 'Potential';
+            if ($wonNow) {
                 $customerData['customer_since'] = now()->toDateString();
             }
             $customer = Customer::create($customerData);
         } else {
+            // Customer sudah ada: JANGAN turunkan status Existing yang sudah ada.
+            // Naikkan ke Existing hanya bila stage Won dan saat ini belum Existing.
+            if ($wonNow && $customer->status !== 'Existing') {
+                $customerData['status'] = 'Existing';
+                $customerData['customer_since'] = $customer->customer_since
+                    ? $customer->customer_since->toDateString()
+                    : now()->toDateString();
+            }
             $customer->update($customerData);
         }
 
@@ -236,34 +246,41 @@ class LeadsController extends Controller
             $lead->updateQuietly(['customer_id' => $customer->id]);
         }
 
-        // Sync produk lead ke field produk customer tanpa menghapus produk manual customer.
-        $leadProducts = $lead->products->map(function ($product) {
-            $name = trim($product->product_name ?? '');
+        // Sync produk lead ke tabel customer_products (field: name, unit, description).
+        // Tidak menghapus produk manual customer; hanya menambah yang belum ada.
+        foreach ($lead->products as $leadProduct) {
+            $name = trim($leadProduct->product_name ?? '');
             if ($name === '') {
-                return null;
+                continue;
             }
+            $unit = trim($leadProduct->unit ?? '') !== '' ? $leadProduct->unit : 'ton';
 
-            $unit = trim($product->unit ?? '');
-            return $unit !== '' ? $name . ' (' . $unit . ')' : $name;
-        })->filter()->values()->all();
+            $exists = $customer->productItems()
+                ->whereRaw('LOWER(product_name) = ?', [mb_strtolower($name)])
+                ->exists();
 
-        if (empty($leadProducts) && trim((string) $lead->product_interest) !== '') {
-            $leadProducts[] = trim((string) $lead->product_interest);
+            if (!$exists) {
+                $customer->productItems()->create([
+                    'product_name' => $name,
+                    'unit'         => $unit,
+                    'description'  => null,
+                ]);
+            }
         }
 
-        if (!empty($leadProducts)) {
-            $existingProducts = collect(explode(',', (string) $customer->products))
-                ->map(fn ($item) => trim($item))
-                ->filter()
-                ->values();
-
-            $mergedProducts = $existingProducts
-                ->merge($leadProducts)
-                ->unique(fn ($item) => mb_strtolower($item))
-                ->values()
-                ->implode(', ');
-
-            $customer->update(['products' => $mergedProducts]);
+        // Fallback: product_interest (string) jika lead tidak punya produk terstruktur.
+        if ($lead->products->isEmpty() && trim((string) $lead->product_interest) !== '') {
+            $piName = trim((string) $lead->product_interest);
+            $exists = $customer->productItems()
+                ->whereRaw('LOWER(product_name) = ?', [mb_strtolower($piName)])
+                ->exists();
+            if (!$exists) {
+                $customer->productItems()->create([
+                    'product_name' => $piName,
+                    'unit'         => 'ton',
+                    'description'  => null,
+                ]);
+            }
         }
 
         // Sync PIC tambahan dari lead. Tidak menghapus PIC customer yang sudah ada.

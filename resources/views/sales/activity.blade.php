@@ -268,12 +268,12 @@
                             </optgroup>
                             <optgroup label="— Customer Existing —">
                             @foreach($existingCustomers as $cust)
-                            <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-stage="">{{ $cust->company_name }} (Existing)</option>
+                            <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-status="Existing" data-stage="">{{ $cust->company_name }} (Existing)</option>
                             @endforeach
                             </optgroup>
                             <optgroup label="— Customer Potential —">
                             @foreach($potentialCustomers as $cust)
-                            <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-stage="">{{ $cust->company_name }} (Potential)</option>
+                            <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-status="Potential" data-stage="">{{ $cust->company_name }} (Potential)</option>
                             @endforeach
                             </optgroup>
                         </select>
@@ -281,13 +281,11 @@
                         <input type="hidden" name="customer_id" id="actCustomerHidden" value="">
                     </div>
 
-                    {{-- Pipeline Stage — muncul setelah lead dipilih --}}
+                    {{-- Pipeline Stage — muncul setelah client dipilih (lead atau customer) --}}
                     <div class="mb-3" id="stageWrap" style="display:none">
                         <label class="form-label">Update Pipeline Stage</label>
                         <select name="pipeline_stage" class="form-select" id="actStageSelect">
-                            @foreach(['Identifying','Approaching','Follow Up','Won/Closing','Lost','Maintaining'] as $s)
-                            <option value="{{ $s === 'Won/Closing' ? 'Won' : $s }}">{{ $s }}</option>
-                            @endforeach
+                            {{-- diisi via JS sesuai sumber --}}
                         </select>
                         <div class="form-text">Opsional — biarkan jika tidak ingin mengubah stage</div>
                     </div>
@@ -378,9 +376,36 @@ function openActivityModal(type) {
         }
     }
 
+    // Opsi stage sesuai sumber (revisi #4 & #5)
+    const STAGE_FULL = [
+        ['Identifying','Identifying'],
+        ['Approaching','Approaching'],
+        ['Follow Up','Follow Up'],
+        ['Won','Won/Closing'],
+        ['Lost','Lost'],
+        ['Maintaining','Maintaining'],
+    ];
+    const STAGE_EXISTING = [
+        ['Follow Up','Follow Up'],
+        ['Won','Won/Closing'],
+        ['Lost','Lost'],
+        ['Maintaining','Maintaining'],
+    ];
+
+    function fillStageOptions(list, currentStage) {
+        const stSel = document.getElementById('actStageSelect');
+        stSel.innerHTML = '';
+        list.forEach(function(pair) {
+            const opt = document.createElement('option');
+            opt.value = pair[0];
+            opt.textContent = pair[1];
+            if (currentStage && currentStage === pair[0]) opt.selected = true;
+            stSel.appendChild(opt);
+        });
+    }
+
     function onLeadChange(sel) {
         const wrap = document.getElementById('stageWrap');
-        const stSel = document.getElementById('actStageSelect');
         const leadHidden = document.getElementById('actLeadHidden');
         const custHidden = document.getElementById('actCustomerHidden');
 
@@ -391,23 +416,30 @@ function openActivityModal(type) {
             return;
         }
 
-        const opt = sel.options[sel.selectedIndex];
-        const type = opt.dataset.type;
-        const id   = opt.dataset.id;
+        const opt    = sel.options[sel.selectedIndex];
+        const type   = opt.dataset.type;
+        const id     = opt.dataset.id;
+        const stage  = opt.dataset.stage || '';
+        const status = opt.dataset.status || '';
 
         if (type === 'lead') {
+            // Lead / customer potential → opsi penuh
             leadHidden.value = id;
             custHidden.value = '';
+            fillStageOptions(STAGE_FULL, stage);
             wrap.style.display = 'block';
-            const stage = opt.dataset.stage;
-            if (stage) {
-                for (let o of stSel.options) o.selected = o.value === stage;
-            }
         } else {
-            // Customer Existing/Potential — tidak ada stage pipeline
+            // Customer
             leadHidden.value = '';
             custHidden.value = id;
-            wrap.style.display = 'none';
+            if (status === 'Existing') {
+                // Revisi #5: customer existing → Follow Up, Won/Closing, Lost, Maintaining
+                fillStageOptions(STAGE_EXISTING, '');
+            } else {
+                // Revisi #4: customer potential → opsi penuh
+                fillStageOptions(STAGE_FULL, '');
+            }
+            wrap.style.display = 'block';
         }
     }
 
