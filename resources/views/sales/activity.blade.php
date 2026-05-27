@@ -4,6 +4,28 @@
 @section('page-title', 'Sales Activity')
 @section('page-subtitle', 'Kelola aktivitas harian dan follow up dengan customer')
 
+@push('styles')
+<style>
+/* Pipeline (Leads) summary — grid agar kolom sejajar antar baris */
+.pipeline-row{
+    display:grid;
+    grid-template-columns:10px 1fr auto auto;
+    align-items:center;
+    column-gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid #f3f4f6;
+}
+.pipeline-row:last-child{border-bottom:none;}
+.pipeline-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.pipeline-name{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pipeline-count{font-size:.72rem;color:var(--text-muted);text-align:right;min-width:62px;white-space:nowrap;}
+.pipeline-value{font-size:.75rem;font-weight:600;text-align:right;min-width:78px;white-space:nowrap;}
+.pipeline-total{margin-top:4px;padding-top:10px;border-top:2px solid #e5e7eb;}
+.pipeline-total .pipeline-name strong,
+.pipeline-total .pipeline-value strong{font-size:.82rem;}
+</style>
+@endpush
+
 @section('content')
 <div class="row g-3">
     {{-- LEFT: Activity Timeline --}}
@@ -190,19 +212,28 @@
                 <a href="{{ route('leads.index') }}" style="font-size:.75rem;color:var(--primary)">Lihat Semua</a>
             </div>
             <div class="card-body p-3">
-                @foreach($pipelineSummary as $stage => $data)
                 @php
-                $colors = ['Identifying'=>'#2563eb','Approaching'=>'#d97706','Follow Up'=>'#7c3aed','Closing'=>'#059669','Maintaining'=>'#6366f1'];
+                $pipeColors = [
+                    'Identifying' => '#2563eb',
+                    'Approaching' => '#d97706',
+                    'Follow Up'   => '#7c3aed',
+                    'Won/Closing' => '#059669',
+                    'Maintaining' => '#6366f1',
+                ];
                 @endphp
-                <div class="d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid #f3f4f6">
-                    <span style="font-size:.8rem;color:{{ $colors[$stage] ?? '#333' }};font-weight:600">{{ $stage }}</span>
-                    <span style="font-size:.75rem;color:var(--text-muted)">{{ $data['count'] }} Leads</span>
-                    <span style="font-size:.75rem;font-weight:600">{{ idrm($data['value']) }}</span>
+                @foreach($pipelineSummary as $stage => $data)
+                <div class="pipeline-row">
+                    <span class="pipeline-dot" style="background:{{ $pipeColors[$stage] ?? '#9ca3af' }}"></span>
+                    <span class="pipeline-name" style="color:{{ $pipeColors[$stage] ?? '#333' }}">{{ $stage }}</span>
+                    <span class="pipeline-count">{{ $data['count'] }} Leads</span>
+                    <span class="pipeline-value">{{ idrm($data['value']) }}</span>
                 </div>
                 @endforeach
-                <div class="d-flex justify-content-between pt-2">
-                    <strong style="font-size:.82rem">Total Pipeline Value</strong>
-                    <strong style="font-size:.82rem;color:var(--primary)">{{ idrm(collect($pipelineSummary)->sum(fn($d) => $d['value'])) }}</strong>
+                <div class="pipeline-row pipeline-total">
+                    <span class="pipeline-dot" style="background:transparent"></span>
+                    <span class="pipeline-name"><strong>Total Pipeline</strong></span>
+                    <span class="pipeline-count"></span>
+                    <span class="pipeline-value"><strong style="color:var(--primary)">{{ idrm(collect($pipelineSummary)->sum(fn($d) => $d['value'])) }}</strong></span>
                 </div>
             </div>
         </div>
@@ -259,7 +290,6 @@
                                 // Leads yang belum jadi customer existing
                                 $leadsNotExisting = \App\Models\Lead::orderBy('company_name')->get()->filter(fn($l) => !in_array(strtolower(trim($l->company_name)), $existingCustomerCompanyNames));
                                 $existingCustomers = \App\Models\Customer::where('status','Existing')->orderBy('company_name')->get();
-                                $potentialCustomers = \App\Models\Customer::where('status','Potential')->orderBy('company_name')->get();
                             @endphp
                             <optgroup label="— Leads —">
                             @foreach($leadsNotExisting as $lead)
@@ -269,11 +299,6 @@
                             <optgroup label="— Customer Existing —">
                             @foreach($existingCustomers as $cust)
                             <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-status="Existing" data-stage="">{{ $cust->company_name }} (Existing)</option>
-                            @endforeach
-                            </optgroup>
-                            <optgroup label="— Customer Potential —">
-                            @foreach($potentialCustomers as $cust)
-                            <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-status="Potential" data-stage="">{{ $cust->company_name }} (Potential)</option>
                             @endforeach
                             </optgroup>
                         </select>

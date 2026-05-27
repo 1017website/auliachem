@@ -246,7 +246,7 @@ class LeadsController extends Controller
             $lead->updateQuietly(['customer_id' => $customer->id]);
         }
 
-        // Sync produk lead ke tabel customer_products (field: name, unit, description).
+        // Sync produk lead ke tabel customer_products (field: product_name, qty, unit).
         // Tidak menghapus produk manual customer; hanya menambah yang belum ada.
         foreach ($lead->products as $leadProduct) {
             $name = trim($leadProduct->product_name ?? '');
@@ -262,8 +262,8 @@ class LeadsController extends Controller
             if (!$exists) {
                 $customer->productItems()->create([
                     'product_name' => $name,
+                    'qty'          => $leadProduct->qty ?? 0,
                     'unit'         => $unit,
-                    'description'  => null,
                 ]);
             }
         }
@@ -277,8 +277,8 @@ class LeadsController extends Controller
             if (!$exists) {
                 $customer->productItems()->create([
                     'product_name' => $piName,
+                    'qty'          => 0,
                     'unit'         => 'ton',
-                    'description'  => null,
                 ]);
             }
         }

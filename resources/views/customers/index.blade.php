@@ -111,7 +111,7 @@
                                     <div style="display:flex;flex-wrap:wrap;gap:3px">
                                         @foreach($cust->productItems as $p)
                                             <span style="background:#eff6ff;color:#2563eb;padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
-                                                {{ $p->product_name }}{{ $p->unit ? ' ('.$p->unit.')' : '' }}
+                                                {{ $p->product_name }}{{ $p->qty > 0 ? ' '.number_format($p->qty, 0, ',', '.').' '.$p->unit : ($p->unit ? ' ('.$p->unit.')' : '') }}
                                             </span>
                                         @endforeach
                                     </div>
@@ -214,8 +214,8 @@
                         <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:4px">Kebutuhan Produk</div>
                         @foreach($selectedCustomer->productItems as $cp)
                         <div style="font-size:.78rem">
-                            • {{ $cp->product_name }}@if($cp->unit) <span style="color:var(--text-muted)">({{ $cp->unit }})</span>@endif
-                            @if($cp->description)<div style="font-size:.7rem;color:var(--text-muted);margin-left:10px">{{ $cp->description }}</div>@endif
+                            • {{ $cp->product_name }}
+                            <span style="color:var(--text-muted);font-size:.7rem">{{ number_format($cp->qty, 0, ',', '.') }} {{ $cp->unit }}</span>
                         </div>
                         @endforeach
                     </div>
@@ -539,8 +539,8 @@
                     ? $c->productItems->map(function ($p) {
                         return [
                             'product_name' => $p->product_name,
+                            'qty' => $p->qty,
                             'unit' => $p->unit,
-                            'description' => $p->description,
                         ];
                     })->values()
                     : [],
@@ -609,15 +609,15 @@ function addCustPicRow(containerId, data = {}) {
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
 }
 
-// ── Inline Product rows (Customer) — field: name, unit, description (sama dgn supplier) ──
+// ── Inline Product rows (Customer) — field: product_name, qty, unit (sama dgn leads) ──
 let custProdIdx = 0;
 function addCustProductRow(containerId, data = {}) {
     const i = custProdIdx++;
-    const html = `<div class="row g-2 mb-2 align-items-start" id="custProd_${i}">
-        <div class="col-md-4"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(safeValue(data.product_name))}" required></div>
-        <div class="col-md-3"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (mis. ton)" value="${escapeHtml(safeValue(data.unit))}"></div>
-        <div class="col-md-4"><input type="text" name="products_list[${i}][description]" class="form-control form-control-sm" placeholder="Keterangan" value="${escapeHtml(safeValue(data.description))}"></div>
-        <div class="col-md-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
+    const html = `<div class="row g-2 mb-2 align-items-center" id="custProd_${i}">
+        <div class="col-5"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(safeValue(data.product_name))}" required></div>
+        <div class="col-3"><input type="number" name="products_list[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.01" value="${escapeHtml(safeValue(data.qty))}"></div>
+        <div class="col-3"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)" value="${escapeHtml(safeValue(data.unit))}"></div>
+        <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;
     document.getElementById(containerId).insertAdjacentHTML('beforeend', html);
 }

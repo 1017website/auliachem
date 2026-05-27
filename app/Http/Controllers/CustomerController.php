@@ -73,11 +73,11 @@ class CustomerController extends Controller
             'pics.*.pic_position' => 'nullable|string|max:100',
             'pics.*.phone'        => 'nullable|string|max:20',
             'pics.*.email'        => 'nullable|email|max:255',
-            // Kebutuhan produk — field disamakan dengan supplier (name, unit, description)
+            // Kebutuhan produk — field disamakan dengan leads (product_name, qty, unit)
             'products_list'                => 'nullable|array',
             'products_list.*.product_name' => 'required_with:products_list|string|max:255',
+            'products_list.*.qty'          => 'nullable|numeric|min:0',
             'products_list.*.unit'         => 'nullable|string|max:100',
-            'products_list.*.description'  => 'nullable|string',
         ]);
 
         // Revisi #1: customer dari menu Customer SELALU Existing
@@ -117,8 +117,8 @@ class CustomerController extends Controller
                 if ($name === '') continue;
                 $customer->productItems()->create([
                     'product_name' => $name,
+                    'qty'          => $prod['qty'] ?? 0,
                     'unit'         => trim($prod['unit'] ?? '') !== '' ? $prod['unit'] : 'ton',
-                    'description'  => $prod['description'] ?? null,
                 ]);
             }
 
@@ -143,7 +143,7 @@ class CustomerController extends Controller
             foreach ($customer->productItems as $cp) {
                 $lead->products()->create([
                     'product_name' => $cp->product_name,
-                    'qty'          => 0,
+                    'qty'          => $cp->qty ?? 0,
                     'unit'         => $cp->unit ?? 'ton',
                 ]);
             }
@@ -175,11 +175,11 @@ class CustomerController extends Controller
             'pics.*.phone'        => 'nullable|string|max:20',
             'pics.*.email'        => 'nullable|email|max:255',
 
-            // Kebutuhan produk — name, unit, description (sama seperti supplier)
+            // Kebutuhan produk — product_name, qty, unit (sama seperti leads)
             'products_list'                => 'nullable|array',
             'products_list.*.product_name' => 'nullable|string|max:255',
+            'products_list.*.qty'          => 'nullable|numeric|min:0',
             'products_list.*.unit'         => 'nullable|string|max:100',
-            'products_list.*.description'  => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($validated, $customer, $request) {
@@ -210,8 +210,8 @@ class CustomerController extends Controller
                     if ($name === '') continue;
                     $customer->productItems()->create([
                         'product_name' => $name,
+                        'qty'          => $product['qty'] ?? 0,
                         'unit'         => trim($product['unit'] ?? '') !== '' ? $product['unit'] : 'ton',
-                        'description'  => $product['description'] ?? null,
                     ]);
                 }
             }
