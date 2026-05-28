@@ -359,62 +359,15 @@
     </div>
 </div>
 
-{{-- 2. Add Activity Modal --}}
-<div class="modal fade" id="addActivityModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold">Add Activity — {{ $lead->company_name }}</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('leads.activity.store', $lead) }}">
-                @csrf
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <label class="form-label">Jenis <span class="text-danger">*</span></label>
-                            <select name="type" class="form-select" required>
-                                <option>Call</option><option>Visit</option><option>Email</option><option>Note</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="Done">Done</option>
-                                <option value="Planned">Planned</option>
-                                <option value="Pending">Pending</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Subject <span class="text-danger">*</span></label>
-                            <input type="text" name="subject" class="form-control" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Tanggal & Waktu</label>
-                            <input type="datetime-local" name="activity_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Sales PIC</label>
-                            <select name="user_id" class="form-select" required>
-                                @foreach($salesUsers as $su)
-                                <option value="{{ $su->id }}" {{ $lead->user_id == $su->id ? 'selected' : '' }}>{{ $su->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Keterangan</label>
-                            <textarea name="description" class="form-control" rows="2"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Simpan Activity</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{{-- 2. Add Activity Modal — Revisi #6: pakai modal unified --}}
+@include('components.activity-modal', [
+    'lockClient' => true,
+    'preType'    => 'lead',
+    'preId'      => $lead->id,
+    'preName'    => $lead->company_name,
+    'preStage'   => $lead->pipeline_stage,
+    'redirect'   => route('leads.show', $lead),
+])
 
 {{-- 3. Edit Catatan Internal Modal --}}
 <div class="modal fade" id="editCatatanModal" tabindex="-1">

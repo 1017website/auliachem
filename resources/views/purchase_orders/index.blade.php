@@ -669,28 +669,18 @@
 
                 const dateValue = normalizeDateForInput(value);
 
-                // Set native input value
-                el.value = dateValue;
-                el.setAttribute('value', dateValue);
+                // Pakai helper Air Datepicker bila tersedia (input sudah di-init).
+                if (window.setAdpDate) {
+                    window.setAdpDate(el, dateValue);
+                } else {
+                    el.value = dateValue;
+                    el.setAttribute('value', dateValue);
+                }
                 el.dataset.pendingDate = dateValue;
 
-                // Jika project memakai Flatpickr / datepicker dengan altInput,
-                // value harus diset lewat instance agar UI ikut terisi.
-                if (el._flatpickr && dateValue) {
-                    el._flatpickr.setDate(dateValue, true, 'Y-m-d');
-                }
-
-                // Fallback untuk datepicker lain yang mendengar event input/change.
+                // Fallback untuk listener input/change lain.
                 el.dispatchEvent(new Event('input', { bubbles: true }));
                 el.dispatchEvent(new Event('change', { bubbles: true }));
-
-                // Fallback khusus flatpickr altInput jika ada tapi instance belum sync.
-                if (el._flatpickr && el._flatpickr.altInput && dateValue) {
-                    el._flatpickr.altInput.value = el._flatpickr.formatDate(
-                        el._flatpickr.selectedDates[0] || new Date(dateValue),
-                        el._flatpickr.config.altFormat || 'd F Y'
-                    );
-                }
             }
 
             async function openEditPo(id) {

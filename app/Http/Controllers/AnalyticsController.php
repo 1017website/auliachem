@@ -88,14 +88,28 @@ class AnalyticsController extends Controller
             ->groupBy('lead_source')->orderByDesc('count')->get();
 
         // ── Sales performance ──
-        $salesPerformance = User::orderBy('name')->get()->map(function ($u) use ($startDate, $endDate) {
-            $total   = Lead::where('user_id', $u->id)->count();
-            $won     = Lead::where('user_id', $u->id)->where('pipeline_stage', 'Won')->whereBetween('updated_at', [$startDate, $endDate])->count();
-            $u->deals_closed = $won;
-            $u->revenue      = Lead::where('user_id', $u->id)->where('pipeline_stage', 'Won')->sum('potensi_revenue');
-            $u->conversion   = $total > 0 ? round(($won / $total) * 100, 1) : 0;
-            return $u;
-        })->sortByDesc('revenue');
+        // Revisi #2: hanya tampilkan user dengan role sales (bukan Admin),
+        // dan revenue dihitung dari PO Done aktual (bukan potensi_revenue lead).
+        $salesPerformance = User::whereIn('role', ['Sales Executive', 'Sales Manager'])
+            ->orderBy('name')->get()->map(function ($u) use ($startDate, $endDate) {
+                $total = Lead::where('user_id', $u->id)->count();
+                $won   = Lead::where('user_id', $u->id)->where('pipeline_stage', 'Won')
+                    ->whereBetween('updated_at', [$startDate, $endDate])->count();
+
+                // Revenue aktual: PO Done milik lead/customer yang di-handle user ini.
+                $revenue = PurchaseOrder::where('status', 'Done')->where('currency', 'IDR')
+                    ->whereBetween('order_date', [$startDate, $endDate])
+                    ->where(function ($q) use ($u) {
+                        $q->whereHas('lead', fn($l) => $l->where('user_id', $u->id))
+                          ->orWhereHas('customer', fn($c) => $c->where('user_id', $u->id));
+                    })
+                    ->with('items')->get()->sum(fn($po) => $po->total_revenue);
+
+                $u->deals_closed = $won;
+                $u->revenue      = $revenue;
+                $u->conversion   = $total > 0 ? round(($won / $total) * 100, 1) : 0;
+                return $u;
+            })->sortByDesc('revenue')->values();
 
         // ── Top customers ──
         $topCustomers = Customer::with('purchaseOrders.items')->get()->map(function($c) use ($startDate, $endDate, $salesId) {

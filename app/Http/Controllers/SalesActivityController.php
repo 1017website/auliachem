@@ -67,6 +67,30 @@ class SalesActivityController extends Controller
 
     public function store(Request $request)
     {
+        // Normalisasi activity_at sebelum validasi: terima 'Y-m-d H:i', 'Y-m-d H:i:s',
+        // 'Y-m-d\TH:i', dll. Ubah ke format standar yang pasti lolos rule 'date'.
+        if ($request->filled('activity_at')) {
+            try {
+                $request->merge([
+                    'activity_at' => \Carbon\Carbon::parse(
+                        str_replace('T', ' ', $request->input('activity_at'))
+                    )->format('Y-m-d H:i:s'),
+                ]);
+            } catch (\Throwable $e) {
+                // biarkan validasi yang menangkap bila benar-benar tidak valid
+            }
+        }
+
+        if ($request->filled('next_follow_up')) {
+            try {
+                $request->merge([
+                    'next_follow_up' => \Carbon\Carbon::parse(
+                        str_replace('T', ' ', $request->input('next_follow_up'))
+                    )->format('Y-m-d'),
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
         $validated = $request->validate([
             'lead_id'        => 'nullable|exists:leads,id',
             'customer_id'    => 'nullable|exists:customers,id',
@@ -78,6 +102,7 @@ class SalesActivityController extends Controller
             'next_follow_up' => 'nullable|date',
             'pipeline_stage' => 'nullable|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'photo'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
+            'redirect_to'    => 'nullable|string',
         ]);
 
         // Selalu pakai auth user
@@ -85,45 +110,71 @@ class SalesActivityController extends Controller
         $validated['sales_user_id'] = $validated['sales_user_id'] ?? auth()->id();
 
         // Resolusi target: lead langsung, atau lead yang terhubung ke customer.
-        // Revisi #3: activity bisa dari (lead / customer potential) & (customer existing).
-        $targetLead = null;
+        // Revisi #1: activity dari customer existing harus ikut ter-record di pipeline.
+        $targetLead     = null;
+        $targetCustomer = null;
 
         if (!empty($validated['lead_id'])) {
             $targetLead = Lead::find($validated['lead_id']);
         } elseif (!empty($validated['customer_id'])) {
-            $customer = Customer::find($validated['customer_id']);
-            // Cari lead terbaru yang terhubung ke customer ini untuk update stage.
-            if ($customer) {
-                $targetLead = Lead::where('customer_id', $customer->id)
+            $targetCustomer = Customer::find($validated['customer_id']);
+            if ($targetCustomer) {
+                // Cari lead terbaru yang terhubung ke customer ini untuk update stage.
+                $targetLead = Lead::where('customer_id', $targetCustomer->id)
                     ->orderByDesc('updated_at')
                     ->first();
             }
         }
 
-        // Update pipeline_stage bila dikirim & ada lead target.
-        // Revisi #4 & #5: validasi stage sesuai sumber dilakukan di server.
-        if ($request->filled('pipeline_stage') && $targetLead) {
+        // Update pipeline_stage bila dikirim.
+        // Revisi #1 & #4: validasi stage sesuai sumber dilakukan di server.
+        if ($request->filled('pipeline_stage')) {
             $requested  = $request->pipeline_stage;
-            $isExisting = !empty($validated['customer_id'])
-                && optional(Customer::find($validated['customer_id']))->status === 'Existing';
+            $isExisting = $targetCustomer && $targetCustomer->status === 'Existing';
 
             $allowed = $isExisting
                 ? ['Follow Up', 'Won', 'Lost', 'Maintaining']                                  // customer existing
                 : ['Identifying', 'Approaching', 'Follow Up', 'Won', 'Lost', 'Maintaining'];   // lead / customer potential
 
             if (in_array($requested, $allowed, true)) {
-                $targetLead->update(['pipeline_stage' => $requested]);
-                \App\Http\Controllers\LeadsController::syncToCustomer($targetLead->fresh());
+                // Revisi #1: customer existing tanpa lead → buat lead backing
+                // agar perubahan stage muncul di pipeline.
+                if (!$targetLead && $targetCustomer) {
+                    $targetLead = Lead::create([
+                        'lead_code'      => Lead::generateLeadCode(),
+                        'customer_id'    => $targetCustomer->id,
+                        'company_name'   => $targetCustomer->company_name,
+                        'pic_name'       => $targetCustomer->pic_name,
+                        'pic_position'   => $targetCustomer->pic_position,
+                        'phone'          => $targetCustomer->phone,
+                        'email'          => $targetCustomer->email,
+                        'address'        => $targetCustomer->address,
+                        'industry'       => $targetCustomer->industry,
+                        'location'       => $targetCustomer->location,
+                        'pipeline_stage' => $requested,
+                        'user_id'        => $targetCustomer->user_id ?? auth()->id(),
+                    ]);
+                }
+
+                if ($targetLead) {
+                    $targetLead->update(['pipeline_stage' => $requested]);
+                    \App\Http\Controllers\LeadsController::syncToCustomer($targetLead->fresh());
+                }
             }
         }
 
         // Foto: compress ke maks 500KB sebelum simpan
-        unset($validated['photo'], $validated['pipeline_stage']);
+        unset($validated['photo'], $validated['pipeline_stage'], $validated['redirect_to']);
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $validated['photo'] = self::compressAndStore($request->file('photo'));
         }
 
         Activity::create($validated);
+
+        // Revisi #6: hormati redirect (mis. balik ke halaman customer/lead)
+        if ($request->filled('redirect_to')) {
+            return redirect($request->redirect_to)->with('success', 'Aktivitas berhasil disimpan.');
+        }
         return redirect()->back()->with('success', 'Aktivitas berhasil disimpan.');
     }
 

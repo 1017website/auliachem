@@ -70,9 +70,6 @@
             @endforeach
         </select>
     </div>
-    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addLeadPipelineModal">
-        <i class="fas fa-plus me-1"></i> Add Lead
-    </button>
 </div>
 
 {{-- Kanban Board --}}
@@ -138,12 +135,6 @@
                         </div>
                     </div>
                     @endforeach
-
-                    <button class="d-block w-100 text-center mt-2 py-1"
-                        style="font-size:.72rem;color:var(--primary);border:1px dashed #dbeafe;border-radius:6px;background:transparent;cursor:pointer"
-                        onclick="event.stopPropagation(); openAddLead('{{ $stageName }}')">
-                        <i class="fas fa-plus me-1"></i> Add Lead
-                    </button>
                 </div>
             </div>
             @endforeach
@@ -211,72 +202,6 @@
 </div>
 
 {{-- Add Lead Modal --}}
-<div class="modal fade" id="addLeadPipelineModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold">Add Lead Baru</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('leads.store') }}">
-                @csrf
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                            <input type="text" name="company_name" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">PIC Name <span class="text-danger">*</span></label>
-                            <input type="text" name="pic_name" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Phone</label>
-                            <input type="text" name="phone" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Product Interest</label>
-                            <input type="text" name="product_interest" class="form-control" placeholder="Solvent, Resin, Pigment, dll">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Pipeline Stage <span class="text-danger">*</span></label>
-                            <select name="pipeline_stage" class="form-select" id="modalPipelineStage">
-                                @foreach(['Identifying','Approaching','Follow Up','Won','Maintaining'] as $s)
-                                <option value="{{ $s }}">{{ $s === 'Won' ? 'Won/Closing' : $s }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Potensi Revenue</label>
-                            <input type="text" name="potensi_revenue" class="form-control idr-input" placeholder="100.000.000">
-                        </div>
-                        <div class="col-md-6">
-                            @include('components.sales-pic-field')
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Lead Source</label>
-                            <select name="lead_source" class="form-select">
-                                <option value="">- Pilih -</option>
-                                @foreach(['Referral','Website','Cold Call','Email Campaign','Social Media','Exhibition','Lainnya'] as $src)
-                                <option value="{{ $src }}">{{ $src }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Simpan Lead</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -438,12 +363,6 @@ $trendData[] = (float)(\App\Models\Lead::whereYear('created_at', $month->year)
             const matchSales = !filterSalesId || card.dataset.sales == filterSalesId;
             card.style.display = matchSales ? '' : 'none';
         });
-    }
-
-    // ── Open Add Lead modal dengan stage preset ──
-    function openAddLead(stage) {
-        document.getElementById('modalPipelineStage').value = stage;
-        new bootstrap.Modal(document.getElementById('addLeadPipelineModal')).show();
     }
 </script>
 @endpush

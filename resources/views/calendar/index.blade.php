@@ -200,70 +200,8 @@
 </div>
 <div id="popupOverlay" onclick="closePopup()" style="display:none;position:fixed;inset:0;z-index:9998"></div>
 
-{{-- Add Activity Modal --}}
-<div class="modal fade" id="addActivityModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold">Tambah Activity</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('tasks.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <label class="form-label">Jenis Activity <span class="text-danger">*</span></label>
-                            <select name="type" id="addActType" class="form-select" required>
-                                <option value="Call">Call</option><option value="Visit">Visit</option><option value="Email">Email</option><option value="Note">Note</option><option value="Others">Task</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="Planned">Planned</option>
-                                <option value="Done">Done</option>
-                                <option value="Pending">Pending</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Subject <span class="text-danger">*</span></label>
-                            <input type="text" name="subject" class="form-control" required placeholder="Contoh: Follow up PT. ABC">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Tanggal & Waktu <span class="text-danger">*</span></label>
-                            <input type="datetime-local" name="activity_at" id="addActDate" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            @include('components.sales-pic-field')
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Lead (Opsional)</label>
-                            <select name="lead_id" class="form-select">
-                                <option value="">- Tidak ada / pilih lead -</option>
-                                @foreach(\App\Models\Lead::whereNotIn('pipeline_stage',['Won','Lost'])->orderBy('company_name')->get() as $lead)
-                                <option value="{{ $lead->id }}">{{ $lead->company_name }} ({{ $lead->pipeline_stage }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Keterangan</label>
-                            <textarea name="description" class="form-control" rows="2" placeholder="Opsional..."></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Next Follow Up</label>
-                            <input type="date" name="next_follow_up" class="form-control">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Simpan Activity</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{{-- Add Activity Modal — Revisi #4 & #6: pakai modal unified (post ke activities, bukan tasks) --}}
+@include('components.activity-modal')
 
 @endsection
 
@@ -384,16 +322,27 @@ function filterSales(val) {
 }
 
 // ── Klik tanggal kosong → buka add modal dengan tanggal ter-set ──
+function setActivityDate(value) {
+    const modalEl = document.getElementById('addActivityModal');
+    const modal = new bootstrap.Modal(modalEl);
+    // set nilai setelah datepicker ter-init (event shown)
+    modalEl.addEventListener('shown.bs.modal', function handler() {
+        const input = modalEl.querySelector('input[name="activity_at"]');
+        if (window.setAdpDateTime) window.setAdpDateTime(input, value);
+        else if (input) input.value = value;
+        modalEl.removeEventListener('shown.bs.modal', handler);
+    });
+    modal.show();
+}
+function _pad2(n) { return String(n).padStart(2, '0'); }
+
 function clickDay(dateStr) {
-    const dt = dateStr + 'T09:00';
-    document.getElementById('addActDate').value = dt;
-    new bootstrap.Modal(document.getElementById('addActivityModal')).show();
+    setActivityDate(dateStr + ' 09:00');
 }
 function openAddModal() {
-    const now = new Date();
-    const dt  = now.toISOString().slice(0,16);
-    document.getElementById('addActDate').value = dt;
-    new bootstrap.Modal(document.getElementById('addActivityModal')).show();
+    const n = new Date();
+    const dt = `${n.getFullYear()}-${_pad2(n.getMonth()+1)}-${_pad2(n.getDate())} ${_pad2(n.getHours())}:${_pad2(n.getMinutes())}`;
+    setActivityDate(dt);
 }
 
 // ── Event detail popup ──

@@ -21,8 +21,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Select2 (local) -->
     <link href="{{ asset('vendor/select2/select2.min.css') }}" rel="stylesheet">
-    <!-- Flatpickr (local) -->
-    <link href="{{ asset('vendor/flatpickr/flatpickr.min.css') }}" rel="stylesheet">
+    <!-- Air Datepicker (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/air-datepicker@3.5.3/dist/air-datepicker.css" rel="stylesheet"
+        onerror="this.onerror=null;this.href='https://unpkg.com/air-datepicker@3.5.3/air-datepicker.css';">
 
     <style>
         /* ── Select2 Custom Theme ── */
@@ -150,134 +151,88 @@
             letter-spacing: .04em;
         }
 
-        /* ── Flatpickr Custom Theme ── */
-        .flatpickr-input {
-            background: #fff !important;
-            cursor: pointer;
-        }
-
-        .flatpickr-input:focus {
-            border-color: #2563eb !important;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1) !important;
-        }
-
-        .flatpickr-calendar {
-            border: 1px solid #e5e7eb !important;
-            border-radius: 12px !important;
+        /* ── Air Datepicker Custom Theme ── */
+        .air-datepicker {
+            --adp-z-index: 1080;
+            --adp-font-family: 'Inter', sans-serif;
+            --adp-border-radius: 12px;
+            --adp-border-color: #e5e7eb;
+            --adp-border-color-inner: #f1f5f9;
+            --adp-background-color: #fff;
+            --adp-color: #374151;
+            --adp-color-secondary: #9ca3af;
+            --adp-accent-color: #2563eb;
+            --adp-day-name-color: #9ca3af;
+            --adp-cell-border-radius: 8px;
+            --adp-cell-background-color-selected: #2563eb;
+            --adp-cell-background-color-selected-hover: #1d4ed8;
+            --adp-cell-background-color-in-range: #dbeafe;
+            --adp-cell-background-color-in-range-hover: #bfdbfe;
+            --adp-day-cell-height: 34px;
+            --adp-nav-color-secondary: #6b7280;
+            --adp-nav-arrow-color: #6b7280;
+            --adp-time-track-color: #e5e7eb;
+            --adp-time-track-color-hover: #cbd5e1;
             box-shadow: 0 8px 32px rgba(0, 0, 0, .12) !important;
-            font-family: 'Inter', sans-serif !important;
-            overflow: hidden;
+            font-size: .82rem;
+            z-index: 1080 !important;   /* di atas modal Bootstrap (~1055) */
         }
 
-        .flatpickr-months {
+        /* Datepicker yang di-render di dalam modal: anchor relatif ke modal-body */
+        .modal-body { position: relative; }
+        .modal-body .air-datepicker.-active- { position: absolute; }
+
+        .air-datepicker-nav {
             background: #0f1d35;
-            border-radius: 10px 10px 0 0;
-            padding: 4px 0;
+            border-bottom: none;
+            border-radius: 11px 11px 0 0;
+            padding: 6px 8px;
         }
 
-        .flatpickr-month {
+        .air-datepicker-nav--title,
+        .air-datepicker-nav--action {
             color: #fff !important;
         }
 
-        .flatpickr-current-month {
-            font-size: .9rem !important;
-            font-weight: 600 !important;
+        .air-datepicker-nav--title:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .air-datepicker-nav--action path {
+            stroke: #fff;
+        }
+
+        .air-datepicker-nav--action:hover path {
+            stroke: #93c5fd;
+        }
+
+        .air-datepicker-body--day-name {
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .air-datepicker-cell.-current- {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .air-datepicker-cell.-selected- {
             color: #fff !important;
         }
 
-        .flatpickr-current-month .flatpickr-monthDropdown-months {
-            color: #fff !important;
-            background: transparent;
+        .air-datepicker--time {
+            border-top: 1px solid #f1f5f9;
         }
 
-        .flatpickr-current-month input.cur-year {
-            color: #fff !important;
-            font-weight: 600 !important;
+        /* Tombol "Hari ini" / "Sekarang" */
+        .air-datepicker-button {
+            color: #2563eb;
+            font-size: .78rem;
+            font-weight: 600;
         }
 
-        .flatpickr-prev-month,
-        .flatpickr-next-month {
-            color: #fff !important;
-            fill: #fff !important;
-            padding: 8px !important;
-        }
-
-        .flatpickr-prev-month:hover svg,
-        .flatpickr-next-month:hover svg {
-            fill: #93c5fd !important;
-        }
-
-        .flatpickr-weekdays {
-            background: #f9fafb;
-        }
-
-        .flatpickr-weekday {
-            color: #9ca3af !important;
-            font-size: .72rem !important;
-            font-weight: 600 !important;
-        }
-
-        .flatpickr-day {
-            border-radius: 8px !important;
-            font-size: .8rem !important;
-            color: #374151 !important;
-            height: 34px !important;
-            line-height: 34px !important;
-        }
-
-        .flatpickr-day:hover {
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            border-color: transparent !important;
-        }
-
-        .flatpickr-day.selected,
-        .flatpickr-day.selected:hover {
-            background: #2563eb !important;
-            border-color: #2563eb !important;
-            color: #fff !important;
-            border-radius: 8px !important;
-        }
-
-        .flatpickr-day.today {
-            border-color: #2563eb !important;
-            color: #2563eb !important;
-            font-weight: 600 !important;
-        }
-
-        .flatpickr-day.today:hover {
-            background: #eff6ff !important;
-        }
-
-        .flatpickr-day.today.selected {
-            color: #fff !important;
-        }
-
-        .flatpickr-day.inRange {
-            background: #dbeafe !important;
-            border-color: transparent !important;
-        }
-
-        .flatpickr-day.disabled {
-            color: #d1d5db !important;
-        }
-
-        .flatpickr-time input {
-            font-size: .82rem !important;
-            color: #374151 !important;
-            font-family: 'Inter', sans-serif !important;
-        }
-
-        .flatpickr-time .flatpickr-am-pm {
-            font-size: .82rem !important;
-            color: #374151 !important;
-        }
-
-        .flatpickr-time input:hover,
-        .flatpickr-time .flatpickr-am-pm:hover,
-        .flatpickr-time input:focus,
-        .flatpickr-time .flatpickr-am-pm:focus {
-            background: #eff6ff !important;
+        .air-datepicker-button:hover {
+            background: #eff6ff;
         }
 
         /* Input date wrapper icon */
@@ -293,6 +248,16 @@
             color: #9ca3af;
             font-size: .8rem;
             pointer-events: none;
+        }
+
+        .date-input-wrap > input {
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .date-input-wrap > input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
         }
 
         :root {
@@ -1456,6 +1421,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             @endif
+            @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Gagal menyimpan. Periksa input berikut:</strong>
+                <ul class="mb-0 mt-1" style="font-size:.85rem">
+                    @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
 
             @yield('content')
         </main>
@@ -1470,7 +1447,9 @@
     <!-- Select2 (local) -->
     <script src="{{ asset('vendor/select2/select2.min.js') }}"></script>
     <!-- Flatpickr (local) -->
-    <script src="{{ asset('vendor/flatpickr/flatpickr.min.js') }}"></script>
+    <!-- Air Datepicker (CDN, dengan fallback) -->
+    <script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.5.3/dist/air-datepicker.js"
+        onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/air-datepicker@3.5.3/air-datepicker.js';document.head.appendChild(s);})()"></script>
 
     <script>
         function toggleSidebar() {
@@ -1708,66 +1687,218 @@
             });
         }
 
-        function initFlatpickr(scope) {
-            const ctx = scope || document;
+        // ── Air Datepicker locale (Bahasa Indonesia) ──
+        const ADP_LOCALE_ID = {
+            days: ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],
+            daysShort: ['Min','Sen','Sel','Rab','Kam','Jum','Sab'],
+            daysMin: ['Mi','Sn','Sl','Rb','Km','Jm','Sb'],
+            months: ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],
+            monthsShort: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+            today: 'Hari Ini',
+            clear: 'Hapus',
+            dateFormat: 'dd MMM yyyy',
+            timeFormat: 'HH:mm',
+            firstDay: 1
+        };
 
-            // Date only
-            $(ctx).find('input[type="date"]').not('.flatpickr-input').each(function() {
-                if (this._flatpickr) return;
+        // Pad helper
+        function _pad(n) { return String(n).padStart(2, '0'); }
+
+        // Init Air Datepicker untuk semua input date / datetime-local dalam scope.
+        // PENTING: nilai asli input tetap disimpan dalam format Y-m-d (date) atau
+        // Y-m-d H:i (datetime) supaya validasi Laravel tetap lolos.
+        function initDatepicker(scope) {
+            const ctx = scope || document;
+            if (typeof AirDatepicker === 'undefined') return;
+
+            // Saat init global (scope = document), lewati input di dalam modal.
+            // Input modal di-init saat modal dibuka (shown.bs.modal) agar binding
+            // terjadi ketika elemen sudah terlihat — picker tidak gagal buka.
+            const _skipModal = !scope;
+            const _eligible = function(el) { return !_skipModal || !el.closest('.modal'); };
+
+            // ── Date only ──
+            $(ctx).find('input[type="date"]').not('[data-adp-init]').each(function() {
+                if (!_eligible(this)) return;
+                const input = this;
+                input.setAttribute('data-adp-init', '1');
+                input.setAttribute('type', 'text');           // cegah native picker
+                input.setAttribute('autocomplete', 'off');
+
+                // Bungkus + ikon kalender
                 const wrapper = document.createElement('div');
                 wrapper.className = 'date-input-wrap';
-                this.parentNode.insertBefore(wrapper, this);
-                wrapper.appendChild(this);
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
                 const icon = document.createElement('i');
                 icon.className = 'fas fa-calendar-alt date-icon';
                 wrapper.appendChild(icon);
-                flatpickr(this, {
-                    dateFormat: 'Y-m-d',
-                    altInput: true,
-                    altFormat: 'd M Y',
-                    locale: {
-                        firstDayOfWeek: 1
-                    },
-                    disableMobile: true,
-                    allowInput: true,
+
+                // Nilai awal (Y-m-d) → tampilkan terformat, simpan tetap Y-m-d
+                const initial = input.value ? new Date(input.value + 'T00:00:00') : null;
+
+                const adp = new AirDatepicker(input, {
+                    locale: ADP_LOCALE_ID,
+                    autoClose: true,
+                    isMobile: false,
+                    selectedDates: initial ? [initial] : undefined,
+                    buttons: ['today', 'clear'],
+                    onSelect({ date }) {
+                        if (!date) { input.value = ''; return; }
+                        input.value = `${date.getFullYear()}-${_pad(date.getMonth()+1)}-${_pad(date.getDate())}`;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                 });
+                input._adp = adp;   // simpan instance untuk update programatik
+
+                // Buka kalender secara eksplisit (handal di dalam modal)
+                const _open = function(e) { e.preventDefault(); adp.show(); };
+                input.addEventListener('focus', _open);
+                input.addEventListener('click', _open);
+                icon.style.pointerEvents = 'auto';
+                icon.style.cursor = 'pointer';
+                icon.addEventListener('click', function(e){ e.preventDefault(); input.focus(); adp.show(); });
+                // Cegah ketik manual (pengganti readonly)
+                input.addEventListener('keydown', function(e){ e.preventDefault(); });
+
+                // Set ulang tampilan agar konsisten saat reopen
+                if (initial) {
+                    input.value = `${initial.getFullYear()}-${_pad(initial.getMonth()+1)}-${_pad(initial.getDate())}`;
+                }
             });
 
-            // DateTime
-            $(ctx).find('input[type="datetime-local"]').not('.flatpickr-input').each(function() {
-                if (this._flatpickr) return;
+            // ── DateTime ──
+            $(ctx).find('input[type="datetime-local"]').not('[data-adp-init]').each(function() {
+                if (!_eligible(this)) return;
+                const input = this;
+                input.setAttribute('data-adp-init', '1');
+                input.setAttribute('type', 'text');
+                input.setAttribute('autocomplete', 'off');
+
                 const wrapper = document.createElement('div');
                 wrapper.className = 'date-input-wrap';
-                this.parentNode.insertBefore(wrapper, this);
-                wrapper.appendChild(this);
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
                 const icon = document.createElement('i');
                 icon.className = 'fas fa-clock date-icon';
                 wrapper.appendChild(icon);
-                flatpickr(this, {
-                    dateFormat: 'Y-m-d H:i',
-                    altInput: true,
-                    altFormat: 'd M Y H:i',
-                    enableTime: true,
-                    time_24hr: true,
-                    minuteIncrement: 15,
-                    locale: {
-                        firstDayOfWeek: 1
-                    },
-                    disableMobile: true,
-                    allowInput: true,
+
+                const raw = input.value ? input.value.replace('T', ' ') : '';
+                const initial = raw ? new Date(raw.replace(' ', 'T')) : null;
+
+                const adp = new AirDatepicker(input, {
+                    locale: ADP_LOCALE_ID,
+                    timepicker: true,
+                    minutesStep: 15,
+                    autoClose: false,
+                    isMobile: false,
+                    selectedDates: initial ? [initial] : undefined,
+                    buttons: ['today', 'clear'],
+                    onSelect({ date }) {
+                        if (!date) { input.value = ''; return; }
+                        input.value = `${date.getFullYear()}-${_pad(date.getMonth()+1)}-${_pad(date.getDate())} ${_pad(date.getHours())}:${_pad(date.getMinutes())}`;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                 });
+                input._adp = adp;   // simpan instance untuk update programatik
+
+                const _open = function(e) { e.preventDefault(); adp.show(); };
+                input.addEventListener('focus', _open);
+                input.addEventListener('click', _open);
+                icon.style.pointerEvents = 'auto';
+                icon.style.cursor = 'pointer';
+                icon.addEventListener('click', function(e){ e.preventDefault(); input.focus(); adp.show(); });
+                input.addEventListener('keydown', function(e){ e.preventDefault(); });
+
+                if (initial) {
+                    input.value = `${initial.getFullYear()}-${_pad(initial.getMonth()+1)}-${_pad(initial.getDate())} ${_pad(initial.getHours())}:${_pad(initial.getMinutes())}`;
+                }
             });
         }
+
+        // Set nilai datetime input (sudah ber-Air Datepicker) secara programatik.
+        // value format: 'YYYY-MM-DD HH:mm'
+        window.setAdpDateTime = function(input, value) {
+            if (!input) return;
+            input.value = value;
+            const d = value ? new Date(value.replace(' ', 'T')) : null;
+            if (input._adp && d && !isNaN(d)) {
+                input._adp.selectDate(d, { silent: true });
+            }
+        };
+
+        // Set nilai date-only input secara programatik. value format: 'YYYY-MM-DD'
+        window.setAdpDate = function(input, value) {
+            if (!input) return;
+            input.value = value || '';
+            const d = value ? new Date(value + 'T00:00:00') : null;
+            if (input._adp) {
+                if (d && !isNaN(d)) input._adp.selectDate(d, { silent: true });
+                else input._adp.clear({ silent: true });
+            }
+        };
+
+        // Alias backward-compat (beberapa view memanggil initFlatpickr)
+        function initFlatpickr(scope) { initDatepicker(scope); }
 
         // Init saat DOM ready
         $(document).ready(function() {
             initSelect2();
-            initFlatpickr();
+            initDatepicker();
+
+            // AirDatepicker mungkin dimuat via fallback CDN (async).
+            // Coba ulang init beberapa kali sampai library tersedia.
+            if (typeof AirDatepicker === 'undefined') {
+                let _tries = 0;
+                const _t = setInterval(function() {
+                    _tries++;
+                    if (typeof AirDatepicker !== 'undefined') {
+                        clearInterval(_t);
+                        initDatepicker();
+                    } else if (_tries > 40) {   // ~6 detik
+                        clearInterval(_t);
+                    }
+                }, 150);
+            }
+
+            // ── Revisi #3: cegah modal tertutup & input hilang ──
+            // Semua modal Bootstrap dipaksa static backdrop + non-ESC,
+            // jadi klik di luar / tekan ESC tidak akan menutup & menghapus input.
+            document.querySelectorAll('.modal').forEach(function(m) {
+                m.setAttribute('data-bs-backdrop', 'static');
+                m.setAttribute('data-bs-keyboard', 'false');
+                m.setAttribute('data-bs-focus', 'false');   // jangan rebut focus dari datepicker
+            });
 
             // Re-init setiap kali modal Bootstrap dibuka
             $(document).on('shown.bs.modal', '.modal', function() {
+                this.setAttribute('data-bs-backdrop', 'static');
+                this.setAttribute('data-bs-keyboard', 'false');
+                this.setAttribute('data-bs-focus', 'false');
                 initSelect2(this);
-                initFlatpickr(this);
+                initDatepicker(this);
+            });
+
+            // Tandai form "kotor" begitu user mulai mengisi
+            $(document).on('input change', '.modal form', function() {
+                this.setAttribute('data-dirty', '1');
+            });
+
+            // Saat klik tombol tutup (X / Cancel): konfirmasi bila ada isian
+            $(document).on('click', '.modal [data-bs-dismiss="modal"]', function(e) {
+                const form = $(this).closest('.modal').find('form')[0];
+                if (form && form.getAttribute('data-dirty') === '1') {
+                    if (!confirm('Tutup form? Data yang sudah diisi akan hilang.')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }
+            });
+
+            // Reset penanda dirty setelah modal benar-benar tertutup
+            $(document).on('hidden.bs.modal', '.modal', function() {
+                const form = $(this).find('form')[0];
+                if (form) form.removeAttribute('data-dirty');
             });
 
             // ── Format input IDR — separator real-time saat ketik ──

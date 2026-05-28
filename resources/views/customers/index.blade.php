@@ -325,7 +325,7 @@
                 <div id="tab-activity" style="display:none">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <strong style="font-size:.8rem">Activity History</strong>
-                        <button class="btn btn-sm btn-primary" style="font-size:.72rem;padding:3px 8px" data-bs-toggle="modal" data-bs-target="#addCustActivityModal">
+                        <button class="btn btn-sm btn-primary" style="font-size:.72rem;padding:3px 8px" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                             <i class="fas fa-plus me-1"></i> Add
                         </button>
                     </div>
@@ -470,29 +470,16 @@
     </div></div>
 </div>
 
-{{-- Add Activity (Customer) --}}
+{{-- Add Activity (Customer) — Revisi #6: pakai modal unified --}}
 @if($selectedCustomer)
-<div class="modal fade" id="addCustActivityModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h6 class="modal-title fw-bold">Add Activity — {{ $selectedCustomer->company_name }}</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <form method="POST" action="{{ route('customers.activity.store', $selectedCustomer) }}">@csrf
-            <div class="modal-body"><div class="row g-3">
-                <div class="col-6"><label class="form-label">Jenis <span class="text-danger">*</span></label>
-                    <select name="type" id="custActType" class="form-select" required><option value="Call">Call</option><option value="Visit">Visit</option><option value="Email">Email</option><option value="Note">Note</option><option value="Others">Task</option></select></div>
-                <div class="col-6"><label class="form-label">Status</label>
-                    <select name="status" class="form-select"><option value="Done">Done</option><option value="Planned">Planned</option><option value="Pending">Pending</option></select></div>
-                <div class="col-12"><label class="form-label">Subject <span class="text-danger">*</span></label><input type="text" name="subject" class="form-control" required></div>
-                <div class="col-6"><label class="form-label">Tanggal & Waktu</label><input type="datetime-local" name="activity_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}"></div>
-                <div class="col-6"><label class="form-label">Sales PIC</label>
-                    <select name="user_id" class="form-select" required>
-                        @foreach($salesUsers as $su)<option value="{{ $su->id }}" {{ $selectedCustomer->user_id==$su->id?'selected':'' }}>{{ $su->name }}</option>@endforeach
-                    </select></div>
-                <div class="col-12"><label class="form-label">Keterangan</label><textarea name="description" class="form-control" rows="2"></textarea></div>
-            </div></div>
-            <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm">Simpan</button></div>
-        </form>
-    </div></div>
-</div>
+@include('components.activity-modal', [
+    'lockClient' => true,
+    'preType'    => 'customer',
+    'preId'      => $selectedCustomer->id,
+    'preName'    => $selectedCustomer->company_name,
+    'preStatus'  => $selectedCustomer->status,
+    'redirect'   => route('customers.index', ['selected_id' => $selectedCustomer->id]),
+])
 
 {{-- Add PIC (Customer) --}}
 <div class="modal fade" id="addCustPicModal" tabindex="-1">
@@ -689,9 +676,9 @@ function openEditModal(id) {
     }, 150);
 }
 function quickActCust(type) {
-    const el = document.getElementById('custActType');
-    if(el) el.value = type;
-    const m = document.getElementById('addCustActivityModal');
+    const radio = document.getElementById('type_' + type);
+    if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+    const m = document.getElementById('addActivityModal');
     if(m) new bootstrap.Modal(m).show();
 }
 // Prevent data loss add customer modal
