@@ -169,6 +169,18 @@ class SalesActivityController extends Controller
             $validated['photo'] = self::compressAndStore($request->file('photo'));
         }
 
+        // Revisi #3: tautkan activity ke lead DAN customer sekaligus bila keduanya ada,
+        // supaya muncul di timeline detail Lead maupun Customer.
+        if ($targetLead) {
+            $validated['lead_id'] = $targetLead->id;
+            if (!empty($targetLead->customer_id)) {
+                $validated['customer_id'] = $targetLead->customer_id;
+            }
+        }
+        if ($targetCustomer) {
+            $validated['customer_id'] = $targetCustomer->id;
+        }
+
         Activity::create($validated);
 
         // Revisi #6: hormati redirect (mis. balik ke halaman customer/lead)

@@ -182,7 +182,7 @@
 
 <!-- Pagination -->
 <div class="d-flex justify-content-center mt-4">
-    {{ $tasks->withQueryString()->links('pagination::bootstrap-5') }}
+    {{ $tasks->withQueryString()->links() }}
 </div>
 
 <!-- Add Task Modal -->

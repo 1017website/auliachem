@@ -42,12 +42,12 @@ class DashboardController extends Controller
         $dealGrowth    = $growth($dealClosed, $dealClosedPrev);
         $leadsGrowth   = $growth($activeLeads, $activeLeadsPrev);
 
-        // ── Pipeline by stage ──
+        // ── Pipeline by stage ── (samakan dengan menu Pipeline)
         $pipelineStages = [
             'Identifying' => Lead::where('pipeline_stage','Identifying')->get(),
             'Approaching' => Lead::where('pipeline_stage','Approaching')->get(),
             'Follow Up'   => Lead::where('pipeline_stage','Follow Up')->get(),
-            'Closing'     => Lead::where('pipeline_stage','Closing')->get(),
+            'Won'         => Lead::where('pipeline_stage','Won')->get(),
             'Maintaining' => Lead::where('pipeline_stage','Maintaining')->get(),
         ];
 

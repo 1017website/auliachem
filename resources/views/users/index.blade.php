@@ -146,7 +146,7 @@
     @if($users->hasPages())
     <div class="p-3 d-flex justify-content-between align-items-center">
         <span style="font-size:13px;color:#6b7280">Showing {{ $users->firstItem() }}–{{ $users->lastItem() }} of {{ $users->total() }}</span>
-        {{ $users->withQueryString()->links('pagination::bootstrap-5') }}
+        {{ $users->withQueryString()->links() }}
     </div>
     @endif
 </div>

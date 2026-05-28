@@ -22,7 +22,8 @@
     <!-- Select2 (local) -->
     <link href="{{ asset('vendor/select2/select2.min.css') }}" rel="stylesheet">
     <!-- Air Datepicker (CDN) -->
-    <link href="https://unpkg.com/air-datepicker@3.5.3/air-datepicker.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/air-datepicker@3.5.3/dist/air-datepicker.css" rel="stylesheet"
+        onerror="this.onerror=null;this.href='https://unpkg.com/air-datepicker@3.5.3/air-datepicker.css';">
 
     <style>
         /* ── Select2 Custom Theme ── */
@@ -699,7 +700,7 @@
             color: #dc2626;
             font-size: .68rem;
             font-weight: 600;
-            padding: 2px 7px;
+            padding: 3px 9px;
             border-radius: 20px;
         }
 
@@ -708,7 +709,7 @@
             color: #d97706;
             font-size: .68rem;
             font-weight: 600;
-            padding: 2px 7px;
+            padding: 3px 9px;
             border-radius: 20px;
         }
 
@@ -717,7 +718,7 @@
             color: #2563eb;
             font-size: .68rem;
             font-weight: 600;
-            padding: 2px 7px;
+            padding: 3px 9px;
             border-radius: 20px;
         }
 
@@ -745,6 +746,20 @@
             padding: 2px 8px;
             border-radius: 20px;
             display: inline-block;
+        }
+
+        /* Revisi #6: base konsisten untuk semua badge status & stage */
+        .badge-identifying, .badge-approaching, .badge-follow-up, .badge-closing,
+        .badge-won, .badge-lost, .badge-done, .badge-pending, .badge-planned,
+        .badge-overdue, .badge-today, .badge-tomorrow {
+            display: inline-block;
+            font-size: .68rem;
+            font-weight: 600;
+            line-height: 1.4;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            vertical-align: middle;
         }
 
         .badge-identifying {
@@ -845,6 +860,11 @@
         .kanban-won {
             background: #ccfbf1;
             color: #0d9488;
+        }
+
+        .kanban-maintaining {
+            background: #e0f2fe;
+            color: #0369a1;
         }
 
         .kanban-body {
@@ -1447,7 +1467,8 @@
     <script src="{{ asset('vendor/select2/select2.min.js') }}"></script>
     <!-- Flatpickr (local) -->
     <!-- Air Datepicker (CDN, dengan fallback) -->
-    <script src="https://unpkg.com/air-datepicker@3.5.3/air-datepicker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.5.3/dist/air-datepicker.js"
+        onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/air-datepicker@3.5.3/air-datepicker.js';document.head.appendChild(s);})()"></script>
 
     <script>
         function toggleSidebar() {

@@ -156,7 +156,7 @@
                             {{ $act->activity_at->format('d M') }}
                         </div>
                         <div class="activity-icon" style="background:{{ $act->type === 'Call' ? '#d1fae5' : ($act->type === 'Visit' ? '#dbeafe' : ($act->type === 'Email' ? '#fef3c7' : '#f3f4f6')) }}">
-                            <i class="fas fa-{{ $act->type_icon }}" style="color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? '#2563eb' : ($act->type === 'Email' ? '#d97706' : '#6b7280')) }};font-size:.75rem"></i>
+                            <span style="font-weight:700;font-size:.75rem;color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? '#2563eb' : ($act->type === 'Email' ? '#d97706' : '#6b7280')) }}">{{ $act->type_letter }}</span>
                         </div>
                         <div class="activity-body">
                             <div class="d-flex justify-content-between">

@@ -128,13 +128,15 @@ function growthBadge($val, $prev_label) {
                 <div class="row g-2">
                     @foreach($pipelineStages as $stageName => $stageLeads)
                     @php
-                        $slugs = ['Identifying'=>'identifying','Approaching'=>'approaching','Follow Up'=>'follow-up','Closing'=>'closing'];
+                        $slugs = ['Identifying'=>'identifying','Approaching'=>'approaching','Follow Up'=>'follow-up','Won'=>'closing','Maintaining'=>'maintaining'];
                         $slug = $slugs[$stageName] ?? 'identifying';
-                        $colors = ['Identifying'=>'#2563eb','Approaching'=>'#d97706','Follow Up'=>'#7c3aed','Closing'=>'#059669'];
+                        $labels = ['Identifying'=>'IDENTIFYING','Approaching'=>'APPROACHING','Follow Up'=>'FOLLOW UP','Won'=>'WON/CLOSING','Maintaining'=>'MAINTAINING'];
+                        $stageLabel = $labels[$stageName] ?? strtoupper($stageName);
+                        $colors = ['Identifying'=>'#2563eb','Approaching'=>'#d97706','Follow Up'=>'#7c3aed','Won'=>'#059669','Maintaining'=>'#0ea5e9'];
                     @endphp
-                    <div class="col-3">
+                    <div class="col">
                         <div class="kanban-header kanban-{{ $slug }}">
-                            <span>{{ strtoupper($stageName) }}</span>
+                            <span>{{ $stageLabel }}</span>
                             <span class="badge" style="background:{{ $colors[$stageName] ?? '#333' }};color:#fff;font-size:.65rem">{{ $stageLeads->count() }}</span>
                         </div>
                         <div class="kanban-body">
@@ -171,7 +173,7 @@ function growthBadge($val, $prev_label) {
                 <div class="reminder-item">
                     <div class="reminder-time">{{ $reminder->activity_at->format('H:i') }}</div>
                     <div style="width:30px;height:30px;background:{{ $reminder->type === 'Call' ? '#d1fae5' : '#dbeafe' }};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <i class="fas fa-{{ $reminder->type_icon }}" style="font-size:.7rem;color:{{ $reminder->type === 'Call' ? '#059669' : '#2563eb' }}"></i>
+                        <span style="font-weight:700;font-size:.72rem;color:{{ $reminder->type === 'Call' ? '#059669' : '#2563eb' }}">{{ $reminder->type_letter }}</span>
                     </div>
                     <div class="flex-1">
                         <div style="font-size:.78rem;font-weight:600">{{ $reminder->subject }}</div>
@@ -200,7 +202,7 @@ function growthBadge($val, $prev_label) {
                 @foreach($recentActivities as $act)
                 <div class="activity-item">
                     <div class="activity-icon" style="background:{{ $act->type === 'Call' ? '#d1fae5' : ($act->type === 'Visit' ? '#dbeafe' : '#fef3c7') }}">
-                        <i class="fas fa-{{ $act->type_icon }}" style="color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? '#2563eb' : '#d97706') }};font-size:.8rem"></i>
+                        <span style="font-weight:700;font-size:.8rem;color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? '#2563eb' : '#d97706') }}">{{ $act->type_letter }}</span>
                     </div>
                     <div class="flex-1">
                         <div class="activity-subject">{{ $act->subject }}</div>

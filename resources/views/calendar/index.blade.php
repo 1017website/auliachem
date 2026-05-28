@@ -239,6 +239,7 @@ function renderCalendar() {
 
     for (let r = 0; r < 6; r++) {
         html += '<tr>';
+        let rowHasCurrentMonth = false;
         for (let c = 0; c < 7; c++) {
             const cellIdx = r*7+c;
             let dateNum, isCurrentMonth = true;
@@ -251,6 +252,7 @@ function renderCalendar() {
                 isCurrentMonth = false;
             } else {
                 dateNum = day++;
+                rowHasCurrentMonth = true;
             }
 
             const isToday = isCurrentMonth &&
@@ -280,7 +282,8 @@ function renderCalendar() {
             html += '</td>';
         }
         html += '</tr>';
-        if (!isCurrentMonth && day > daysInMonth && r >= 4) break;
+        // Hentikan setelah baris ke-5 bila baris berikutnya sudah bukan bulan ini
+        if (day > daysInMonth && !rowHasCurrentMonth && r >= 4) break;
     }
 
     document.getElementById('calBody').innerHTML = html;

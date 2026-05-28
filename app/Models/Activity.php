@@ -20,4 +20,30 @@ class Activity extends Model
     public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
     public function user(): BelongsTo     { return $this->belongsTo(User::class); }
     public function salesUser(): BelongsTo { return $this->belongsTo(User::class, 'sales_user_id'); }
+
+    // Huruf inisial untuk badge ikon activity (Revisi #5)
+    public function getTypeLetterAttribute(): string
+    {
+        return match ($this->type) {
+            'Call'   => 'C',
+            'Visit'  => 'V',
+            'Email'  => 'E',
+            'Note'   => 'N',
+            'Others' => 'T',
+            default  => strtoupper(substr((string) $this->type, 0, 1)) ?: '?',
+        };
+    }
+
+    // Nama ikon FontAwesome (fallback bila ingin pakai ikon)
+    public function getTypeIconAttribute(): string
+    {
+        return match ($this->type) {
+            'Call'   => 'phone',
+            'Visit'  => 'building',
+            'Email'  => 'envelope',
+            'Note'   => 'sticky-note',
+            'Others' => 'tasks',
+            default  => 'circle',
+        };
+    }
 }

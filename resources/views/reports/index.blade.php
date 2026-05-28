@@ -446,7 +446,7 @@
         <span style="font-size:13px;color:#6b7280">
             Showing {{ $reportData->firstItem() }}–{{ $reportData->lastItem() }} of {{ $reportData->total() }}
         </span>
-        {{ $reportData->withQueryString()->links('pagination::bootstrap-5') }}
+        {{ $reportData->withQueryString()->links() }}
     </div>
     @endif
 

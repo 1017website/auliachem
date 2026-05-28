@@ -157,7 +157,7 @@
             @if($customers->hasPages())
             <div class="card-footer p-3 d-flex justify-content-between align-items-center">
                 <span style="font-size:.78rem;color:var(--text-muted)">Showing {{ $customers->firstItem() }}–{{ $customers->lastItem() }} of {{ $customers->total() }}</span>
-                {{ $customers->links('pagination::bootstrap-5') }}
+                {{ $customers->links() }}
             </div>
             @endif
         </div>
@@ -332,7 +332,7 @@
                     @forelse($selectedCustomer->activities->sortByDesc('activity_at') as $act)
                     <div class="d-flex gap-2 mb-3">
                         <div class="activity-icon" style="width:28px;height:28px;flex-shrink:0;background:{{ $act->type==='Call'?'#d1fae5':($act->type==='Visit'?'#dbeafe':'#fef3c7') }}">
-                            <i class="fas fa-{{ $act->type_icon }}" style="font-size:.65rem;color:{{ $act->type==='Call'?'#059669':($act->type==='Visit'?'#2563eb':'#d97706') }}"></i>
+                            <span style="font-weight:700;font-size:.7rem;color:{{ $act->type==='Call'?'#059669':($act->type==='Visit'?'#2563eb':'#d97706') }}">{{ $act->type_letter }}</span>
                         </div>
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.75rem;font-weight:600">{{ $act->subject ?: $act->type }}</div>
