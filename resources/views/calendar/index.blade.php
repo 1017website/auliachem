@@ -327,7 +327,7 @@ function setActivityDate(value) {
     const modal = new bootstrap.Modal(modalEl);
     // set nilai setelah datepicker ter-init (event shown)
     modalEl.addEventListener('shown.bs.modal', function handler() {
-        const input = modalEl.querySelector('input[name="activity_at"]');
+        const input = document.getElementById('actDateTime');   // field tampilan (punya _adp)
         if (window.setAdpDateTime) window.setAdpDateTime(input, value);
         else if (input) input.value = value;
         modalEl.removeEventListener('shown.bs.modal', handler);

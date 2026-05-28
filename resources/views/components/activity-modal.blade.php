@@ -119,7 +119,7 @@
                     <div class="row g-2 mb-3">
                         <div class="col-7">
                             <label class="form-label">Date &amp; Time <span class="text-danger">*</span></label>
-                            <input type="datetime-local" name="activity_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                            <input type="datetime-local" name="activity_at" id="actDateTime" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -273,20 +273,22 @@
     const _actForm = document.getElementById('activityForm');
     if (_actForm) {
         _actForm.addEventListener('submit', function(ev) {
-            const dt = _actForm.querySelector('input[name="activity_at"]');
-            const nf = _actForm.querySelector('input[name="next_follow_up"]');
+            // Field TAMPILAN (punya _adp). Hidden field membawa name="activity_at".
+            const dtView   = document.getElementById('actDateTime');
+            const dtHidden = _actForm.querySelector('input[name="activity_at"]');
+            const nfHidden = _actForm.querySelector('input[name="next_follow_up"]');
+            // next_follow_up: field tampilan = sibling sebelum hidden-nya
+            const nfView   = nfHidden && nfHidden.previousElementSibling && nfHidden.previousElementSibling._adp
+                             ? nfHidden.previousElementSibling : null;
 
-            // (1) activity_at → format ISO 'Y-m-d H:i:s' yang selalu valid di Laravel
-            const dtDate = _resolveDate(dt);
-            if (dt) {
-                if (dtDate) dt.value = _fmtDateTime(dtDate);
-                else dt.value = '';
-            }
+            // (1) activity_at → ISO 'Y-m-d H:i:s' yang selalu valid di Laravel
+            const dtDate = _resolveDate(dtView) || _resolveDate(dtHidden);
+            if (dtHidden) dtHidden.value = dtDate ? _fmtDateTime(dtDate) : '';
 
             // (2) next_follow_up → 'Y-m-d' (opsional)
-            if (nf) {
-                const nfDate = _resolveDate(nf);
-                nf.value = nfDate ? _fmtDate(nfDate) : '';
+            if (nfHidden) {
+                const nfDate = _resolveDate(nfView) || _resolveDate(nfHidden);
+                nfHidden.value = nfDate ? _fmtDate(nfDate) : '';
             }
 
             // (3) Pastikan ada activity type terpilih
@@ -305,7 +307,7 @@
                 subj.focus();
                 return;
             }
-            if (dt && !dt.value.trim()) {
+            if (dtHidden && !dtHidden.value.trim()) {
                 ev.preventDefault();
                 alert('Tanggal & waktu wajib diisi. Klik field tanggal lalu pilih.');
                 return;

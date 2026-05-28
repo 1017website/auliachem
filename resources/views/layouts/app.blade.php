@@ -22,8 +22,7 @@
     <!-- Select2 (local) -->
     <link href="{{ asset('vendor/select2/select2.min.css') }}" rel="stylesheet">
     <!-- Air Datepicker (CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/air-datepicker@3.5.3/dist/air-datepicker.css" rel="stylesheet"
-        onerror="this.onerror=null;this.href='https://unpkg.com/air-datepicker@3.5.3/air-datepicker.css';">
+    <link href="https://unpkg.com/air-datepicker@3.5.3/air-datepicker.css" rel="stylesheet">
 
     <style>
         /* ── Select2 Custom Theme ── */
@@ -1448,8 +1447,7 @@
     <script src="{{ asset('vendor/select2/select2.min.js') }}"></script>
     <!-- Flatpickr (local) -->
     <!-- Air Datepicker (CDN, dengan fallback) -->
-    <script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.5.3/dist/air-datepicker.js"
-        onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/air-datepicker@3.5.3/air-datepicker.js';document.head.appendChild(s);})()"></script>
+    <script src="https://unpkg.com/air-datepicker@3.5.3/air-datepicker.js"></script>
 
     <script>
         function toggleSidebar() {
@@ -1717,25 +1715,53 @@
             const _skipModal = !scope;
             const _eligible = function(el) { return !_skipModal || !el.closest('.modal'); };
 
+            // Bulan singkat ID untuk tampilan d M Y
+            const _MON_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            function _fmtDisplayDate(d) {
+                if (!(d instanceof Date) || isNaN(d)) return '';
+                return `${_pad(d.getDate())} ${_MON_ID[d.getMonth()]} ${d.getFullYear()}`;
+            }
+            function _fmtDisplayDateTime(d) {
+                if (!(d instanceof Date) || isNaN(d)) return '';
+                return `${_pad(d.getDate())} ${_MON_ID[d.getMonth()]} ${d.getFullYear()} ${_pad(d.getHours())}:${_pad(d.getMinutes())}`;
+            }
+            function _fmtValueDate(d) {
+                return `${d.getFullYear()}-${_pad(d.getMonth()+1)}-${_pad(d.getDate())}`;
+            }
+            function _fmtValueDateTime(d) {
+                return `${d.getFullYear()}-${_pad(d.getMonth()+1)}-${_pad(d.getDate())} ${_pad(d.getHours())}:${_pad(d.getMinutes())}`;
+            }
+
             // ── Date only ──
             $(ctx).find('input[type="date"]').not('[data-adp-init]').each(function() {
                 if (!_eligible(this)) return;
-                const input = this;
+                const input = this;                            // jadi field TAMPILAN (d M Y)
                 input.setAttribute('data-adp-init', '1');
-                input.setAttribute('type', 'text');           // cegah native picker
+                input.setAttribute('type', 'text');
                 input.setAttribute('autocomplete', 'off');
+
+                // Pindahkan "name" ke hidden field (nilai Y-m-d untuk server)
+                const realName = input.getAttribute('name');
+                input.removeAttribute('name');
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                if (realName) hidden.setAttribute('name', realName);
+
+                // Nilai awal (input.value masih Y-m-d dari Blade)
+                const initial = input.value ? new Date(input.value + 'T00:00:00') : null;
+                hidden.value = initial ? _fmtValueDate(initial) : '';
 
                 // Bungkus + ikon kalender
                 const wrapper = document.createElement('div');
                 wrapper.className = 'date-input-wrap';
                 input.parentNode.insertBefore(wrapper, input);
                 wrapper.appendChild(input);
+                wrapper.appendChild(hidden);
                 const icon = document.createElement('i');
                 icon.className = 'fas fa-calendar-alt date-icon';
                 wrapper.appendChild(icon);
 
-                // Nilai awal (Y-m-d) → tampilkan terformat, simpan tetap Y-m-d
-                const initial = input.value ? new Date(input.value + 'T00:00:00') : null;
+                input._hidden = hidden;   // referensi untuk update programatik
 
                 const adp = new AirDatepicker(input, {
                     locale: ADP_LOCALE_ID,
@@ -1744,12 +1770,18 @@
                     selectedDates: initial ? [initial] : undefined,
                     buttons: ['today', 'clear'],
                     onSelect({ date }) {
-                        if (!date) { input.value = ''; return; }
-                        input.value = `${date.getFullYear()}-${_pad(date.getMonth()+1)}-${_pad(date.getDate())}`;
-                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (!date) { input.value = ''; hidden.value = ''; }
+                        else {
+                            input.value  = _fmtDisplayDate(date);   // tampilan: 28 Mei 2026
+                            hidden.value = _fmtValueDate(date);      // server: 2026-05-28
+                        }
+                        hidden.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 });
                 input._adp = adp;   // simpan instance untuk update programatik
+
+                // Tampilkan nilai awal terformat
+                if (initial) input.value = _fmtDisplayDate(initial);
 
                 // Buka kalender secara eksplisit (handal di dalam modal)
                 const _open = function(e) { e.preventDefault(); adp.show(); };
@@ -1760,11 +1792,6 @@
                 icon.addEventListener('click', function(e){ e.preventDefault(); input.focus(); adp.show(); });
                 // Cegah ketik manual (pengganti readonly)
                 input.addEventListener('keydown', function(e){ e.preventDefault(); });
-
-                // Set ulang tampilan agar konsisten saat reopen
-                if (initial) {
-                    input.value = `${initial.getFullYear()}-${_pad(initial.getMonth()+1)}-${_pad(initial.getDate())}`;
-                }
             });
 
             // ── DateTime ──
@@ -1775,16 +1802,25 @@
                 input.setAttribute('type', 'text');
                 input.setAttribute('autocomplete', 'off');
 
+                const realName = input.getAttribute('name');
+                input.removeAttribute('name');
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                if (realName) hidden.setAttribute('name', realName);
+
                 const wrapper = document.createElement('div');
                 wrapper.className = 'date-input-wrap';
                 input.parentNode.insertBefore(wrapper, input);
                 wrapper.appendChild(input);
+                wrapper.appendChild(hidden);
                 const icon = document.createElement('i');
                 icon.className = 'fas fa-clock date-icon';
                 wrapper.appendChild(icon);
 
                 const raw = input.value ? input.value.replace('T', ' ') : '';
                 const initial = raw ? new Date(raw.replace(' ', 'T')) : null;
+                hidden.value = initial ? _fmtValueDateTime(initial) : '';
+                input._hidden = hidden;
 
                 const adp = new AirDatepicker(input, {
                     locale: ADP_LOCALE_ID,
@@ -1795,12 +1831,17 @@
                     selectedDates: initial ? [initial] : undefined,
                     buttons: ['today', 'clear'],
                     onSelect({ date }) {
-                        if (!date) { input.value = ''; return; }
-                        input.value = `${date.getFullYear()}-${_pad(date.getMonth()+1)}-${_pad(date.getDate())} ${_pad(date.getHours())}:${_pad(date.getMinutes())}`;
-                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (!date) { input.value = ''; hidden.value = ''; }
+                        else {
+                            input.value  = _fmtDisplayDateTime(date);  // 28 Mei 2026 14:00
+                            hidden.value = _fmtValueDateTime(date);     // 2026-05-28 14:00
+                        }
+                        hidden.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 });
                 input._adp = adp;   // simpan instance untuk update programatik
+
+                if (initial) input.value = _fmtDisplayDateTime(initial);
 
                 const _open = function(e) { e.preventDefault(); adp.show(); };
                 input.addEventListener('focus', _open);
@@ -1809,32 +1850,33 @@
                 icon.style.cursor = 'pointer';
                 icon.addEventListener('click', function(e){ e.preventDefault(); input.focus(); adp.show(); });
                 input.addEventListener('keydown', function(e){ e.preventDefault(); });
-
-                if (initial) {
-                    input.value = `${initial.getFullYear()}-${_pad(initial.getMonth()+1)}-${_pad(initial.getDate())} ${_pad(initial.getHours())}:${_pad(initial.getMinutes())}`;
-                }
             });
         }
 
-        // Set nilai datetime input (sudah ber-Air Datepicker) secara programatik.
-        // value format: 'YYYY-MM-DD HH:mm'
+        // Set nilai datetime input secara programatik. value: 'YYYY-MM-DD HH:mm' / dengan 'T'.
+        // 'input' = elemen tampilan (punya _adp & _hidden).
         window.setAdpDateTime = function(input, value) {
             if (!input) return;
-            input.value = value;
-            const d = value ? new Date(value.replace(' ', 'T')) : null;
+            const d = value ? new Date(String(value).replace(' ', 'T')) : null;
             if (input._adp && d && !isNaN(d)) {
-                input._adp.selectDate(d, { silent: true });
+                input._adp.selectDate(d);   // memicu onSelect → update tampilan & hidden
+            } else if (input._hidden) {
+                input.value = '';
+                input._hidden.value = '';
             }
         };
 
-        // Set nilai date-only input secara programatik. value format: 'YYYY-MM-DD'
+        // Set nilai date-only secara programatik. value: 'YYYY-MM-DD'.
         window.setAdpDate = function(input, value) {
             if (!input) return;
-            input.value = value || '';
             const d = value ? new Date(value + 'T00:00:00') : null;
             if (input._adp) {
-                if (d && !isNaN(d)) input._adp.selectDate(d, { silent: true });
-                else input._adp.clear({ silent: true });
+                if (d && !isNaN(d)) input._adp.selectDate(d);   // memicu onSelect
+                else {
+                    input._adp.clear();
+                    input.value = '';
+                    if (input._hidden) input._hidden.value = '';
+                }
             }
         };
 
