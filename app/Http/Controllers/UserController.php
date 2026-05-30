@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Lead;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -15,14 +17,15 @@ class UserController extends Controller
         $role   = $request->get('role');
         $status = $request->get('status');
 
-        $query = User::withCount([
+        // User Non-Active tidak ditampilkan lagi di list user.
+        $query = User::where('status', 'Active')->withCount([
             'leads',
             'leads as deals_won' => fn($q) => $q->where('pipeline_stage', 'Won'),
         ]);
 
         if ($search) $query->where(fn($q) => $q->where('name', 'like', "%$search%")->orWhere('email', 'like', "%$search%"));
         if ($role)   $query->where('role', $role);
-        if ($status) $query->where('status', $status);
+        // Filter status tetap diterima agar query lama tidak error, tetapi list selalu hanya Active.
 
         $users = $query->orderBy('name')->paginate(15)->withQueryString();
 
@@ -31,11 +34,11 @@ class UserController extends Controller
             ->selectRaw('user_id, SUM(potensi_revenue) as total')
             ->groupBy('user_id')->pluck('total', 'user_id');
 
-        $totalUsers   = User::count();
-        $activeUsers  = User::where('status', 'Active')->count();
-        $totalSales   = User::where('role', 'Sales Executive')->count();
-        $totalManager = User::where('role', 'Sales Manager')->count();
-        $roles        = User::distinct()->whereNotNull('role')->pluck('role')->sort()->values();
+        $totalUsers   = User::where('status', 'Active')->count();
+        $activeUsers  = $totalUsers;
+        $totalSales   = User::where('status', 'Active')->where('role', 'Sales Executive')->count();
+        $totalManager = User::where('status', 'Active')->where('role', 'Sales Manager')->count();
+        $roles        = User::where('status', 'Active')->distinct()->whereNotNull('role')->pluck('role')->sort()->values();
 
         return view('users.index', compact(
             'users', 'revenues', 'totalUsers', 'activeUsers', 'totalSales', 'totalManager',
@@ -77,8 +80,27 @@ class UserController extends Controller
             $validated['password'] = Hash::make($request->new_password);
         }
 
-        $user->update($validated);
-        return redirect()->back()->with('success', 'User diupdate.');
+        $willBeNonActive = ($validated['status'] ?? $user->status) === 'Non-Active' && $user->status !== 'Non-Active';
+
+        if ($willBeNonActive && $user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Tidak bisa menonaktifkan akun sendiri.');
+        }
+
+        DB::transaction(function () use ($user, $validated, $willBeNonActive) {
+            if ($willBeNonActive) {
+                $administrator = $this->getAdministratorForTransfer($user->id);
+                Customer::where('user_id', $user->id)->update(['user_id' => $administrator->id]);
+                Lead::where('user_id', $user->id)->update(['user_id' => $administrator->id]);
+            }
+
+            $user->update($validated);
+        });
+
+        $message = $willBeNonActive
+            ? 'User diupdate dan seluruh Customer/Leads miliknya dipindahkan ke Administrator.'
+            : 'User diupdate.';
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function destroy(User $user)
@@ -86,7 +108,29 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return redirect()->back()->with('error', 'Tidak bisa menonaktifkan akun sendiri.');
         }
-        $user->update(['status' => 'Non-Active']);
-        return redirect()->route('users.index')->with('success', 'User ' . $user->name . ' dinonaktifkan.');
+        DB::transaction(function () use ($user) {
+            $administrator = $this->getAdministratorForTransfer($user->id);
+            Customer::where('user_id', $user->id)->update(['user_id' => $administrator->id]);
+            Lead::where('user_id', $user->id)->update(['user_id' => $administrator->id]);
+            $user->update(['status' => 'Non-Active']);
+        });
+
+        return redirect()->route('users.index')->with('success', 'User ' . $user->name . ' dinonaktifkan. Customer dan Leads dipindahkan ke Administrator.');
+    }
+
+    private function getAdministratorForTransfer(int $excludedUserId): User
+    {
+        $administrator = User::where('status', 'Active')
+            ->where('role', 'Admin')
+            ->where('id', '!=', $excludedUserId)
+            ->orderByRaw("CASE WHEN name = 'Administrator' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->first();
+
+        if (!$administrator) {
+            abort(422, 'Tidak ada Administrator aktif untuk menerima transfer Customer dan Leads.');
+        }
+
+        return $administrator;
     }
 }

@@ -65,7 +65,7 @@
     <div class="d-flex gap-2 align-items-center">
         <select class="form-select form-select-sm no-select2" style="width:160px;font-size:13px" onchange="filterSales(this.value)">
             <option value="">Semua Sales</option>
-            @foreach(\App\Models\User::orderBy('name')->get() as $su)
+            @foreach(\App\Models\User::where('status', 'Active')->orderBy('name')->get() as $su)
             <option value="{{ $su->id }}">{{ $su->name }}</option>
             @endforeach
         </select>
