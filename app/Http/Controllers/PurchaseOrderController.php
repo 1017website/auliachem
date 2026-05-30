@@ -88,8 +88,7 @@ class PurchaseOrderController extends Controller
             }
             $userId = $userId ?? auth()->id();
 
-            $po = PurchaseOrder::create([
-                'po_number'   => PurchaseOrder::generatePoNumber(),
+            $po = PurchaseOrder::createWithUniqueNumber([
                 'customer_id' => $request->customer_id,
                 'supplier_id' => $request->supplier_id,
                 'lead_id'     => $request->lead_id,

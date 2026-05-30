@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\QueryException;
+use RuntimeException;
 
 class PurchaseOrder extends Model
 {
@@ -51,9 +53,51 @@ class PurchaseOrder extends Model
     public static function generatePoNumber(): string
     {
         $prefix = 'PO-' . date('Ym') . '-';
-        $last   = static::where('po_number', 'like', $prefix . '%')
-            ->orderByDesc('po_number')->value('po_number');
-        $seq    = $last ? (intval(substr($last, -4)) + 1) : 1;
-        return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+
+        // Pakai withTrashed() karena po_number tetap terkunci oleh unique index
+        // meskipun PO sudah soft delete. lockForUpdate() membantu mencegah
+        // dua request bersamaan mengambil nomor urut yang sama.
+        $last = static::withTrashed()
+            ->where('po_number', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderByDesc('po_number')
+            ->value('po_number');
+
+        $seq = $last ? (intval(substr($last, -4)) + 1) : 1;
+
+        do {
+            $number = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+            $exists = static::withTrashed()->where('po_number', $number)->exists();
+            $seq++;
+        } while ($exists && $seq <= 9999);
+
+        return $number;
+    }
+
+    public static function createWithUniqueNumber(array $attributes): self
+    {
+        unset($attributes['po_number']);
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $attributes['po_number'] = static::generatePoNumber();
+
+            try {
+                return static::create($attributes);
+            } catch (QueryException $e) {
+                if (!static::isDuplicatePoNumberException($e)) {
+                    throw $e;
+                }
+            }
+        }
+
+        throw new RuntimeException('Gagal membuat po_number unik. Silakan coba simpan ulang.');
+    }
+
+    protected static function isDuplicatePoNumberException(QueryException $e): bool
+    {
+        $message = $e->getMessage();
+        return str_contains($message, 'purchase_orders_po_number_unique')
+            || str_contains($message, 'po_number')
+            || str_contains($message, 'Duplicate entry');
     }
 }

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\QueryException;
+use RuntimeException;
 
 class Lead extends Model
 {
@@ -51,9 +53,51 @@ class Lead extends Model
     public static function generateLeadCode(): string
     {
         $prefix = 'LEAD-' . date('Y') . '-';
-        $last   = static::where('lead_code', 'like', $prefix . '%')
-            ->orderByDesc('lead_code')->value('lead_code');
-        $seq    = $last ? (intval(substr($last, -4)) + 1) : 1;
-        return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+
+        // Pakai withTrashed() karena lead_code tetap terkunci oleh unique index
+        // meskipun data sudah soft delete. lockForUpdate() membantu mencegah
+        // dua request bersamaan mengambil nomor urut yang sama.
+        $last = static::withTrashed()
+            ->where('lead_code', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderByDesc('lead_code')
+            ->value('lead_code');
+
+        $seq = $last ? (intval(substr($last, -4)) + 1) : 1;
+
+        do {
+            $code = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+            $exists = static::withTrashed()->where('lead_code', $code)->exists();
+            $seq++;
+        } while ($exists && $seq <= 9999);
+
+        return $code;
+    }
+
+    public static function createWithUniqueCode(array $attributes): self
+    {
+        unset($attributes['lead_code']);
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $attributes['lead_code'] = static::generateLeadCode();
+
+            try {
+                return static::create($attributes);
+            } catch (QueryException $e) {
+                if (!static::isDuplicateLeadCodeException($e)) {
+                    throw $e;
+                }
+            }
+        }
+
+        throw new RuntimeException('Gagal membuat lead_code unik. Silakan coba simpan ulang.');
+    }
+
+    protected static function isDuplicateLeadCodeException(QueryException $e): bool
+    {
+        $message = $e->getMessage();
+        return str_contains($message, 'leads_lead_code_unique')
+            || str_contains($message, 'lead_code')
+            || str_contains($message, 'Duplicate entry');
     }
 }

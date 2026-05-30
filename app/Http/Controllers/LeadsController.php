@@ -76,7 +76,6 @@ class LeadsController extends Controller
             'products.*.unit'         => 'nullable|string|max:50',
         ]);
 
-        $validated['lead_code']      = Lead::generateLeadCode();
         $validated['pipeline_stage'] = $validated['pipeline_stage'] ?? 'Identifying';
 
         if (auth()->user()->isSalesExecutive()) {
@@ -87,7 +86,7 @@ class LeadsController extends Controller
         $productsData = $validated['products'] ?? [];
         unset($validated['pics'], $validated['products']);
 
-        $lead = Lead::create($validated);
+        $lead = Lead::createWithUniqueCode($validated);
 
         // Simpan inline PICs
         foreach ($picsData as $i => $pic) {
@@ -458,8 +457,7 @@ class LeadsController extends Controller
                 // Cari sales user by name
                 $salesUser = User::where('name', trim($row[12] ?? ''))->first();
 
-                Lead::create([
-                    'lead_code'      => Lead::generateLeadCode(),
+                Lead::createWithUniqueCode([
                     'company_name'   => trim($row[1] ?? ''),
                     'pic_name'       => trim($row[2] ?? ''),
                     'phone'          => trim($row[3] ?? ''),

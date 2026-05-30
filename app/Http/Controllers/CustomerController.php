@@ -123,8 +123,7 @@ class CustomerController extends Controller
             }
 
             // Revisi #1: create customer existing sekaligus create lead stage Maintaining
-            $lead = Lead::create([
-                'lead_code'      => Lead::generateLeadCode(),
+            $lead = Lead::createWithUniqueCode([
                 'customer_id'    => $customer->id,
                 'company_name'   => $customer->company_name,
                 'pic_name'       => $customer->pic_name,

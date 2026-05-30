@@ -140,8 +140,7 @@ class SalesActivityController extends Controller
                 // Revisi #1: customer existing tanpa lead → buat lead backing
                 // agar perubahan stage muncul di pipeline.
                 if (!$targetLead && $targetCustomer) {
-                    $targetLead = Lead::create([
-                        'lead_code'      => Lead::generateLeadCode(),
+                    $targetLead = Lead::createWithUniqueCode([
                         'customer_id'    => $targetCustomer->id,
                         'company_name'   => $targetCustomer->company_name,
                         'pic_name'       => $targetCustomer->pic_name,
