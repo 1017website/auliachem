@@ -9,6 +9,7 @@ use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PurchaseOrderController extends Controller
 {
@@ -42,7 +43,7 @@ class PurchaseOrderController extends Controller
         $grossProfit = $revenue - $totalCost;
         $volumePo    = $allDone->count();
 
-        $customers = Customer::orderBy('company_name')->get(['id', 'company_name']);
+        $customers = Customer::where('status', 'Existing')->orderBy('company_name')->get(['id', 'company_name']);
         $suppliers = Supplier::where('status', 'Active')->orderBy('supplier_name')->get(['id', 'supplier_name', 'source_type']);
         $leads = Lead::where(function($q) {
                 // Semua stage closing/won/maintaining ATAU lead yang sudah linked ke customer
@@ -64,7 +65,7 @@ class PurchaseOrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'customer_id'            => 'nullable|exists:customers,id',
+            'customer_id'            => ['nullable', Rule::exists('customers', 'id')->where('status', 'Existing')],
             'supplier_id'            => 'nullable|exists:suppliers,id',
             'lead_id'                => 'nullable|exists:leads,id',
             'currency'               => 'required|in:IDR,USD,SGD',
@@ -78,6 +79,8 @@ class PurchaseOrderController extends Controller
             'items.*.buy_price'      => 'required|numeric|min:0',
             'items.*.sell_price'     => 'required|numeric|min:0',
             'items.*.description'    => 'nullable|string',
+        ], [
+            'customer_id.exists' => 'PO hanya bisa dibuat untuk customer berstatus Existing.',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -126,7 +129,7 @@ class PurchaseOrderController extends Controller
     public function update(Request $request, PurchaseOrder $purchaseOrder)
     {
         $request->validate([
-            'customer_id'            => 'nullable|exists:customers,id',
+            'customer_id'            => ['nullable', Rule::exists('customers', 'id')->where('status', 'Existing')],
             'supplier_id'            => 'nullable|exists:suppliers,id',
             'lead_id'                => 'nullable|exists:leads,id',
             'currency'               => 'required|in:IDR,USD,SGD',
@@ -140,6 +143,8 @@ class PurchaseOrderController extends Controller
             'items.*.buy_price'      => 'required|numeric|min:0',
             'items.*.sell_price'     => 'required|numeric|min:0',
             'items.*.description'    => 'nullable|string',
+        ], [
+            'customer_id.exists' => 'PO hanya bisa dibuat untuk customer berstatus Existing.',
         ]);
 
         DB::transaction(function () use ($request, $purchaseOrder) {

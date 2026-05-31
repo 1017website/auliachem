@@ -39,7 +39,7 @@ class SupplierController extends Controller
         $potentialSupplier   = Supplier::where('relationship_status', 'Potential')->count();
 
         $selectedSupplier = $request->get('selected_id')
-            ? Supplier::with(['purchaseOrders', 'products', 'pics'])->find($request->get('selected_id'))
+            ? Supplier::with(['purchaseOrders.items', 'purchaseOrders.customer', 'products', 'pics'])->find($request->get('selected_id'))
             : null;
 
         return view('suppliers.index', compact(

@@ -29,4 +29,19 @@ class Supplier extends Model
     public function isPotential(): bool { return $this->relationship_status === 'Potential'; }
     public function isLocal(): bool     { return $this->source_type === 'Local'; }
     public function isImport(): bool    { return $this->source_type === 'Import'; }
+
+    public function getTotalRevenueAttribute(): float
+    {
+        return $this->purchaseOrders()
+            ->where('status', 'Done')->where('currency', 'IDR')
+            ->with('items')->get()->sum(fn($po) => $po->total_revenue);
+    }
+
+    public function getLogoInitialsAttribute(): string
+    {
+        $parts = explode(' ', $this->supplier_name);
+        $initials = '';
+        foreach (array_slice($parts, 0, 2) as $part) $initials .= strtoupper(substr($part, 0, 1));
+        return $initials;
+    }
 }

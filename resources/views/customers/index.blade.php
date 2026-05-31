@@ -445,6 +445,8 @@
                     <input type="text" id="editStatusDisplay" class="form-control" value="" disabled>
                     <div class="form-text" style="font-size:.68rem">Status hanya berubah ke Existing via Sales Activity (stage Won/Closing).</div></div>
                 <div class="col-md-6">@include('components.sales-pic-field', ['fieldId' => 'editSalesPIC'])</div>
+                <div class="col-md-6"><label class="form-label">Customer Since</label><input type="date" name="customer_since" id="editCustomerSince" class="form-control"></div>
+                <div class="col-12"><label class="form-label">Alamat</label><textarea name="address" id="editAddress" class="form-control" rows="2"></textarea></div>
                 <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" id="editNotes" class="form-control" rows="2"></textarea></div>
 
                 {{-- Tambahan PICs (edit) --}}
@@ -518,6 +520,7 @@
                 'industry' => $c->industry,
                 'location' => $c->location,
                 'address' => $c->address,
+                'customer_since' => $c->customer_since?->format('Y-m-d'),
                 'status' => $c->status,
                 'user_id' => (string) $c->user_id,
                 'notes' => $c->notes,
@@ -647,6 +650,8 @@ function openEditModal(id) {
     document.getElementById('editEmail').value = safeValue(data.email);
     document.getElementById('editIndustry').value = safeValue(data.industry);
     document.getElementById('editLocation').value = safeValue(data.location);
+    document.getElementById('editAddress').value = safeValue(data.address);
+    document.getElementById('editCustomerSince').value = safeValue(data.customer_since);
     document.getElementById('editNotes').value = safeValue(data.notes);
     document.getElementById('editStatusDisplay').value = safeValue(data.status);
 

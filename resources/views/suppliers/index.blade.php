@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="row g-3">
-<div class="col-12">
+<div class="col-lg-{{ $selectedSupplier ? '8' : '12' }}">
 
     {{-- Header --}}
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
@@ -85,8 +85,14 @@
                         @forelse($suppliers as $s)
                         <tr>
                             <td class="px-3 py-2">
-                                <div style="font-weight:700">{{ $s->supplier_name }}</div>
-                                @if($s->is_preferred)<span style="font-size:10px;color:#d97706">⭐ Preferred</span>@endif
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-avatar" style="width:30px;height:30px;font-size:.65rem;border-radius:6px;flex-shrink:0">{{ $s->logo_initials }}</div>
+                                    <div>
+                                        <a href="{{ route('suppliers.index', array_merge(request()->query(), ['selected_id'=>$s->id])) }}"
+                                            style="font-weight:700;color:#111;text-decoration:none">{{ $s->supplier_name }}</a>
+                                        @if($s->is_preferred)<div style="font-size:10px;color:#d97706">⭐ Preferred</div>@endif
+                                    </div>
+                                </div>
                             </td>
                             <td class="py-2">
                                 <div>{{ $s->pic_name }}</div>
@@ -135,6 +141,10 @@
                             </td>
                             <td class="py-2" style="font-size:12px">{{ $s->rating > 0 ? $s->rating : '-' }}</td>
                             <td class="py-2">
+                                <a href="{{ route('suppliers.index', array_merge(request()->query(), ['selected_id'=>$s->id])) }}"
+                                    class="btn btn-sm btn-outline-primary" style="padding:3px 7px" title="Detail">
+                                    <i class="fas fa-eye" style="font-size:.7rem"></i>
+                                </a>
                                 <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px"
                                     onclick="openEditSupplier({{ $s->id }})">
                                     <i class="fas fa-pencil-alt"></i>
@@ -164,6 +174,181 @@
         </div>
     </div>
 </div>
+
+{{-- RIGHT: Detail Panel --}}
+@if($selectedSupplier)
+<div class="col-lg-4">
+    <div class="card" style="position:sticky;top:70px">
+        <div class="card-body p-3">
+            <div class="d-flex align-items-start justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="user-avatar" style="width:44px;height:44px;border-radius:8px;font-size:.85rem">{{ $selectedSupplier->logo_initials }}</div>
+                    <div>
+                        <div style="font-weight:700;font-size:.9rem">{{ $selectedSupplier->supplier_name }}</div>
+                        <div class="d-flex gap-1 mt-1 flex-wrap">
+                            <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
+                                background:{{ $selectedSupplier->source_type==='Local'?'#dbeafe':'#ede9fe' }};
+                                color:{{ $selectedSupplier->source_type==='Local'?'#1d4ed8':'#7c3aed' }}">{{ $selectedSupplier->source_type }}</span>
+                            <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
+                                background:{{ $selectedSupplier->relationship_status==='Existing'?'#d1fae5':'#fff7ed' }};
+                                color:{{ $selectedSupplier->relationship_status==='Existing'?'#059669':'#ea580c' }}">{{ $selectedSupplier->relationship_status }}</span>
+                            @if($selectedSupplier->is_preferred)
+                            <span style="background:#fef3c7;color:#b45309;font-size:.65rem;padding:2px 7px;border-radius:20px;font-weight:600">⭐ Preferred</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('suppliers.index', request()->except('selected_id')) }}" style="color:var(--text-muted)"><i class="fas fa-times"></i></a>
+            </div>
+
+            <ul class="nav nav-tabs mb-3" style="font-size:.75rem" id="supTabs">
+                <li class="nav-item"><a class="nav-link active" href="#" onclick="showSupTab('overview',this);return false" style="padding:6px 10px">Overview</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showSupTab('pics',this);return false" style="padding:6px 10px">PICs</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showSupTab('products',this);return false" style="padding:6px 10px">Produk</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showSupTab('transaction',this);return false" style="padding:6px 10px">PO</a></li>
+            </ul>
+
+            {{-- Tab Overview --}}
+            <div id="suptab-overview">
+                @foreach([
+                    ['PIC Utama',$selectedSupplier->pic_name],
+                    ['Jabatan',$selectedSupplier->pic_position??'-'],
+                    ['Phone',$selectedSupplier->phone??'-'],
+                    ['Email',$selectedSupplier->email??'-'],
+                    ['Kategori Produk',$selectedSupplier->product_category??'-'],
+                    ['Source Type',$selectedSupplier->source_type],
+                    ['Negara Asal',$selectedSupplier->origin_country??'-'],
+                    ['Payment Term',$selectedSupplier->payment_term??'-'],
+                    ['Rating',$selectedSupplier->rating > 0 ? $selectedSupplier->rating : '-'],
+                    ['Supplier Since',$selectedSupplier->supplier_since?->format('d M Y')??'-'],
+                ] as $f)
+                <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid #f9fafb;font-size:.77rem">
+                    <span style="color:var(--text-muted);min-width:90px">{{ $f[0] }}</span>
+                    <span style="font-weight:500;text-align:right;max-width:55%">{{ $f[1] }}</span>
+                </div>
+                @endforeach
+
+                @if($selectedSupplier->address)
+                <div class="mt-2 pt-2" style="border-top:1px solid #f3f4f6">
+                    <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:4px">Alamat</div>
+                    <div style="font-size:.78rem">{{ $selectedSupplier->address }}</div>
+                </div>
+                @endif
+
+                <div class="row g-2 mt-3 mb-3 text-center">
+                    <div class="col-6">
+                        <div style="background:#eff6ff;border-radius:8px;padding:10px">
+                            <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedSupplier->total_revenue > 0 ? idrm($selectedSupplier->total_revenue) : 'Rp 0' }}</div>
+                            <div style="font-size:.65rem;color:var(--text-muted)">Total Pembelian</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div style="background:#f0fdf4;border-radius:8px;padding:10px">
+                            <div style="font-size:1rem;font-weight:800;color:#16a34a">{{ $selectedSupplier->purchaseOrders->count() }}</div>
+                            <div style="font-size:.65rem;color:var(--text-muted)">Total PO</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary flex-fill" style="font-size:.75rem"
+                        onclick="openEditSupplier({{ $selectedSupplier->id }})">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </button>
+                    <form method="POST" action="{{ route('suppliers.destroy', $selectedSupplier) }}" class="flex-fill"
+                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus {{ addslashes($selectedSupplier->supplier_name) }}? Tindakan ini tidak dapat dibatalkan.')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-size:.75rem"><i class="fas fa-trash me-1"></i> Hapus</button>
+                    </form>
+                </div>
+            </div>
+
+            {{-- Tab PICs --}}
+            <div id="suptab-pics" style="display:none">
+                <strong style="font-size:.8rem;display:block;margin-bottom:10px">Daftar PIC</strong>
+                {{-- PIC Utama --}}
+                <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f3f4f6">
+                    <div style="width:32px;height:32px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-user" style="color:#2563eb;font-size:.65rem"></i>
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-size:.8rem;font-weight:600">{{ $selectedSupplier->pic_name }}
+                            <span style="font-size:.65rem;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
+                        </div>
+                        @if($selectedSupplier->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $selectedSupplier->pic_position }}</div>@endif
+                        @if($selectedSupplier->phone)<div style="font-size:.72rem">{{ $selectedSupplier->phone }}</div>@endif
+                        @if($selectedSupplier->email)<div style="font-size:.72rem;color:var(--primary)">{{ $selectedSupplier->email }}</div>@endif
+                    </div>
+                </div>
+                {{-- PIC tambahan --}}
+                @forelse($selectedSupplier->pics as $pic)
+                <div class="d-flex align-items-start gap-2 mb-2">
+                    <div style="width:32px;height:32px;background:#f3f4f6;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-user" style="color:#6b7280;font-size:.65rem"></i>
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-size:.8rem;font-weight:600">{{ $pic->pic_name }}</div>
+                        @if($pic->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $pic->pic_position }}</div>@endif
+                        @if($pic->phone)<div style="font-size:.72rem">{{ $pic->phone }}</div>@endif
+                        @if($pic->email)<div style="font-size:.72rem;color:var(--primary)">{{ $pic->email }}</div>@endif
+                    </div>
+                    <form method="POST" action="{{ route('suppliers.pics.destroy', [$selectedSupplier, $pic]) }}"
+                        onsubmit="return confirm('Hapus PIC {{ addslashes($pic->pic_name) }}?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
+                    </form>
+                </div>
+                @empty
+                <div class="text-center py-3" style="color:var(--text-muted);font-size:.8rem">Belum ada PIC tambahan.</div>
+                @endforelse
+            </div>
+
+            {{-- Tab Produk --}}
+            <div id="suptab-products" style="display:none">
+                <strong style="font-size:.8rem;display:block;margin-bottom:10px">Produk Supplier</strong>
+                @forelse($selectedSupplier->products as $prod)
+                <div class="d-flex align-items-start gap-2 mb-2 pb-2" style="border-bottom:1px solid #f9fafb">
+                    <div style="width:32px;height:32px;border-radius:8px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-box" style="font-size:.7rem;color:#7c3aed"></i>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:.78rem;font-weight:600">{{ $prod->product_name }}</div>
+                        @if($prod->unit)<div style="font-size:.7rem;color:var(--text-muted)">Satuan: {{ $prod->unit }}</div>@endif
+                        @if($prod->description)<div style="font-size:.7rem;color:#374151">{{ $prod->description }}</div>@endif
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-3" style="color:var(--text-muted);font-size:.8rem">Belum ada produk supplier.</div>
+                @endforelse
+            </div>
+
+            {{-- Tab PO --}}
+            <div id="suptab-transaction" style="display:none">
+                <strong style="font-size:.8rem;display:block;margin-bottom:10px">Purchase Orders</strong>
+                @forelse($selectedSupplier->purchaseOrders->sortByDesc('order_date') as $po)
+                <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f9fafb">
+                    <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-file-invoice" style="font-size:.7rem;color:#2563eb"></i>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:.78rem;font-weight:600">{{ $po->po_number }}</div>
+                        <div style="font-size:.7rem;color:var(--text-muted)">{{ $po->customer?->company_name ?? '-' }}</div>
+                        <div style="font-size:.7rem;color:var(--text-muted)">{{ \Carbon\Carbon::parse($po->order_date)->format('d M Y') }}</div>
+                    </div>
+                    <div class="text-end" style="flex-shrink:0">
+                        <div style="font-size:.75rem;font-weight:600">{{ idrm($po->total_revenue) }}</div>
+                        @php $sc = ['Done' => ['#d1fae5', '#059669'], 'In Progress' => ['#dbeafe', '#2563eb'], 'Cancelled' => ['#fee2e2', '#dc2626']][$po->status] ?? ['#f3f4f6', '#6b7280']; @endphp
+                        <span style="font-size:.62rem;padding:2px 8px;border-radius:20px;font-weight:600;background:{{ $sc[0] }};color:{{ $sc[1] }}">{{ $po->status }}</span>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-3" style="color:var(--text-muted);font-size:.8rem">Belum ada PO.</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 </div>
 
 {{-- Modal Tambah --}}
@@ -312,6 +497,10 @@
                             <label class="form-label">PIC Name</label>
                             <input type="text" name="pic_name" id="esPic" class="form-control">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Posisi PIC</label>
+                            <input type="text" name="pic_position" id="esPicPosition" class="form-control">
+                        </div>
                         <div class="col-md-4">
                             <label class="form-label">Phone</label>
                             <input type="text" name="phone" id="esPhone" class="form-control">
@@ -344,6 +533,14 @@
                                 <input type="checkbox" name="is_preferred" value="1" class="form-check-input" id="esPreferred">
                                 <label class="form-check-label" for="esPreferred">Preferred Supplier</label>
                             </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Term</label>
+                            <input type="text" name="payment_term" id="esPaymentTerm" class="form-control" placeholder="Net 30, COD, dll">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Alamat</label>
+                            <textarea name="address" id="esAddress" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
 
@@ -423,41 +620,62 @@
 
 
 @php
-    $supplierEditData = $suppliers->mapWithKeys(function ($s) {
+    $supplierEditSource = $suppliers->getCollection()
+        ->merge($selectedSupplier ? collect([$selectedSupplier]) : collect())
+        ->unique('id')
+        ->values();
+
+    $supplierEditData = $supplierEditSource->mapWithKeys(function ($s) {
         return [$s->id => [
             'id' => $s->id,
             'supplier_name' => $s->supplier_name,
             'source_type' => $s->source_type,
             'pic_name' => $s->pic_name,
+            'pic_position' => $s->pic_position,
             'phone' => $s->phone,
             'email' => $s->email,
             'product_category' => $s->product_category,
             'origin_country' => $s->origin_country,
+            'payment_term' => $s->payment_term,
+            'address' => $s->address,
             'status' => $s->status,
             'relationship_status' => $s->relationship_status,
             'is_preferred' => (bool) $s->is_preferred,
             'rating' => $s->rating,
-            'pics' => $s->pics->map(function ($pic) {
-                return [
-                    'pic_name' => $pic->pic_name,
-                    'pic_position' => $pic->pic_position,
-                    'phone' => $pic->phone,
-                    'email' => $pic->email,
-                ];
-            })->values(),
-            'products' => $s->products->map(function ($product) {
-                return [
-                    'product_name' => $product->product_name,
-                    'unit' => $product->unit,
-                    'description' => $product->description,
-                ];
-            })->values(),
+            'pics' => $s->relationLoaded('pics')
+                ? $s->pics->map(function ($pic) {
+                    return [
+                        'pic_name' => $pic->pic_name,
+                        'pic_position' => $pic->pic_position,
+                        'phone' => $pic->phone,
+                        'email' => $pic->email,
+                    ];
+                })->values()
+                : [],
+            'products' => $s->relationLoaded('products')
+                ? $s->products->map(function ($product) {
+                    return [
+                        'product_name' => $product->product_name,
+                        'unit' => $product->unit,
+                        'description' => $product->description,
+                    ];
+                })->values()
+                : [],
         ]];
     });
 @endphp
 
 @push('scripts')
 <script>
+function showSupTab(tab, el) {
+    document.querySelectorAll('#supTabs .nav-link').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+    ['overview','pics','products','transaction'].forEach(t => {
+        const d = document.getElementById('suptab-'+t);
+        if (d) d.style.display = t===tab ? 'block' : 'none';
+    });
+}
+
 function toggleOrigin(mode) {
     const sel  = document.getElementById(mode === 'add' ? 'addSourceType' : 'esSourceType');
     const wrap = document.getElementById(mode === 'add' ? 'addOriginWrap' : 'editOriginWrap');
@@ -476,6 +694,9 @@ function openEditSupplier(id) {
     document.getElementById('esOrigin').value       = data.origin_country || '';
     document.getElementById('esCategory').value     = data.product_category || '';
     document.getElementById('esPic').value          = data.pic_name || '';
+    document.getElementById('esPicPosition').value  = data.pic_position || '';
+    document.getElementById('esPaymentTerm').value  = data.payment_term || '';
+    document.getElementById('esAddress').value      = data.address || '';
     document.getElementById('esPhone').value        = data.phone || '';
     document.getElementById('esEmail').value        = data.email || '';
     document.getElementById('esStatus').value       = data.status || 'Active';
@@ -493,6 +714,9 @@ function openEditSupplier(id) {
     editSupProductsExisting.innerHTML = '';
     editSupPicsContainer.innerHTML = '';
     editSupProductsContainer.innerHTML = '';
+
+    supPicIdx = 0;
+    supProdIdx = 0;
 
     (data.pics || []).forEach(function(pic) {
         addSupPicRow('editSupPicsContainer', pic);

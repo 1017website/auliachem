@@ -22,11 +22,14 @@
     $preStage   = $preStage   ?? null;
     $redirect   = $redirect   ?? null;
 
-    $existingCustomerCompanyNames = \App\Models\Customer::where('status','Existing')
-        ->pluck('company_name')->map(fn($n) => strtolower(trim($n)))->toArray();
-    $leadsNotExisting = \App\Models\Lead::orderBy('company_name')->get()
-        ->filter(fn($l) => !in_array(strtolower(trim($l->company_name)), $existingCustomerCompanyNames));
-    $existingCustomers = \App\Models\Customer::where('status','Existing')->orderBy('company_name')->get();
+    // Sumber data dropdown diambil langsung dari tabel customers — bukan dari leads —
+    // untuk menghindari duplikasi (setiap lead selalu punya pasangan customer):
+    //   - Customer status "Potential" => entitas "Leads" (prospek)
+    //   - Customer status "Existing"  => entitas "Customer Existing"
+    // client_ref dikirim sebagai customer:{id} untuk keduanya; store() otomatis
+    // me-resolve lead terkait dari customer_id.
+    $potentialCustomers = \App\Models\Customer::where('status','Potential')->orderBy('company_name')->get();
+    $existingCustomers  = \App\Models\Customer::where('status','Existing')->orderBy('company_name')->get();
 @endphp
 
 <div class="modal fade" id="addActivityModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -66,8 +69,8 @@
                             <select name="client_ref" class="form-select" id="actLeadSelect" onchange="onLeadChange(this)">
                                 <option value="">Pilih atau cari client</option>
                                 <optgroup label="— Leads —">
-                                @foreach($leadsNotExisting as $lead)
-                                    <option value="lead:{{ $lead->id }}" data-type="lead" data-id="{{ $lead->id }}" data-stage="{{ $lead->pipeline_stage }}">{{ $lead->company_name }} (Lead)</option>
+                                @foreach($potentialCustomers as $cust)
+                                    <option value="customer:{{ $cust->id }}" data-type="customer" data-id="{{ $cust->id }}" data-status="Potential" data-stage="">{{ $cust->company_name }} (Lead)</option>
                                 @endforeach
                                 </optgroup>
                                 <optgroup label="— Customer Existing —">
