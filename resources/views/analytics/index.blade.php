@@ -58,7 +58,7 @@
 <div class="row g-3 mb-4">
     @php
     $kpis = [
-        ['bg'=>'#eff6ff','icon'=>'fas fa-dollar-sign','ico_color'=>'#3b82f6','label'=>'Revenue (Omzet)','value'=>idr($revenue),'sub'=>'Total periode ini'],
+        ['bg'=>'var(--primary-soft)','icon'=>'fas fa-dollar-sign','ico_color'=>'var(--primary-hover)','label'=>'Revenue (Omzet)','value'=>idr($revenue),'sub'=>'Total periode ini'],
         ['bg'=>'#f0fdf4','icon'=>'fas fa-chart-line','ico_color'=>'#10b981','label'=>'Gross Profit','value'=>idr($grossProfit),'sub'=>'Revenue - HPP'],
         ['bg'=>'#faf5ff','icon'=>'fas fa-wallet','ico_color'=>'#7c3aed','label'=>'Nett Profit','value'=>idr($nettProfit),'sub'=>'Revenue - Total Biaya'],
         ['bg'=>'#f0fdfa','icon'=>'fas fa-file-invoice','ico_color'=>'#0d9488','label'=>'Volume PO','value'=>$volumePo,'sub'=>'PO Done periode ini'],
@@ -99,7 +99,7 @@
         <div class="chart-card h-100">
             <div class="chart-title mb-3">Pipeline Conversion Funnel</div>
             @php
-            $funnelColors = ['Identifying'=>'#3b82f6','Approaching'=>'#10b981','Follow Up'=>'#f59e0b','Closing'=>'#f97316','Won'=>'#16a34a'];
+            $funnelColors = ['Identifying'=>'var(--primary-hover)','Approaching'=>'#10b981','Follow Up'=>'#f59e0b','Closing'=>'#f97316','Won'=>'#16a34a'];
             $maxCount = max(array_values($funnel->toArray()) + [1]);
             @endphp
             @foreach($funnel as $stage => $count)
@@ -135,7 +135,7 @@
                 </div>
                 <div style="flex:1;min-width:0">
                     <div style="font-size:12px;font-weight:600;color:#0f1d35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $s->name }}</div>
-                    <div class="progress-sm mt-1"><div class="progress-sm-fill" style="width:{{ $pct }}%;background:#3b82f6"></div></div>
+                    <div class="progress-sm mt-1"><div class="progress-sm-fill" style="width:{{ $pct }}%;background:var(--primary-hover)"></div></div>
                 </div>
                 <div style="text-align:right;flex-shrink:0;min-width:60px">
                     <div style="font-size:11px;font-weight:600;color:#374151">{{ idrm($s->revenue) }}</div>
@@ -163,7 +163,7 @@
                 <canvas id="serviceDonutChart" style="width:100%;height:100%"></canvas>
                 </div>
                 <div style="flex:1">
-                    @php $totalSvc = $revenueByService->sum('total'); $svcColors = ['#3b82f6','#10b981','#f59e0b','#f97316','#8b5cf6','#ec4899']; @endphp
+                    @php $totalSvc = $revenueByService->sum('total'); $svcColors = ['var(--primary-hover)','#10b981','#f59e0b','#f97316','#8b5cf6','#ec4899']; @endphp
                     @foreach($revenueByService as $idx => $svc)
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <div style="width:8px;height:8px;border-radius:2px;background:{{ $svcColors[$idx%count($svcColors)] }};flex-shrink:0"></div>
@@ -196,7 +196,7 @@
             <div class="d-flex align-items-center gap-2 mb-3">
                 <div style="font-size:11px;color:#374151;width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ $r->product_name ?? "" }}">{{ $r->product_name ?? "-" }}</div>
                 <div style="flex:1">
-                    <div style="height:7px;border-radius:4px;background:#3b82f6;width:{{ $pct }}%"></div>
+                    <div style="height:7px;border-radius:4px;background:var(--primary-hover);width:{{ $pct }}%"></div>
                 </div>
                 <div style="font-size:11px;color:#6b7280;width:80px;text-align:right;flex-shrink:0">{{ idrm($r->total) }}</div>
             </div>
@@ -245,7 +245,7 @@
                 <div class="col-6">
                     <div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center">
                         <div style="font-size:11px;color:#6b7280">Avg Nett Margin</div>
-                        <div style="font-size:18px;font-weight:700;color:#3b82f6">{{ $avgNettMargin }}%</div>
+                        <div style="font-size:18px;font-weight:700;color:var(--primary-hover)">{{ $avgNettMargin }}%</div>
                     </div>
                 </div>
             </div>
@@ -263,7 +263,7 @@
                 <canvas id="leadSourceChart" style="width:100%;height:100%"></canvas>
                 </div>
                 <div style="flex:1">
-                    @php $totalSrc = $leadSources->sum('count'); $srcColors=['#3b82f6','#10b981','#f59e0b','#f97316','#8b5cf6','#9ca3af']; @endphp
+                    @php $totalSrc = $leadSources->sum('count'); $srcColors=['var(--primary-hover)','#10b981','#f59e0b','#f97316','#8b5cf6','#9ca3af']; @endphp
                     @foreach($leadSources as $idx => $src)
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <div style="width:8px;height:8px;border-radius:2px;background:{{ $srcColors[$idx%count($srcColors)] }};flex-shrink:0"></div>
@@ -333,8 +333,8 @@ $profitGross    = array_column($profitAnalysis, 'gross_profit');
 $profitNet      = array_column($profitAnalysis, 'profit');
 @endphp
 
-const svcColors = ['#3b82f6','#10b981','#f59e0b','#f97316','#8b5cf6','#ec4899'];
-const srcColors = ['#3b82f6','#10b981','#f59e0b','#f97316','#8b5cf6','#9ca3af'];
+const svcColors = ['var(--primary-hover)','#10b981','#f59e0b','#f97316','#8b5cf6','#ec4899'];
+const srcColors = ['var(--primary-hover)','#10b981','#f59e0b','#f97316','#8b5cf6','#9ca3af'];
 
 // Revenue Trend
 new Chart(document.getElementById('revenueTrendChart'), {
@@ -342,7 +342,7 @@ new Chart(document.getElementById('revenueTrendChart'), {
     data: {
         labels: {!! json_encode($trendLabels) !!},
         datasets: [
-            { label: 'Revenue', data: {!! json_encode($trendRevenue) !!}, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.08)', fill: true, tension: .4, borderWidth: 2, pointRadius: 3 },
+            { label: 'Revenue', data: {!! json_encode($trendRevenue) !!}, borderColor: 'var(--primary-hover)', backgroundColor: 'rgba(59,130,246,.08)', fill: true, tension: .4, borderWidth: 2, pointRadius: 3 },
             { label: 'Nett Profit', data: {!! json_encode($trendProfit) !!}, borderColor: '#10b981', backgroundColor: 'transparent', fill: false, tension: .4, borderWidth: 2, pointRadius: 3 }
         ]
     },
@@ -383,7 +383,7 @@ new Chart(document.getElementById('profitChart'), {
     data: {
         labels: {!! json_encode($profitLabels) !!},
         datasets: [
-            { label: 'Revenue', data: {!! json_encode($profitRevenue) !!}, backgroundColor: '#3b82f6', borderRadius: 3, barPercentage: .5 },
+            { label: 'Revenue', data: {!! json_encode($profitRevenue) !!}, backgroundColor: 'var(--primary-hover)', borderRadius: 3, barPercentage: .5 },
             { label: 'Total Cost', data: {!! json_encode($profitCost) !!}, backgroundColor: '#fca5a5', borderRadius: 3, barPercentage: .5 },
             { label: 'Gross Profit', data: {!! json_encode($profitGross) !!}, type: 'line', borderColor: '#10b981', backgroundColor: 'transparent', tension: .4, borderWidth: 2, pointRadius: 3 },
             { label: 'Nett Profit', data: {!! json_encode($profitNet) !!}, type: 'line', borderColor: '#7c3aed', backgroundColor: 'transparent', tension: .4, borderWidth: 2, pointRadius: 3, borderDash: [4,3] }

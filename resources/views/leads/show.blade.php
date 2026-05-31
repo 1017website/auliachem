@@ -77,12 +77,12 @@
             <div class="card-body p-3">
                 {{-- PIC utama (dari lead) --}}
                 <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f3f4f6">
-                    <div style="width:30px;height:30px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <i class="fas fa-user" style="color:#2563eb;font-size:.65rem"></i>
+                    <div style="width:30px;height:30px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-user" style="color:var(--primary);font-size:.65rem"></i>
                     </div>
                     <div style="flex:1;min-width:0">
                         <div style="font-size:.8rem;font-weight:600">{{ $lead->pic_name }}
-                            <span style="font-size:.65rem;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
+                            <span style="font-size:.65rem;background:var(--primary-light);color:var(--primary-dark);padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
                         </div>
                         @if($lead->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $lead->pic_position }}</div>@endif
                         @if($lead->phone)<div style="font-size:.72rem">{{ $lead->phone }}</div>@endif
@@ -155,8 +155,8 @@
                         <div class="activity-time" style="font-size:.7rem;color:var(--text-muted);min-width:45px">
                             {{ $act->activity_at->format('d M') }}
                         </div>
-                        <div class="activity-icon" style="background:{{ $act->type === 'Call' ? '#d1fae5' : ($act->type === 'Visit' ? '#dbeafe' : ($act->type === 'Email' ? '#fef3c7' : '#f3f4f6')) }}">
-                            <span style="font-weight:700;font-size:.75rem;color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? '#2563eb' : ($act->type === 'Email' ? '#d97706' : '#6b7280')) }}">{{ $act->type_letter }}</span>
+                        <div class="activity-icon" style="background:{{ $act->type === 'Call' ? '#d1fae5' : ($act->type === 'Visit' ? 'var(--primary-light)' : ($act->type === 'Email' ? '#fef3c7' : '#f3f4f6')) }}">
+                            <span style="font-weight:700;font-size:.75rem;color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? 'var(--primary)' : ($act->type === 'Email' ? '#d97706' : '#6b7280')) }}">{{ $act->type_letter }}</span>
                         </div>
                         <div class="activity-body">
                             <div class="d-flex justify-content-between">
@@ -222,8 +222,8 @@
             <div class="card-body p-3">
                 @if($lead->next_follow_up)
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <div style="width:32px;height:32px;background:#dbeafe;border-radius:7px;display:flex;align-items:center;justify-content:center">
-                        <i class="fas fa-calendar" style="color:#2563eb;font-size:.75rem"></i>
+                    <div style="width:32px;height:32px;background:var(--primary-light);border-radius:7px;display:flex;align-items:center;justify-content:center">
+                        <i class="fas fa-calendar" style="color:var(--primary);font-size:.75rem"></i>
                     </div>
                     <div>
                         <div style="font-weight:700;font-size:.85rem">{{ $lead->next_follow_up->format('d M Y') }}</div>

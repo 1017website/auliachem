@@ -177,7 +177,7 @@
                     <i class="fas fa-file-excel" style="font-size:16px"></i> Export Excel
                 </a>
                 <button type="button" onclick="window.print()"
-                    class="d-flex align-items-center gap-2 p-2 w-100" style="border:1px solid #bfdbfe;border-radius:8px;color:#2563eb;background:#eff6ff;font-size:13px;font-weight:500;cursor:pointer">
+                    class="d-flex align-items-center gap-2 p-2 w-100" style="border:1px solid #bfdbfe;border-radius:8px;color:var(--primary);background:var(--primary-soft);font-size:13px;font-weight:500;cursor:pointer">
                     <i class="fas fa-print" style="font-size:16px"></i> Print Report
                 </button>
             </div>
@@ -228,7 +228,7 @@
 {{-- Summary KPI --}}
 <div class="row g-3 mb-4">
     @foreach([
-        ['bg'=>'#eff6ff','icon'=>'fas fa-chart-bar','color'=>'#3b82f6','label'=>'Total Revenue','value'=>idr($revenue)],
+        ['bg'=>'var(--primary-soft)','icon'=>'fas fa-chart-bar','color'=>'var(--primary-hover)','label'=>'Total Revenue','value'=>idr($revenue)],
         ['bg'=>'#f0fdf4','icon'=>'fas fa-chart-line','color'=>'#10b981','label'=>'Gross Profit','value'=>idr($grossProfit ?? 0)],
         ['bg'=>'#faf5ff','icon'=>'fas fa-wallet','color'=>'#7c3aed','label'=>'Nett Profit','value'=>idr($nettProfit ?? 0)],
         ['bg'=>'#fff7ed','icon'=>'fas fa-coins','color'=>'#f97316','label'=>'Avg Deal Value','value'=>idr($avgDealValue)],

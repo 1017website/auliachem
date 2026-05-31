@@ -18,7 +18,7 @@
             </a>
         </div>
         <div class="d-flex gap-3 flex-wrap">
-            @foreach([[$totalSupplier,'Total','#111'],[$localSupplier,'Local','#2563eb'],[$importSupplier,'Import','#7c3aed'],[$existingSupplier,'Existing','#059669'],[$potentialSupplier,'Potential','#f97316']] as $s)
+            @foreach([[$totalSupplier,'Total','#111'],[$localSupplier,'Local','var(--primary)'],[$importSupplier,'Import','#7c3aed'],[$existingSupplier,'Existing','#059669'],[$potentialSupplier,'Potential','#f97316']] as $s)
             <div class="text-center {{ !$loop->first ? 'ps-3' : '' }}" style="{{ !$loop->first ? 'border-left:1px solid var(--border-color)' : '' }}">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $s[2] }}">{{ $s[0] }}</div>
                 <div style="font-size:.68rem;color:var(--text-muted)">{{ $s[1] }}</div>
@@ -121,8 +121,8 @@
                             </td>
                             <td class="py-2">
                                 <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
-                                    background:{{ $s->source_type==='Local'?'#dbeafe':'#ede9fe' }};
-                                    color:{{ $s->source_type==='Local'?'#1d4ed8':'#7c3aed' }}">
+                                    background:{{ $s->source_type==='Local'?'var(--primary-light)':'#ede9fe' }};
+                                    color:{{ $s->source_type==='Local'?'var(--primary-dark)':'#7c3aed' }}">
                                     {{ $s->source_type }}
                                     @if($s->source_type==='Import' && $s->origin_country)
                                     <span style="font-size:10px">({{ $s->origin_country }})</span>
@@ -187,8 +187,8 @@
                         <div style="font-weight:700;font-size:.9rem">{{ $selectedSupplier->supplier_name }}</div>
                         <div class="d-flex gap-1 mt-1 flex-wrap">
                             <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
-                                background:{{ $selectedSupplier->source_type==='Local'?'#dbeafe':'#ede9fe' }};
-                                color:{{ $selectedSupplier->source_type==='Local'?'#1d4ed8':'#7c3aed' }}">{{ $selectedSupplier->source_type }}</span>
+                                background:{{ $selectedSupplier->source_type==='Local'?'var(--primary-light)':'#ede9fe' }};
+                                color:{{ $selectedSupplier->source_type==='Local'?'var(--primary-dark)':'#7c3aed' }}">{{ $selectedSupplier->source_type }}</span>
                             <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
                                 background:{{ $selectedSupplier->relationship_status==='Existing'?'#d1fae5':'#fff7ed' }};
                                 color:{{ $selectedSupplier->relationship_status==='Existing'?'#059669':'#ea580c' }}">{{ $selectedSupplier->relationship_status }}</span>
@@ -237,7 +237,7 @@
 
                 <div class="row g-2 mt-3 mb-3 text-center">
                     <div class="col-6">
-                        <div style="background:#eff6ff;border-radius:8px;padding:10px">
+                        <div style="background:var(--primary-soft);border-radius:8px;padding:10px">
                             <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedSupplier->total_revenue > 0 ? idrm($selectedSupplier->total_revenue) : 'Rp 0' }}</div>
                             <div style="font-size:.65rem;color:var(--text-muted)">Total Pembelian</div>
                         </div>
@@ -268,12 +268,12 @@
                 <strong style="font-size:.8rem;display:block;margin-bottom:10px">Daftar PIC</strong>
                 {{-- PIC Utama --}}
                 <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f3f4f6">
-                    <div style="width:32px;height:32px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <i class="fas fa-user" style="color:#2563eb;font-size:.65rem"></i>
+                    <div style="width:32px;height:32px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-user" style="color:var(--primary);font-size:.65rem"></i>
                     </div>
                     <div style="flex:1">
                         <div style="font-size:.8rem;font-weight:600">{{ $selectedSupplier->pic_name }}
-                            <span style="font-size:.65rem;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
+                            <span style="font-size:.65rem;background:var(--primary-light);color:var(--primary-dark);padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
                         </div>
                         @if($selectedSupplier->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $selectedSupplier->pic_position }}</div>@endif
                         @if($selectedSupplier->phone)<div style="font-size:.72rem">{{ $selectedSupplier->phone }}</div>@endif
@@ -327,8 +327,8 @@
                 <strong style="font-size:.8rem;display:block;margin-bottom:10px">Purchase Orders</strong>
                 @forelse($selectedSupplier->purchaseOrders->sortByDesc('order_date') as $po)
                 <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f9fafb">
-                    <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <i class="fas fa-file-invoice" style="font-size:.7rem;color:#2563eb"></i>
+                    <div style="width:32px;height:32px;border-radius:8px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i class="fas fa-file-invoice" style="font-size:.7rem;color:var(--primary)"></i>
                     </div>
                     <div style="flex:1;min-width:0">
                         <div style="font-size:.78rem;font-weight:600">{{ $po->po_number }}</div>
@@ -337,7 +337,7 @@
                     </div>
                     <div class="text-end" style="flex-shrink:0">
                         <div style="font-size:.75rem;font-weight:600">{{ idrm($po->total_revenue) }}</div>
-                        @php $sc = ['Done' => ['#d1fae5', '#059669'], 'In Progress' => ['#dbeafe', '#2563eb'], 'Cancelled' => ['#fee2e2', '#dc2626']][$po->status] ?? ['#f3f4f6', '#6b7280']; @endphp
+                        @php $sc = ['Done' => ['#d1fae5', '#059669'], 'In Progress' => ['var(--primary-light)', 'var(--primary)'], 'Cancelled' => ['#fee2e2', '#dc2626']][$po->status] ?? ['#f3f4f6', '#6b7280']; @endphp
                         <span style="font-size:.62rem;padding:2px 8px;border-radius:20px;font-weight:600;background:{{ $sc[0] }};color:{{ $sc[1] }}">{{ $po->status }}</span>
                     </div>
                 </div>

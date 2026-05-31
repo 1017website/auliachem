@@ -23,6 +23,7 @@ class SettingsController extends Controller
             'company_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'company_login_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'company_favicon' => 'nullable|mimes:png,jpg,jpeg,ico|max:512',
+            'theme_color' => 'nullable|in:blue,red,green,purple,orange,teal',
         ]);
 
         $fields = [
@@ -35,6 +36,7 @@ class SettingsController extends Controller
             'timezone',
             'date_format',
             'language',
+            'theme_color',
         ];
 
         foreach ($fields as $field) {

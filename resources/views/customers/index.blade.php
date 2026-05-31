@@ -110,7 +110,7 @@
                                 @if($cust->productItems && $cust->productItems->count())
                                     <div style="display:flex;flex-wrap:wrap;gap:3px">
                                         @foreach($cust->productItems as $p)
-                                            <span style="background:#eff6ff;color:#2563eb;padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
+                                            <span style="background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
                                                 {{ $p->product_name }}{{ $p->qty > 0 ? ' '.number_format($p->qty, 0, ',', '.').' '.$p->unit : ($p->unit ? ' ('.$p->unit.')' : '') }}
                                             </span>
                                         @endforeach
@@ -223,7 +223,7 @@
 
                     <div class="row g-2 mt-3 mb-3 text-center">
                         <div class="col-6">
-                            <div style="background:#eff6ff;border-radius:8px;padding:10px">
+                            <div style="background:var(--primary-soft);border-radius:8px;padding:10px">
                                 <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedCustomer->total_revenue > 0 ? idrm($selectedCustomer->total_revenue) : 'Rp 0' }}</div>
                                 <div style="font-size:.65rem;color:var(--text-muted)">Total Revenue</div>
                             </div>
@@ -236,7 +236,7 @@
                         </div>
                     </div>
                     <div class="row g-1 mb-3">
-                        @foreach([['phone','Log Call','#d1fae5','#059669',"quickActCust('Call')"],['building','Visit','#dbeafe','#2563eb',"quickActCust('Visit')"],['envelope','Email','#fef3c7','#d97706',"quickActCust('Email')"],['sticky-note','Note','#f3e8ff','#7c3aed',"quickActCust('Note')"]] as $qa)
+                        @foreach([['phone','Log Call','#d1fae5','#059669',"quickActCust('Call')"],['building','Visit','var(--primary-light)','var(--primary)',"quickActCust('Visit')"],['envelope','Email','#fef3c7','#d97706',"quickActCust('Email')"],['sticky-note','Note','#f3e8ff','#7c3aed',"quickActCust('Note')"]] as $qa)
                         <div class="col-3">
                             <div class="quick-action-btn" onclick="{{ $qa[4] }}" style="padding:8px 4px;cursor:pointer">
                                 <div class="qa-icon" style="width:28px;height:28px;background:{{ $qa[2] }}"><i class="fas fa-{{ $qa[0] }}" style="color:{{ $qa[3] }};font-size:.7rem"></i></div>
@@ -286,12 +286,12 @@
                     </div>
                     {{-- PIC Utama --}}
                     <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f3f4f6">
-                        <div style="width:32px;height:32px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                            <i class="fas fa-user" style="color:#2563eb;font-size:.65rem"></i>
+                        <div style="width:32px;height:32px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fas fa-user" style="color:var(--primary);font-size:.65rem"></i>
                         </div>
                         <div style="flex:1">
                             <div style="font-size:.8rem;font-weight:600">{{ $selectedCustomer->pic_name }}
-                                <span style="font-size:.65rem;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
+                                <span style="font-size:.65rem;background:var(--primary-light);color:var(--primary-dark);padding:1px 6px;border-radius:10px;margin-left:4px">Utama</span>
                             </div>
                             @if($selectedCustomer->pic_position)<div style="font-size:.72rem;color:var(--text-muted)">{{ $selectedCustomer->pic_position }}</div>@endif
                             @if($selectedCustomer->phone)<div style="font-size:.72rem">{{ $selectedCustomer->phone }}</div>@endif
@@ -331,8 +331,8 @@
                     </div>
                     @forelse($selectedCustomer->activities->sortByDesc('activity_at') as $act)
                     <div class="d-flex gap-2 mb-3">
-                        <div class="activity-icon" style="width:28px;height:28px;flex-shrink:0;background:{{ $act->type==='Call'?'#d1fae5':($act->type==='Visit'?'#dbeafe':'#fef3c7') }}">
-                            <span style="font-weight:700;font-size:.7rem;color:{{ $act->type==='Call'?'#059669':($act->type==='Visit'?'#2563eb':'#d97706') }}">{{ $act->type_letter }}</span>
+                        <div class="activity-icon" style="width:28px;height:28px;flex-shrink:0;background:{{ $act->type==='Call'?'#d1fae5':($act->type==='Visit'?'var(--primary-light)':'#fef3c7') }}">
+                            <span style="font-weight:700;font-size:.7rem;color:{{ $act->type==='Call'?'#059669':($act->type==='Visit'?'var(--primary)':'#d97706') }}">{{ $act->type_letter }}</span>
                         </div>
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.75rem;font-weight:600">{{ $act->subject ?: $act->type }}</div>
@@ -351,8 +351,8 @@
                     <strong style="font-size:.8rem;display:block;margin-bottom:10px">Purchase Orders</strong>
                     @forelse($selectedCustomer->purchaseOrders->sortByDesc('order_date') as $do)
                     <div class="d-flex align-items-start gap-2 mb-3 pb-2" style="border-bottom:1px solid #f9fafb">
-                        <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                            <i class="fas fa-ship" style="font-size:.7rem;color:#2563eb"></i>
+                        <div style="width:32px;height:32px;border-radius:8px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fas fa-ship" style="font-size:.7rem;color:var(--primary)"></i>
                         </div>
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.78rem;font-weight:600">{{ $do->po_number }}</div>

@@ -86,8 +86,8 @@
                             {{ $act->activity_at->format('H:i') }}<br>
                             <span style="font-size:.65rem;color:var(--text-muted);font-weight:400">{{ $act->activity_at->format('d M Y') }}</span>
                         </div>
-                        <div class="activity-icon" style="background:{{ $act->type === 'Call' ? '#d1fae5' : ($act->type === 'Visit' ? '#dbeafe' : ($act->type === 'Email' ? '#fef3c7' : '#f3f4f6')) }}">
-                            <span style="font-weight:700;font-size:.8rem;color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? '#2563eb' : ($act->type === 'Email' ? '#d97706' : '#6b7280')) }}">{{ $act->type_letter }}</span>
+                        <div class="activity-icon" style="background:{{ $act->type === 'Call' ? '#d1fae5' : ($act->type === 'Visit' ? 'var(--primary-light)' : ($act->type === 'Email' ? '#fef3c7' : '#f3f4f6')) }}">
+                            <span style="font-weight:700;font-size:.8rem;color:{{ $act->type === 'Call' ? '#059669' : ($act->type === 'Visit' ? 'var(--primary)' : ($act->type === 'Email' ? '#d97706' : '#6b7280')) }}">{{ $act->type_letter }}</span>
                         </div>
                         <div class="flex-1">
                             <div class="d-flex align-items-center justify-content-between">
@@ -101,10 +101,10 @@
                             {{-- Client info --}}
                             @php $client = $act->lead?->company_name ?? $act->customer?->company_name ?? null; @endphp
                             @if($client)
-                            <div class="mt-1" style="font-size:.75rem;color:#2563eb;font-weight:600">
+                            <div class="mt-1" style="font-size:.75rem;color:var(--primary);font-weight:600">
                                 <i class="fas fa-building me-1" style="font-size:.65rem"></i>{{ $client }}
                                 @if($act->lead)
-                                <span style="background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:10px;font-size:.65rem;margin-left:4px">
+                                <span style="background:var(--primary-light);color:var(--primary-dark);padding:1px 6px;border-radius:10px;font-size:.65rem;margin-left:4px">
                                     {{ $act->lead->pipeline_stage }}
                                 </span>
                                 @endif
@@ -176,7 +176,7 @@
                 @endif
 
                 @if($todayReminders->count())
-                <div style="font-size:.72rem;font-weight:700;color:#2563eb;margin:8px 0 6px">TODAY ({{ $todayReminders->count() }})</div>
+                <div style="font-size:.72rem;font-weight:700;color:var(--primary);margin:8px 0 6px">TODAY ({{ $todayReminders->count() }})</div>
                 @foreach($todayReminders->take(4) as $act)
                 <div class="reminder-item">
                     <div class="reminder-time">{{ $act->activity_at->format('H:i') }}</div>
@@ -214,7 +214,7 @@
             <div class="card-body p-3">
                 @php
                 $pipeColors = [
-                    'Identifying' => '#2563eb',
+                    'Identifying' => 'var(--primary)',
                     'Approaching' => '#d97706',
                     'Follow Up'   => '#7c3aed',
                     'Won/Closing' => '#059669',

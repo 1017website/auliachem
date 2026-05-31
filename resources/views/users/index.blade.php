@@ -8,7 +8,7 @@
 {{-- KPI --}}
 <div class="row g-3 mb-4">
     @foreach([
-        ['bg'=>'#eff6ff','icon'=>'fas fa-users','color'=>'#3b82f6','label'=>'Total Users','value'=>$totalUsers],
+        ['bg'=>'var(--primary-soft)','icon'=>'fas fa-users','color'=>'var(--primary-hover)','label'=>'Total Users','value'=>$totalUsers],
         ['bg'=>'#f0fdf4','icon'=>'fas fa-user-check','color'=>'#10b981','label'=>'Active','value'=>$activeUsers],
         ['bg'=>'#faf5ff','icon'=>'fas fa-user-tie','color'=>'#7c3aed','label'=>'Sales Executive','value'=>$totalSales],
         ['bg'=>'#fff7ed','icon'=>'fas fa-crown','color'=>'#f97316','label'=>'Sales Manager','value'=>$totalManager],
@@ -69,7 +69,7 @@
                 </tr>
             </thead>
             <tbody>
-                @php $avatarColors = ['#3b82f6','#10b981','#f59e0b','#f97316','#8b5cf6','#ec4899']; @endphp
+                @php $avatarColors = ['var(--primary-hover)','#10b981','#f59e0b','#f97316','#8b5cf6','#ec4899']; @endphp
                 @forelse($users as $user)
                 @php
                 $color    = $avatarColors[$loop->index % count($avatarColors)];
@@ -78,7 +78,7 @@
                 $achieved = $revenues[$user->id] ?? 0;
                 $pct      = $target > 0 ? min(100, round(($achieved / $target) * 100)) : 0;
                 $barColor = $pct >= 80 ? '#10b981' : ($pct >= 50 ? '#f59e0b' : '#ef4444');
-                $roleClass = str_contains($user->role ?? '', 'Manager') ? 'background:#faf5ff;color:#7c3aed' : (str_contains($user->role ?? '', 'Admin') ? 'background:#fff7ed;color:#c2410c' : 'background:#eff6ff;color:#2563eb');
+                $roleClass = str_contains($user->role ?? '', 'Manager') ? 'background:#faf5ff;color:#7c3aed' : (str_contains($user->role ?? '', 'Admin') ? 'background:#fff7ed;color:#c2410c' : 'background:var(--primary-soft);color:var(--primary)');
                 @endphp
                 <tr style="border-bottom:1px solid #f9fafb">
                     <td style="padding:12px 14px">

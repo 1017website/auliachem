@@ -19,7 +19,7 @@
                     </a>
                 </div>
                 <div class="d-flex gap-3 flex-wrap">
-                    @foreach([[$volumePo, 'Volume PO', '#111'], [$revenue, 'Revenue', '#2563eb'], [$grossProfit, 'Gross Profit', '#10b981']] as $s)
+                    @foreach([[$volumePo, 'Volume PO', '#111'], [$revenue, 'Revenue', 'var(--primary)'], [$grossProfit, 'Gross Profit', '#10b981']] as $s)
                         <div class="text-center {{ !$loop->first ? 'ps-3' : '' }}"
                             style="{{ !$loop->first ? 'border-left:1px solid var(--border-color)' : '' }}">
                             <div style="font-size:{{ $loop->index >= 1 ? '1rem' : '1.2rem' }};font-weight:800;color:{{ $s[2] }}">
@@ -83,7 +83,7 @@
                             <tbody>
                                 @forelse($pos as $po)
                                     @php
-                                        $sc = ['Done' => ['#d1fae5', '#059669'], 'In Progress' => ['#dbeafe', '#2563eb'], 'Cancelled' => ['#fee2e2', '#dc2626']];
+                                        $sc = ['Done' => ['#d1fae5', '#059669'], 'In Progress' => ['var(--primary-light)', 'var(--primary)'], 'Cancelled' => ['#fee2e2', '#dc2626']];
                                         $c = $sc[$po->status] ?? ['#f3f4f6', '#6b7280'];
                                     @endphp
                                     <tr id="po-row-{{ $po->id }}">

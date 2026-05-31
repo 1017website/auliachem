@@ -69,7 +69,7 @@
                                 <td>
                                     @php
                                         $stageColors = [
-                                            'Identifying' => ['bg'=>'#dbeafe','color'=>'#1d4ed8'],
+                                            'Identifying' => ['bg'=>'var(--primary-light)','color'=>'var(--primary-dark)'],
                                             'Approaching' => ['bg'=>'#fef3c7','color'=>'#b45309'],
                                             'Follow Up'   => ['bg'=>'#ede9fe','color'=>'#6d28d9'],
                                             'Won'         => ['bg'=>'#d1fae5','color'=>'#065f46'],

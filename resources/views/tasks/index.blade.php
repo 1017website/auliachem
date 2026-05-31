@@ -17,18 +17,18 @@
     .task-card:hover { box-shadow:0 2px 8px rgba(0,0,0,.08); }
     .task-card.overdue { border-left:3px solid #ef4444; }
     .task-card.done    { opacity:.65; }
-    .task-card.today   { border-left:3px solid #3b82f6; }
+    .task-card.today   { border-left:3px solid var(--primary-hover); }
 
     .badge-type { font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600; }
     .type-call  { background:#dcfce7;color:#16a34a; }
-    .type-visit { background:#dbeafe;color:#2563eb; }
+    .type-visit { background:var(--primary-light);color:var(--primary); }
     .type-email { background:#fef9c3;color:#854d0e; }
     .type-note  { background:#f3e8ff;color:#7c3aed; }
     .type-task  { background:#fee2e2;color:#dc2626; }
 
     .badge-status { font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600; }
     .status-done    { background:#dcfce7;color:#16a34a; }
-    .status-planned { background:#dbeafe;color:#2563eb; }
+    .status-planned { background:var(--primary-light);color:var(--primary); }
     .status-pending { background:#fef9c3;color:#854d0e; }
     .status-overdue { background:#fee2e2;color:#dc2626; }
 
@@ -53,7 +53,7 @@
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="kpi-card d-flex align-items-center gap-3">
-            <div class="kpi-icon" style="background:#eff6ff"><i class="fas fa-calendar-day" style="color:#3b82f6"></i></div>
+            <div class="kpi-icon" style="background:var(--primary-soft)"><i class="fas fa-calendar-day" style="color:var(--primary-hover)"></i></div>
             <div>
                 <div class="kpi-label">Today</div>
                 <div class="kpi-value">{{ $totalToday }}</div>

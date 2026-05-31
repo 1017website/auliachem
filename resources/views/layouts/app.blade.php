@@ -44,7 +44,7 @@
 
         .select2-container--default.select2-container--open .select2-selection--single,
         .select2-container--default.select2-container--focus .select2-selection--single {
-            border-color: #2563eb !important;
+            border-color: var(--primary) !important;
             box-shadow: 0 0 0 3px rgba(37, 99, 235, .1) !important;
             outline: none !important;
         }
@@ -71,7 +71,7 @@
         }
 
         .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
-            border-color: transparent transparent #2563eb transparent !important;
+            border-color: transparent transparent var(--primary) transparent !important;
         }
 
         /* Multiple select2 */
@@ -83,15 +83,15 @@
         }
 
         .select2-container--default.select2-container--focus .select2-selection--multiple {
-            border-color: #2563eb !important;
+            border-color: var(--primary) !important;
             box-shadow: 0 0 0 3px rgba(37, 99, 235, .1) !important;
             outline: none !important;
         }
 
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background: #eff6ff !important;
+            background: var(--primary-soft) !important;
             border: 1px solid #bfdbfe !important;
-            color: #2563eb !important;
+            color: var(--primary) !important;
             border-radius: 20px !important;
             font-size: .75rem;
             padding: 1px 8px !important;
@@ -103,7 +103,7 @@
         }
 
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-            color: #2563eb !important;
+            color: var(--primary) !important;
         }
 
         /* Dropdown */
@@ -123,7 +123,7 @@
         }
 
         .select2-container--default .select2-search--dropdown .select2-search__field:focus {
-            border-color: #2563eb !important;
+            border-color: var(--primary) !important;
             outline: none;
         }
 
@@ -134,8 +134,8 @@
         }
 
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background: #eff6ff !important;
-            color: #2563eb !important;
+            background: var(--primary-soft) !important;
+            color: var(--primary) !important;
         }
 
         .select2-container--default .select2-results__option[aria-selected=true] {
@@ -161,12 +161,12 @@
             --adp-background-color: #fff;
             --adp-color: #374151;
             --adp-color-secondary: #9ca3af;
-            --adp-accent-color: #2563eb;
+            --adp-accent-color: var(--primary);
             --adp-day-name-color: #9ca3af;
             --adp-cell-border-radius: 8px;
-            --adp-cell-background-color-selected: #2563eb;
-            --adp-cell-background-color-selected-hover: #1d4ed8;
-            --adp-cell-background-color-in-range: #dbeafe;
+            --adp-cell-background-color-selected: var(--primary);
+            --adp-cell-background-color-selected-hover: var(--primary-dark);
+            --adp-cell-background-color-in-range: var(--primary-light);
             --adp-cell-background-color-in-range-hover: #bfdbfe;
             --adp-day-cell-height: 34px;
             --adp-nav-color-secondary: #6b7280;
@@ -183,7 +183,7 @@
         .modal-body .air-datepicker.-active- { position: absolute; }
 
         .air-datepicker-nav {
-            background: #0f1d35;
+            background: var(--sidebar-bg);
             border-bottom: none;
             border-radius: 11px 11px 0 0;
             padding: 6px 8px;
@@ -212,7 +212,7 @@
         }
 
         .air-datepicker-cell.-current- {
-            color: #2563eb;
+            color: var(--primary);
             font-weight: 600;
         }
 
@@ -226,13 +226,13 @@
 
         /* Tombol "Hari ini" / "Sekarang" */
         .air-datepicker-button {
-            color: #2563eb;
+            color: var(--primary);
             font-size: .78rem;
             font-weight: 600;
         }
 
         .air-datepicker-button:hover {
-            background: #eff6ff;
+            background: var(--primary-soft);
         }
 
         /* Input date wrapper icon */
@@ -256,7 +256,7 @@
         }
 
         .date-input-wrap > input:focus {
-            border-color: #2563eb;
+            border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
         }
 
@@ -602,7 +602,7 @@
         .sri-title {
             font-size: 13px;
             font-weight: 600;
-            color: #0f1d35;
+            color: var(--sidebar-bg);
         }
 
         .sri-sub {
@@ -714,8 +714,8 @@
         }
 
         .badge-cold {
-            background: #dbeafe;
-            color: #2563eb;
+            background: var(--primary-light);
+            color: var(--primary);
             font-size: .68rem;
             font-weight: 600;
             padding: 3px 9px;
@@ -763,8 +763,8 @@
         }
 
         .badge-identifying {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: var(--primary-light);
+            color: var(--primary-dark);
         }
 
         .badge-approaching {
@@ -803,8 +803,8 @@
         }
 
         .badge-planned {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: var(--primary-light);
+            color: var(--primary-dark);
         }
 
         .badge-overdue {
@@ -813,8 +813,8 @@
         }
 
         .badge-today {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: var(--primary-light);
+            color: var(--primary-dark);
         }
 
         .badge-tomorrow {
@@ -838,8 +838,8 @@
         }
 
         .kanban-identifying {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: var(--primary-light);
+            color: var(--primary-dark);
         }
 
         .kanban-approaching {
@@ -1115,8 +1115,8 @@
         }
 
         .btn-primary:hover {
-            background: #1d4ed8;
-            border-color: #1d4ed8;
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
         }
 
         .btn-sm {
@@ -1167,6 +1167,34 @@
     </style>
 
     @stack('styles')
+
+    {{-- ===== DYNAMIC THEME COLOR (dari Settings) ===== --}}
+    @php
+        $themeColor = \App\Models\Setting::get('theme_color', 'blue');
+        $themePalettes = [
+            'blue'   => ['primary' => '#2563eb', 'dark' => '#1d4ed8', 'hover' => '#3b82f6', 'light' => '#dbeafe', 'soft' => '#eff6ff', 'sidebar' => '#0f1d35'],
+            'red'    => ['primary' => '#dc2626', 'dark' => '#b91c1c', 'hover' => '#ef4444', 'light' => '#fee2e2', 'soft' => '#fef2f2', 'sidebar' => '#2a0f12'],
+            'green'  => ['primary' => '#059669', 'dark' => '#047857', 'hover' => '#10b981', 'light' => '#d1fae5', 'soft' => '#ecfdf5', 'sidebar' => '#0c1f1a'],
+            'purple' => ['primary' => '#7c3aed', 'dark' => '#6d28d9', 'hover' => '#8b5cf6', 'light' => '#ede9fe', 'soft' => '#f5f3ff', 'sidebar' => '#1e1335'],
+            'orange' => ['primary' => '#ea580c', 'dark' => '#c2410c', 'hover' => '#f97316', 'light' => '#ffedd5', 'soft' => '#fff7ed', 'sidebar' => '#2a160a'],
+            'teal'   => ['primary' => '#0d9488', 'dark' => '#0f766e', 'hover' => '#14b8a6', 'light' => '#ccfbf1', 'soft' => '#f0fdfa', 'sidebar' => '#0a1f1d'],
+        ];
+        $pal = $themePalettes[$themeColor] ?? $themePalettes['blue'];
+    @endphp
+    <style>
+        :root {
+            --primary: {{ $pal['primary'] }};
+            --primary-dark: {{ $pal['dark'] }};
+            --primary-hover: {{ $pal['hover'] }};
+            --primary-light: {{ $pal['light'] }};
+            --primary-soft: {{ $pal['soft'] }};
+            --sidebar-bg: {{ $pal['sidebar'] }};
+            --info-color: {{ $pal['hover'] }};
+            --adp-accent-color: {{ $pal['primary'] }};
+            --adp-cell-background-color-selected: {{ $pal['primary'] }};
+            --adp-cell-background-color-selected-hover: {{ $pal['dark'] }};
+        }
+    </style>
 </head>
 
 <body>
@@ -1281,10 +1309,10 @@
                         </div>
                         <div style="padding:10px 16px;border-top:1px solid #f0f0f0;display:flex;gap:8px;flex-wrap:wrap">
                             <span style="font-size:11px;color:#9ca3af">Quick:</span>
-                            <a href="{{ route('leads.index') }}" style="font-size:11px;color:#3b82f6;text-decoration:none">Leads</a>
-                            <a href="{{ route('customers.index') }}" style="font-size:11px;color:#3b82f6;text-decoration:none">Customers</a>
-                            <a href="{{ route('pipeline.index') }}" style="font-size:11px;color:#3b82f6;text-decoration:none">Pipeline</a>
-                            <a href="{{ route('tasks.index') }}" style="font-size:11px;color:#3b82f6;text-decoration:none">Tasks</a>
+                            <a href="{{ route('leads.index') }}" style="font-size:11px;color:var(--primary-hover);text-decoration:none">Leads</a>
+                            <a href="{{ route('customers.index') }}" style="font-size:11px;color:var(--primary-hover);text-decoration:none">Customers</a>
+                            <a href="{{ route('pipeline.index') }}" style="font-size:11px;color:var(--primary-hover);text-decoration:none">Pipeline</a>
+                            <a href="{{ route('tasks.index') }}" style="font-size:11px;color:var(--primary-hover);text-decoration:none">Tasks</a>
                         </div>
                     </div>
                 </div>
@@ -1298,8 +1326,8 @@
                     {{-- Notification dropdown --}}
                     <div id="notifDrop" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:320px;background:#fff;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 4px 20px rgba(0,0,0,.12);z-index:999;overflow:hidden">
                         <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
-                            <span style="font-size:13px;font-weight:700;color:#0f1d35">Notifications</span>
-                            <button onclick="markAllRead()" style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0">Mark all read</button>
+                            <span style="font-size:13px;font-weight:700;color:var(--sidebar-bg)">Notifications</span>
+                            <button onclick="markAllRead()" style="font-size:11px;color:var(--primary-hover);background:none;border:none;cursor:pointer;padding:0">Mark all read</button>
                         </div>
                         <div style="max-height:320px;overflow-y:auto" id="notifList">
                             @php
@@ -1341,7 +1369,7 @@
                                     <i class="fas fa-{{ $icon }}" style="font-size:13px;color:{{ $color }}"></i>
                                 </div>
                                 <div style="flex:1;min-width:0">
-                                    <div style="font-size:12px;font-weight:600;color:#0f1d35">{{ $title }}</div>
+                                    <div style="font-size:12px;font-weight:600;color:var(--sidebar-bg)">{{ $title }}</div>
                                     <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.4">{{ $act->subject }} — {{ $who }}</div>
                                     <div style="font-size:10px;color:#9ca3af;margin-top:4px">{{ $diff }}</div>
                                 </div>
@@ -1351,11 +1379,11 @@
 
                             @foreach($recentLeads as $lead)
                             <div class="notif-item" style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid #f9fafb;cursor:pointer;background:#fff" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
-                                <div style="width:34px;height:34px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                    <i class="fas fa-user-plus" style="font-size:13px;color:#2563eb"></i>
+                                <div style="width:34px;height:34px;border-radius:50%;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <i class="fas fa-user-plus" style="font-size:13px;color:var(--primary)"></i>
                                 </div>
                                 <div style="flex:1;min-width:0">
-                                    <div style="font-size:12px;font-weight:500;color:#0f1d35">Lead Baru</div>
+                                    <div style="font-size:12px;font-weight:500;color:var(--sidebar-bg)">Lead Baru</div>
                                     <div style="font-size:11px;color:#6b7280;margin-top:2px">{{ $lead->company_name }} — {{ $lead->pipeline_stage }}</div>
                                     <div style="font-size:10px;color:#9ca3af;margin-top:4px">{{ $lead->created_at->diffForHumans() }}</div>
                                 </div>
@@ -1363,7 +1391,7 @@
                             @endforeach
                             @endif
                         </div>
-                        <a href="{{ route('tasks.index') }}" style="display:block;text-align:center;padding:12px;font-size:12px;color:#3b82f6;text-decoration:none;border-top:1px solid #f0f0f0" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                        <a href="{{ route('tasks.index') }}" style="display:block;text-align:center;padding:12px;font-size:12px;color:var(--primary-hover);text-decoration:none;border-top:1px solid #f0f0f0" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
                             Lihat semua notifikasi →
                         </a>
                     </div>
@@ -1386,9 +1414,9 @@
                             <div style="display:flex;align-items:center;gap:10px">
                                 <div class="user-avatar" style="width:38px;height:38px;font-size:.8rem">{{ auth()->user()->avatar_initials }}</div>
                                 <div>
-                                    <div style="font-size:13px;font-weight:600;color:#0f1d35">{{ auth()->user()->name }}</div>
+                                    <div style="font-size:13px;font-weight:600;color:var(--sidebar-bg)">{{ auth()->user()->name }}</div>
                                     <div style="font-size:11px;color:#6b7280">{{ auth()->user()->email }}</div>
-                                    <span style="font-size:10px;font-weight:600;padding:1px 8px;border-radius:20px;background:#eff6ff;color:#2563eb;display:inline-block;margin-top:3px">{{ auth()->user()->role }}</span>
+                                    <span style="font-size:10px;font-weight:600;padding:1px 8px;border-radius:20px;background:var(--primary-soft);color:var(--primary);display:inline-block;margin-top:3px">{{ auth()->user()->role }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1534,11 +1562,11 @@
                 <i class="fas fa-${n.icon}" style="font-size:13px;color:${n.icon_color}"></i>
             </div>
             <div style="flex:1;min-width:0">
-                <div style="font-size:12px;font-weight:${n.is_read ? '500' : '600'};color:#0f1d35">${n.title}</div>
+                <div style="font-size:12px;font-weight:${n.is_read ? '500' : '600'};color:var(--sidebar-bg)">${n.title}</div>
                 <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.4">${n.message}</div>
                 <div style="font-size:10px;color:#9ca3af;margin-top:3px">${n.time}</div>
             </div>
-            ${!n.is_read ? '<div style="width:7px;height:7px;border-radius:50%;background:#3b82f6;flex-shrink:0;margin-top:4px"></div>' : ''}
+            ${!n.is_read ? '<div style="width:7px;height:7px;border-radius:50%;background:var(--primary-hover);flex-shrink:0;margin-top:4px"></div>' : ''}
         </div>
     `).join('');
         }
@@ -1661,7 +1689,7 @@
                 vendor: 'handshake'
             };
             const colors = {
-                lead: '#eff6ff:#2563eb',
+                lead: 'var(--primary-soft):var(--primary)',
                 customer: '#f0fdf4:#16a34a',
                 vendor: '#faf5ff:#7c3aed'
             };

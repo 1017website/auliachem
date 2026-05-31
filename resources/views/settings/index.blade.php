@@ -32,8 +32,8 @@
         }
 
         .sn-item.active {
-            background: #eff6ff;
-            color: #2563eb;
+            background: var(--primary-soft);
+            color: var(--primary);
             font-weight: 600;
         }
 
@@ -106,7 +106,7 @@
         }
 
         input:checked+.toggle-slider {
-            background: #3b82f6;
+            background: var(--primary-hover);
         }
 
         input:checked+.toggle-slider:before {
@@ -211,11 +211,11 @@
                             <div class="upload-area" id="logoUploadArea"
                                 onclick="document.getElementById('logoInput').click()"
                                 style="border:2px dashed #cbd5e1;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s"
-                                onmouseover="this.style.borderColor='#2563eb'"
+                                onmouseover="this.style.borderColor='var(--primary)'"
                                 onmouseout="this.style.borderColor='#cbd5e1'">
                                 <i class="fas fa-image" style="font-size:1.5rem;color:#9ca3af"></i>
                                 <div style="font-size:12px;color:#6b7280;margin-top:8px">Klik untuk upload logo baru</div>
-                                <div id="logoFileName" style="font-size:11px;color:#2563eb;margin-top:4px"></div>
+                                <div id="logoFileName" style="font-size:11px;color:var(--primary);margin-top:4px"></div>
                             </div>
                             <input type="file" id="logoInput" name="company_logo" accept="image/*" style="display:none"
                                 onchange="previewFile(this,'logoFileName','logoPreview')">
@@ -245,11 +245,11 @@
                             @endif
                             <div class="upload-area" onclick="document.getElementById('loginLogoInput').click()"
                                 style="border:2px dashed #cbd5e1;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s"
-                                onmouseover="this.style.borderColor='#2563eb'"
+                                onmouseover="this.style.borderColor='var(--primary)'"
                                 onmouseout="this.style.borderColor='#cbd5e1'">
                                 <i class="fas fa-sign-in-alt" style="font-size:1.5rem;color:#9ca3af"></i>
                                 <div style="font-size:12px;color:#6b7280;margin-top:8px">Klik untuk upload logo login</div>
-                                <div id="loginLogoFileName" style="font-size:11px;color:#2563eb;margin-top:4px"></div>
+                                <div id="loginLogoFileName" style="font-size:11px;color:var(--primary);margin-top:4px"></div>
                             </div>
                             <input type="file" id="loginLogoInput" name="company_login_logo" accept="image/*"
                                 style="display:none" onchange="previewFile(this,'loginLogoFileName','loginLogoPreview')">
@@ -279,18 +279,46 @@
                             <div class="upload-area" id="faviconUploadArea"
                                 onclick="document.getElementById('faviconInput').click()"
                                 style="border:2px dashed #cbd5e1;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s"
-                                onmouseover="this.style.borderColor='#2563eb'"
+                                onmouseover="this.style.borderColor='var(--primary)'"
                                 onmouseout="this.style.borderColor='#cbd5e1'">
                                 <i class="fas fa-star" style="font-size:1.5rem;color:#9ca3af"></i>
                                 <div style="font-size:12px;color:#6b7280;margin-top:8px">Klik untuk upload favicon baru
                                 </div>
-                                <div id="faviconFileName" style="font-size:11px;color:#2563eb;margin-top:4px"></div>
+                                <div id="faviconFileName" style="font-size:11px;color:var(--primary);margin-top:4px"></div>
                             </div>
                             <input type="file" id="faviconInput" name="company_favicon" accept="image/*,.ico"
                                 style="display:none" onchange="previewFile(this,'faviconFileName','faviconPreview')">
                             <img id="faviconPreview" src="" alt=""
                                 style="display:none;margin-top:8px;width:32px;height:32px;object-fit:contain;border:1px solid #e5e7eb">
                         </div>
+                    </div>
+
+                    {{-- Tema Warna --}}
+                    <div class="s-divider"></div>
+                    <div class="s-title" style="margin-bottom:16px">Tema Warna</div>
+                    <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:14px">
+                        Pilih warna utama aplikasi. Berguna untuk membedakan tampilan antar perusahaan.
+                    </p>
+                    @php
+                        $currentTheme = $settings['theme_color'] ?? 'blue';
+                        $themeOptions = [
+                            'blue'   => ['label' => 'Biru',   'color' => '#2563eb'],
+                            'red'    => ['label' => 'Merah',  'color' => '#dc2626'],
+                            'green'  => ['label' => 'Hijau',  'color' => '#059669'],
+                            'purple' => ['label' => 'Ungu',   'color' => '#7c3aed'],
+                            'orange' => ['label' => 'Oranye', 'color' => '#ea580c'],
+                            'teal'   => ['label' => 'Teal',   'color' => '#0d9488'],
+                        ];
+                    @endphp
+                    <div class="d-flex flex-wrap gap-3" style="margin-bottom:8px">
+                        @foreach($themeOptions as $val => $opt)
+                        <label style="cursor:pointer;text-align:center">
+                            <input type="radio" name="theme_color" value="{{ $val }}" {{ $currentTheme === $val ? 'checked' : '' }}
+                                style="display:none" onchange="this.closest('div').querySelectorAll('.theme-swatch').forEach(s=>s.style.outline='none');this.nextElementSibling.style.outline='3px solid #111';">
+                            <div class="theme-swatch" style="width:44px;height:44px;border-radius:10px;background:{{ $opt['color'] }};margin:0 auto;outline:{{ $currentTheme === $val ? '3px solid #111' : 'none' }};outline-offset:2px;transition:outline .1s"></div>
+                            <div style="font-size:.72rem;margin-top:6px;color:#374151">{{ $opt['label'] }}</div>
+                        </label>
+                        @endforeach
                     </div>
 
                     <div class="s-divider"></div>
@@ -429,7 +457,7 @@
                 <div class="s-desc">Tahapan pipeline penjualan yang aktif di sistem.</div>
                 @php
                     $stages = [
-                        ['Identifying', '#3b82f6', '10%'],
+                        ['Identifying', 'var(--primary-hover)', '10%'],
                         ['Approaching', '#10b981', '30%'],
                         ['Follow Up', '#f59e0b', '50%'],
                         ['Closing', '#f97316', '80%'],

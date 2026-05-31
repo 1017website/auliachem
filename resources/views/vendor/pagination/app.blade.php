@@ -49,10 +49,10 @@
         text-decoration: none; transition: all .15s ease;
     }
     .app-page > a:hover {
-        background: #eff6ff; border-color: #bfdbfe; color: #2563eb;
+        background: var(--primary-soft); border-color: var(--primary-light); color: var(--primary);
     }
     .app-page.active > span {
-        background: #2563eb; border-color: #2563eb; color: #fff;
+        background: var(--primary); border-color: var(--primary); color: #fff;
         box-shadow: 0 2px 6px rgba(37,99,235,.25);
     }
     .app-page.disabled > span {
