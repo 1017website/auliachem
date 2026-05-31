@@ -129,6 +129,7 @@
         .alert-success { background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a; }
 
         @media (max-width:900px) { .left-panel { display:none; } .right-panel { width:100%; } }
+        @media (max-width:480px) { .right-panel { padding:24px 18px; } }
     </style>
 </head>
 <body>

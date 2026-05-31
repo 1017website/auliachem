@@ -1078,6 +1078,131 @@
             display: none;
         }
 
+        /* ===== HAMBURGER (mobile only) ===== */
+        .mobile-menu-btn {
+            display: none;
+            width: 38px;
+            height: 38px;
+            background: #f9fafb;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #374151;
+            font-size: 1rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        /* Overlay gelap saat sidebar terbuka di mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 1050;
+        }
+
+        /* ===== RESPONSIVE: TABLET ===== */
+        @media (max-width: 992px) {
+            .topbar-search input {
+                width: 150px;
+            }
+        }
+
+        /* ===== RESPONSIVE: MOBILE ===== */
+        @media (max-width: 768px) {
+            /* Sidebar jadi off-canvas (slide dari kiri) */
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width) !important;
+                box-shadow: 4px 0 24px rgba(0, 0, 0, .25);
+                transition: transform .25s ease;
+                z-index: 1060;   /* harus di atas overlay (1050) agar menu bisa diklik */
+            }
+            body.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+            /* Saat mobile, brand-text & menu selalu tampil penuh (abaikan collapsed) */
+            body.sidebar-collapsed .sidebar {
+                width: var(--sidebar-width) !important;
+            }
+            body.sidebar-collapsed .sidebar-brand .brand-text,
+            body.sidebar-collapsed .sidebar-section,
+            body.sidebar-collapsed .sidebar-item span,
+            body.sidebar-collapsed .sidebar-collapse-btn span {
+                display: inline;
+            }
+
+            /* Main full-width, tidak ada margin sidebar */
+            .main-wrapper,
+            body.sidebar-collapsed .main-wrapper {
+                margin-left: 0 !important;
+            }
+
+            /* Tampilkan hamburger & overlay */
+            .mobile-menu-btn {
+                display: flex;
+            }
+            body.sidebar-open .sidebar-overlay {
+                display: block;
+            }
+
+            /* Tombol collapse desktop disembunyikan di mobile */
+            .sidebar-footer {
+                display: none;
+            }
+
+            /* Topbar lebih ringkas */
+            .topbar {
+                padding: 0 14px;
+            }
+            .topbar-title h5 {
+                font-size: .95rem;
+            }
+            .topbar-title p {
+                display: none;
+            }
+            .topbar-right {
+                gap: 10px;
+            }
+            /* Sembunyikan search bar (akses lewat menu), hemat ruang */
+            .topbar-search {
+                display: none;
+            }
+            /* Sembunyikan teks nama user, sisakan avatar */
+            .user-info {
+                display: none !important;
+            }
+
+            /* Konten padding lebih kecil */
+            .main-content {
+                padding: 14px !important;
+            }
+
+            /* Tabel bisa di-scroll horizontal */
+            .table-responsive,
+            .card .table {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Modal lebih lega di layar kecil */
+            .modal-dialog {
+                margin: 10px;
+            }
+            .modal-lg,
+            .modal-dialog {
+                max-width: calc(100% - 20px);
+            }
+            /* Form 2 kolom jadi 1 kolom di modal sempit */
+            .modal .row > [class*="col-md-"] {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+
         /* MODALS */
         .modal-header {
             border-bottom: 1px solid var(--border-color);
@@ -1199,6 +1324,9 @@
 
 <body>
 
+    <!-- Overlay untuk sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <a href="{{ route('dashboard') }}" class="sidebar-brand">
@@ -1291,9 +1419,14 @@
     <div class="main-wrapper" id="mainWrapper">
         <!-- TOPBAR -->
         <header class="topbar">
-            <div class="topbar-title">
-                <h5>@yield('page-title', 'Dashboard')</h5>
-                <p>@yield('page-subtitle', '')</p>
+            <div style="display:flex;align-items:center;min-width:0">
+                <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-title">
+                    <h5>@yield('page-title', 'Dashboard')</h5>
+                    <p>@yield('page-subtitle', '')</p>
+                </div>
             </div>
             <div class="topbar-right">
 
@@ -1504,6 +1637,24 @@
             const icon = document.getElementById('collapseIcon');
             icon.className = document.body.classList.contains('sidebar-collapsed') ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
         }
+
+        // ── Sidebar mobile (off-canvas) ──
+        function toggleMobileSidebar() {
+            document.body.classList.toggle('sidebar-open');
+        }
+        function closeMobileSidebar() {
+            document.body.classList.remove('sidebar-open');
+        }
+        // Tutup sidebar mobile saat salah satu menu diklik
+        document.querySelectorAll('#sidebar .sidebar-item').forEach(function (item) {
+            item.addEventListener('click', function () {
+                if (window.innerWidth <= 768) closeMobileSidebar();
+            });
+        });
+        // Reset state saat resize ke desktop
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 768) document.body.classList.remove('sidebar-open');
+        });
 
         // ── Close all dropdowns when click outside ──
         document.addEventListener('click', function(e) {
