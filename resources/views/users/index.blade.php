@@ -58,6 +58,7 @@
         <table class="table mb-0" style="font-size:13px">
             <thead>
                 <tr style="background:#f9fafb">
+                    <th style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid #f0f0f0">No.</th>
                     <th style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid #f0f0f0">User</th>
                     <th style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid #f0f0f0">Role</th>
                     <th style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid #f0f0f0">Contact</th>
@@ -81,6 +82,7 @@
                 $roleClass = str_contains($user->role ?? '', 'Manager') ? 'background:#faf5ff;color:#7c3aed' : (str_contains($user->role ?? '', 'Admin') ? 'background:#fff7ed;color:#c2410c' : 'background:var(--primary-soft);color:var(--primary)');
                 @endphp
                 <tr style="border-bottom:1px solid #f9fafb">
+                    <td style="padding:12px 14px;color:#9ca3af;font-size:.75rem">{{ $users->firstItem() + $loop->index }}</td>
                     <td style="padding:12px 14px">
                         <div class="d-flex align-items-center gap-3">
                             <div style="width:36px;height:36px;border-radius:50%;background:{{ $color }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">{{ $initials }}</div>
@@ -133,7 +135,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center py-4" style="color:#9ca3af">
+                    <td colspan="9" class="text-center py-4" style="color:#9ca3af">
                         <i class="fas fa-users" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.2"></i>
                         Tidak ada user ditemukan
                     </td>

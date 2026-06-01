@@ -44,6 +44,7 @@
                 <table class="table crm-table mb-0">
                     <thead>
                         <tr>
+                            <th>No.</th>
                             <th>Company</th>
                             <th>PIC / Jabatan</th>
                             <th>Pipeline Stage</th>
@@ -54,8 +55,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($leads as $lead)
+                        @forelse($leads as $i => $lead)
                             <tr>
+                                <td style="color:#9ca3af;font-size:.75rem">{{ $leads->firstItem() + $i }}</td>
                                 <td>
                                     <a href="{{ route('leads.show', $lead) }}"
                                         style="font-weight:600;color:#111;text-decoration:none">{{ $lead->company_name }}</a>
@@ -126,7 +128,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">Tidak ada data leads.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">Tidak ada data leads.</td>
                             </tr>
                         @endforelse
                     </tbody>

@@ -67,6 +67,7 @@
                             <thead style="background:#f8f9fa">
                                 <tr>
                                     <th class="px-3 py-2" style="width:28px"></th>
+                                    <th class="px-3 py-2">No.</th>
                                     <th class="px-3 py-2">No. PO</th>
                                     <th class="py-2">Customer</th>
                                     <th class="py-2">Supplier</th>
@@ -81,7 +82,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($pos as $po)
+                                @forelse($pos as $i => $po)
                                     @php
                                         $sc = ['Done' => ['#d1fae5', '#059669'], 'In Progress' => ['var(--primary-light)', 'var(--primary)'], 'Cancelled' => ['#fee2e2', '#dc2626']];
                                         $c = $sc[$po->status] ?? ['#f3f4f6', '#6b7280'];
@@ -93,6 +94,7 @@
                                                 <i class="fas fa-chevron-right" style="font-size:10px;transition:.2s"></i>
                                             </button>
                                         </td>
+                                        <td class="px-3 py-2" style="color:#9ca3af;font-size:.75rem">{{ $pos->firstItem() + $i }}</td>
                                         <td class="px-3 py-2" style="font-weight:700;color:var(--primary)">{{ $po->po_number }}</td>
                                         <td class="py-2" style="font-size:12px">{{ $po->customer?->company_name ?? '-' }}</td>
                                         <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->supplier?->supplier_name ?? '-' }}</td>
@@ -121,7 +123,7 @@
                                     {{-- Detail row (collapsed) --}}
                                     <tr id="po-detail-{{ $po->id }}" style="display:none;background:#f8faff">
                                         <td></td>
-                                        <td colspan="11" class="px-3 py-2">
+                                        <td colspan="13" class="px-3 py-2">
                                             <div style="font-size:11px;font-weight:600;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">
                                                 Detail Item — {{ $po->po_number }}
                                                 @if($po->notes) <span style="font-weight:400;color:#9ca3af;margin-left:8px"><i class="fas fa-sticky-note me-1"></i>{{ $po->notes }}</span> @endif
@@ -163,7 +165,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="11" class="text-center py-4" style="color:#9ca3af">Belum ada data PO pada
+                                        <td colspan="13" class="text-center py-4" style="color:#9ca3af">Belum ada data PO pada
                                             periode ini</td>
                                     </tr>
                                 @endforelse

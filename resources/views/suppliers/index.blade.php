@@ -69,6 +69,7 @@
                 <table class="table table-hover mb-0" style="font-size:13px">
                     <thead style="background:#f8f9fa">
                         <tr>
+                            <th class="px-3 py-2">No.</th>
                             <th class="px-3 py-2">Supplier</th>
                             <th class="py-2">PIC</th>
                             <th class="py-2">Phone</th>
@@ -82,8 +83,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($suppliers as $s)
+                        @forelse($suppliers as $i => $s)
                         <tr>
+                            <td class="px-3 py-2" style="color:#9ca3af;font-size:.75rem">{{ $suppliers->firstItem() + $i }}</td>
                             <td class="px-3 py-2">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="user-avatar" style="width:30px;height:30px;font-size:.65rem;border-radius:6px;flex-shrink:0">{{ $s->logo_initials }}</div>
@@ -163,7 +165,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="10" class="text-center py-4" style="color:#9ca3af">Belum ada data supplier</td></tr>
+                        <tr><td colspan="11" class="text-center py-4" style="color:#9ca3af">Belum ada data supplier</td></tr>
                         @endforelse
                     </tbody>
                 </table>
