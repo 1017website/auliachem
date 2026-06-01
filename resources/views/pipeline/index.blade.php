@@ -95,7 +95,7 @@
                     </div>
                     <span class="badge" style="background:rgba(0,0,0,.15);font-size:.65rem">{{ $leads->count() }}</span>
                 </div>
-                <div class="kanban-body kanban-drop-zone" id="zone-{{ Str::slug($stageName) }}" data-stage="{{ $stageName }}" style="min-height:300px">
+                <div class="kanban-body kanban-drop-zone" id="zone-{{ Str::slug($stageName) }}" data-stage="{{ $stageName }}" style="min-height:300px;max-height:calc(100vh - 340px);overflow-y:auto;padding-right:4px">
                     @php $stageValue = $leads->sum('potensi_revenue'); @endphp
                     <div style="font-size:.72rem;font-weight:700;color:#374151;margin-bottom:8px;padding:4px 0;border-bottom:1px solid #f0f0f0">
                         {{ idrm($stageValue) }} · {{ $leads->count() }} leads
@@ -105,7 +105,7 @@
                     <div class="kanban-card" draggable="true"
                         data-id="{{ $lead->id }}"
                         data-stage="{{ $lead->pipeline_stage }}"
-                        data-sales="{{ $lead->sales_user_id }}"
+                        data-sales="{{ $lead->user_id }}"
                         onclick="window.location='{{ route('leads.show', $lead) }}'">
                         <div class="kc-company">{{ $lead->company_name }}</div>
                         <div class="kc-pic" style="font-size:.7rem">
@@ -148,7 +148,9 @@
         <div class="card">
             <div class="card-header">Pipeline Summary</div>
             <div class="card-body p-3">
-                <canvas id="pipelinePie" height="150"></canvas>
+                <div style="height:180px;position:relative">
+                    <canvas id="pipelinePie"></canvas>
+                </div>
                 <div class="mt-3">
                     @foreach($pipeline as $sn => $leads)
                     @php $colors = ['Identifying'=>'var(--primary-hover)','Approaching'=>'#10b981','Follow Up'=>'#f59e0b','Won'=>'#8b5cf6','Maintaining'=>'#6366f1']; @endphp
@@ -157,7 +159,7 @@
                             <div style="width:8px;height:8px;border-radius:2px;background:{{ $colors[$sn] ?? '#999' }}"></div>
                             <span style="font-size:.75rem">{{ $sn === 'Won' ? 'Won/Closing' : $sn }} ({{ $leads->count() }})</span>
                         </div>
-                        <span style="font-size:.75rem;font-weight:600">{{ idrm($leads->sum('potensi_revenue')) }}</span>
+                        <span style="font-size:.75rem;font-weight:600">{{ idrm($stageRevenue[$sn] ?? 0) }}</span>
                     </div>
                     @endforeach
                 </div>
@@ -167,9 +169,11 @@
 
     <div class="col-lg-5">
         <div class="card">
-            <div class="card-header">Pipeline Trend (Expected Revenue per Bulan)</div>
+            <div class="card-header">Pipeline Trend (PO Revenue per Bulan)</div>
             <div class="card-body p-3">
-                <canvas id="pipelineTrend" height="180"></canvas>
+                <div style="height:280px;position:relative">
+                    <canvas id="pipelineTrend"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -205,38 +209,21 @@
 @endsection
 
 @push('scripts')
-@php
-$chartLabels = array_keys($pipeline);
-$chartValues = array_values(array_map(fn($l) => (float)($l->sum('potensi_revenue') / 1000000), $pipeline));
-
-// Trend: expected revenue per bulan (6 bulan terakhir) dari DB
-$trendLabels = [];
-$trendData = [];
-for ($i = 5; $i >= 0; $i--) {
-$month = now()->subMonths($i);
-$trendLabels[] = $month->format('M Y');
-$trendData[] = (float)(\App\Models\Lead::whereYear('created_at', $month->year)
-->whereMonth('created_at', $month->month)
-->sum('potensi_revenue') / 1000000);
-}
-@endphp
 <script>
     // ── Pipeline Pie ──
-    new Chart(document.getElementById('pipelinePie'), {
-        type: 'doughnut',
-        data: {
-            labels: {
-                !!json_encode($chartLabels) !!
+    const pipelinePieEl = document.getElementById('pipelinePie');
+    if (pipelinePieEl && window.Chart) {
+        new Chart(pipelinePieEl, {
+            type: 'doughnut',
+            data: {
+                labels: @json($pipelineChartLabels),
+                datasets: [{
+                    data: @json($pipelineChartValues),
+                    backgroundColor: ['var(--primary-hover)', '#10b981', '#f59e0b', '#8b5cf6', '#6366f1'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
             },
-            datasets: [{
-                data: {
-                    !!json_encode($chartValues) !!
-                },
-                backgroundColor: ['var(--primary-hover)', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
-        },
         options: {
             plugins: {
                 legend: {
@@ -244,36 +231,37 @@ $trendData[] = (float)(\App\Models\Lead::whereYear('created_at', $month->year)
                 },
                 tooltip: {
                     callbacks: {
-                        label: ctx => ` ${ctx.label}: Rp ${ctx.parsed.toFixed(1)}M`
+                        label: ctx => ` ${ctx.label}: Rp ${ctx.parsed.toFixed(1)} Jt`
                     }
                 }
             },
-            cutout: '65%'
-        }
-    });
+            cutout: '65%',
+            maintainAspectRatio: false
+            }
+        });
+    }
 
     // ── Pipeline Trend (data real dari DB) ──
-    new Chart(document.getElementById('pipelineTrend'), {
-        type: 'line',
-        data: {
-            labels: {
-                !!json_encode($trendLabels) !!
+    const pipelineTrendEl = document.getElementById('pipelineTrend');
+    if (pipelineTrendEl && window.Chart) {
+        new Chart(pipelineTrendEl, {
+            type: 'line',
+            data: {
+                labels: @json($trendLabels),
+                datasets: [{
+                    label: 'PO Revenue (Jt)',
+                    data: @json($trendData),
+                    borderColor: 'var(--primary)',
+                    backgroundColor: 'rgba(37,99,235,.1)',
+                    fill: true,
+                    tension: .4,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'var(--primary)',
+                }]
             },
-            datasets: [{
-                label: 'Expected Revenue (Jt)',
-                data: {
-                    !!json_encode($trendData) !!
-                },
-                borderColor: 'var(--primary)',
-                backgroundColor: 'rgba(37,99,235,.1)',
-                fill: true,
-                tension: .4,
-                borderWidth: 2,
-                pointRadius: 4,
-                pointBackgroundColor: 'var(--primary)',
-            }]
-        },
         options: {
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
@@ -291,6 +279,7 @@ $trendData[] = (float)(\App\Models\Lead::whereYear('created_at', $month->year)
                     }
                 },
                 y: {
+                    beginAtZero: true,
                     grid: {
                         color: '#f3f4f6'
                     },
@@ -302,8 +291,9 @@ $trendData[] = (float)(\App\Models\Lead::whereYear('created_at', $month->year)
                     }
                 }
             }
-        }
-    });
+            }
+        });
+    }
 
     // ── Drag & Drop pindah stage ──
     let dragId = null;

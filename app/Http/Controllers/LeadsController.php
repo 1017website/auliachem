@@ -21,8 +21,8 @@ class LeadsController extends Controller
         $stage  = $request->get('stage');
         $search = $request->get('search');
 
-        $query = Lead::with(['salesUser', 'activities'])
-            ->whereNotIn('pipeline_stage', ['Won']);
+        // Tampilkan semua pipeline stage di list Leads, termasuk Won/Closing, Lost, dan Maintaining.
+        $query = Lead::with(['salesUser', 'activities']);
 
         if (auth()->user()->isSalesExecutive()) {
             $query->where('user_id', auth()->id());

@@ -112,6 +112,8 @@ class PurchaseOrderController extends Controller
                     'description'  => $item['description'] ?? null,
                 ]);
             }
+
+            $this->moveClosedLeadToMaintaining($po->lead_id);
         });
 
         return redirect()->route('purchase-orders.index')->with('success', 'Purchase Order berhasil ditambahkan.');
@@ -170,9 +172,32 @@ class PurchaseOrderController extends Controller
                     'description'  => $item['description'] ?? null,
                 ]);
             }
+
+            $this->moveClosedLeadToMaintaining($purchaseOrder->lead_id);
         });
 
         return redirect()->route('purchase-orders.index')->with('success', 'Purchase Order berhasil diperbarui.');
+    }
+
+
+    /**
+     * Setelah PO dibuat/diupdate dari lead Won/Closing, lead dipindah ke Maintaining.
+     * Customer tidak diturunkan statusnya karena PO hanya valid untuk Existing customer.
+     */
+    private function moveClosedLeadToMaintaining(?int $leadId): void
+    {
+        if (!$leadId) {
+            return;
+        }
+
+        $lead = Lead::find($leadId);
+        if (!$lead) {
+            return;
+        }
+
+        if (in_array($lead->pipeline_stage, ['Won', 'Closing'], true)) {
+            $lead->update(['pipeline_stage' => 'Maintaining']);
+        }
     }
 
     public function destroy(PurchaseOrder $purchaseOrder)
