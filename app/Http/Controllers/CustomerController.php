@@ -235,9 +235,79 @@ class CustomerController extends Controller
                     ]);
                 }
             }
+
+            // Auto-sync balik ke lead terkait SETELAH produk & PIC final,
+            // agar mirror dua arah membaca data terbaru (termasuk hasil hapus).
+            self::syncToLeads($customer->fresh(['pics', 'productItems']));
         });
 
         return redirect()->back()->with('success', 'Data customer berhasil diupdate.');
+    }
+
+    /**
+     * Sync balik data customer ke lead-lead yang terkait (customer_id sama).
+     *
+     * Hanya field dasar (nama PT, PIC, kontak, industri, lokasi, sales)
+     * yang disinkronkan. Pipeline stage & data sales lead TIDAK diubah,
+     * karena progres pipeline adalah otoritas modul Leads.
+     */
+    public static function syncToLeads(Customer $customer): void
+    {
+        // Cegah loop: jika sedang sync dari arah Lead, jangan balik lagi.
+        if (\App\Http\Controllers\LeadsController::$syncing) {
+            return;
+        }
+        \App\Http\Controllers\LeadsController::$syncing = true;
+
+        try {
+            $customer->loadMissing(['pics', 'productItems']);
+
+            $leadData = [
+                'company_name' => $customer->company_name,
+                'pic_name'     => $customer->pic_name,
+                'pic_position' => $customer->pic_position,
+                'phone'        => $customer->phone,
+                'email'        => $customer->email,
+                'address'      => $customer->address,
+                'industry'     => $customer->industry,
+                'location'     => $customer->location,
+                'user_id'      => $customer->user_id,
+            ];
+
+            // Siapkan baris produk & PIC dari customer (sumber mirror saat ini).
+            $productRows = $customer->productItems->map(fn ($p) => [
+                'product_name' => $p->product_name,
+                'qty'          => $p->qty ?? 0,
+                'unit'         => trim($p->unit ?? '') !== '' ? $p->unit : 'ton',
+            ])->all();
+
+            $picRows = $customer->pics->map(fn ($pic) => [
+                'pic_name'     => $pic->pic_name,
+                'pic_position' => $pic->pic_position,
+                'phone'        => $pic->phone,
+                'email'        => $pic->email,
+                'is_primary'   => (bool) $pic->is_primary,
+            ])->all();
+
+            $customer->leads()->each(function (Lead $lead) use ($leadData, $productRows, $picRows) {
+                // Field dasar — updateQuietly agar tidak memicu notifikasi pipeline.
+                $lead->updateQuietly($leadData);
+
+                // Mirror produk lead = produk customer.
+                $lead->products()->delete();
+                foreach ($productRows as $row) {
+                    $lead->products()->create($row);
+                }
+
+                // Mirror PIC lead = PIC customer.
+                $lead->pics()->delete();
+                foreach ($picRows as $row) {
+                    $lead->pics()->create($row);
+                }
+            });
+        } finally {
+            \App\Http\Controllers\LeadsController::$syncing = false;
+        }
     }
 
     public function destroy(Customer $customer)
@@ -262,6 +332,7 @@ class CustomerController extends Controller
             'email'        => $request->email,
             'is_primary'   => $customer->pics()->count() === 0,
         ]);
+        self::syncToLeads($customer->fresh(['pics', 'productItems']));
         return redirect()->back()->with('success', 'PIC ditambahkan.');
     }
 
@@ -269,6 +340,7 @@ class CustomerController extends Controller
     {
         abort_if((int) $pic->customer_id !== (int) $customer->id, 404);
         $pic->delete();
+        self::syncToLeads($customer->fresh(['pics', 'productItems']));
         return redirect()->back()->with('success', 'PIC dihapus.');
     }
 

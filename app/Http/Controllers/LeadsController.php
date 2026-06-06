@@ -16,6 +16,9 @@ use App\Models\Notification;
 
 class LeadsController extends Controller
 {
+    /** Guard anti-loop sync dua arah Lead <-> Customer. */
+    public static bool $syncing = false;
+
     public function index(Request $request)
     {
         $stage  = $request->get('stage');
@@ -150,10 +153,10 @@ class LeadsController extends Controller
 
         $lead->update($validated);
 
-        // Auto-sync ke database customer setiap kali stage berubah
-        if (isset($validated['pipeline_stage'])) {
-            self::syncToCustomer($lead);
-        }
+        // Auto-sync ke database customer setiap kali lead di-update
+        // (bukan hanya saat stage berubah), agar perubahan data dasar
+        // seperti nama PT, PIC, phone, email, dll ikut ter-update di customer.
+        self::syncToCustomer($lead->fresh());
 
         // Notifikasi: Deal Won
         if (isset($validated['pipeline_stage']) && $validated['pipeline_stage'] === 'Won') {
@@ -194,6 +197,13 @@ class LeadsController extends Controller
      */
     public static function syncToCustomer(Lead $lead): void
     {
+        // Cegah loop: jika sedang sync dari arah Customer, jangan balik lagi.
+        if (self::$syncing) {
+            return;
+        }
+        self::$syncing = true;
+
+        try {
         $lead->loadMissing(['products', 'pics']);
 
         $stage = $lead->pipeline_stage;
@@ -246,64 +256,53 @@ class LeadsController extends Controller
             $lead->updateQuietly(['customer_id' => $customer->id]);
         }
 
-        // Sync produk lead ke tabel customer_products (field: product_name, qty, unit).
-        // Tidak menghapus produk manual customer; hanya menambah yang belum ada.
+        // ── MIRROR PRODUK: customer_products = cerminan persis produk lead. ──
+        // Bangun daftar produk dari lead; fallback ke product_interest bila kosong.
+        $productRows = [];
         foreach ($lead->products as $leadProduct) {
             $name = trim($leadProduct->product_name ?? '');
             if ($name === '') {
                 continue;
             }
-            $unit = trim($leadProduct->unit ?? '') !== '' ? $leadProduct->unit : 'ton';
-
-            $exists = $customer->productItems()
-                ->whereRaw('LOWER(product_name) = ?', [mb_strtolower($name)])
-                ->exists();
-
-            if (!$exists) {
-                $customer->productItems()->create([
-                    'product_name' => $name,
-                    'qty'          => $leadProduct->qty ?? 0,
-                    'unit'         => $unit,
-                ]);
-            }
+            $productRows[] = [
+                'product_name' => $name,
+                'qty'          => $leadProduct->qty ?? 0,
+                'unit'         => trim($leadProduct->unit ?? '') !== '' ? $leadProduct->unit : 'ton',
+            ];
+        }
+        if (empty($productRows) && trim((string) $lead->product_interest) !== '') {
+            $productRows[] = [
+                'product_name' => trim((string) $lead->product_interest),
+                'qty'          => 0,
+                'unit'         => 'ton',
+            ];
+        }
+        $customer->productItems()->delete();
+        foreach ($productRows as $row) {
+            $customer->productItems()->create($row);
         }
 
-        // Fallback: product_interest (string) jika lead tidak punya produk terstruktur.
-        if ($lead->products->isEmpty() && trim((string) $lead->product_interest) !== '') {
-            $piName = trim((string) $lead->product_interest);
-            $exists = $customer->productItems()
-                ->whereRaw('LOWER(product_name) = ?', [mb_strtolower($piName)])
-                ->exists();
-            if (!$exists) {
-                $customer->productItems()->create([
-                    'product_name' => $piName,
-                    'qty'          => 0,
-                    'unit'         => 'ton',
-                ]);
-            }
-        }
-
-        // Sync PIC tambahan dari lead. Tidak menghapus PIC customer yang sudah ada.
+        // ── MIRROR PIC: customer pics = cerminan persis pics lead. ──
+        $picRows = [];
         foreach ($lead->pics as $leadPic) {
             $picName = trim($leadPic->pic_name ?? '');
             if ($picName === '') {
                 continue;
             }
-
-            $exists = $customer->pics()
-                ->where('pic_name', $picName)
-                ->when($leadPic->phone, fn ($q) => $q->where('phone', $leadPic->phone))
-                ->exists();
-
-            if (!$exists) {
-                $customer->pics()->create([
-                    'pic_name'     => $picName,
-                    'pic_position' => $leadPic->pic_position,
-                    'phone'        => $leadPic->phone,
-                    'email'        => $leadPic->email,
-                    'is_primary'   => false,
-                ]);
-            }
+            $picRows[] = [
+                'pic_name'     => $picName,
+                'pic_position' => $leadPic->pic_position,
+                'phone'        => $leadPic->phone,
+                'email'        => $leadPic->email,
+                'is_primary'   => (bool) $leadPic->is_primary,
+            ];
+        }
+        $customer->pics()->delete();
+        foreach ($picRows as $row) {
+            $customer->pics()->create($row);
+        }
+        } finally {
+            self::$syncing = false;
         }
     }
 
@@ -326,6 +325,7 @@ class LeadsController extends Controller
             'qty'          => $request->qty ?? 0,
             'unit'         => $request->unit,
         ]);
+        self::syncToCustomer($lead->fresh());
         return redirect()->back()->with('success', 'Produk ditambahkan.');
     }
 
@@ -333,6 +333,7 @@ class LeadsController extends Controller
     {
         abort_if((int) $product->lead_id !== (int) $lead->id, 404);
         $product->delete();
+        self::syncToCustomer($lead->fresh());
         return redirect()->back()->with('success', 'Produk dihapus.');
     }
 
@@ -352,6 +353,7 @@ class LeadsController extends Controller
             'email'        => $request->email,
             'is_primary'   => $lead->pics()->count() === 0,
         ]);
+        self::syncToCustomer($lead->fresh());
         return redirect()->back()->with('success', 'PIC ditambahkan.');
     }
 
@@ -359,6 +361,7 @@ class LeadsController extends Controller
     {
         abort_if((int) $pic->lead_id !== (int) $lead->id, 404);
         $pic->delete();
+        self::syncToCustomer($lead->fresh());
         return redirect()->back()->with('success', 'PIC dihapus.');
     }
 
