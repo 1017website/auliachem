@@ -43,7 +43,7 @@ class CustomerController extends Controller
         $potentialCustomer = Customer::where('status', 'Potential')->count();
         $existingCustomer  = Customer::where('status', 'Existing')->count();
         $industries        = Customer::whereNotNull('industry')->distinct()->pluck('industry')->filter()->sort()->values();
-        $salesUsers        = User::where('status', 'Active')->orderBy('name')->get();
+        $salesUsers        = User::assignable()->orderBy('name')->get();
 
         $selectedCustomer = $request->get('selected_id')
             ? Customer::with(['salesUser','purchaseOrders','activities.salesUser','leads','pics','productItems'])->find($request->get('selected_id'))
@@ -66,7 +66,9 @@ class CustomerController extends Controller
             'industry'       => 'nullable|string|max:100',
             'location'       => 'nullable|string|max:255',
             'address'        => 'nullable|string',
-            'user_id'        => ['required', Rule::exists('users', 'id')->where('status', 'Active')],
+            'user_id'        => ['required', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+            )],
             'customer_since' => 'nullable|date',
             'notes'          => 'nullable|string',
             'pics'                => 'nullable|array',
@@ -165,7 +167,9 @@ class CustomerController extends Controller
             'industry'       => 'nullable|string|max:100',
             'location'       => 'nullable|string|max:255',
             'address'        => 'nullable|string',
-            'user_id'        => ['sometimes', Rule::exists('users', 'id')->where('status', 'Active')],
+            'user_id'        => ['sometimes', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+            )],
             'customer_since' => 'nullable|date',
             'notes'          => 'nullable|string',
 
@@ -348,7 +352,9 @@ class CustomerController extends Controller
     public function transferSales(Request $request, Customer $customer)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
-        $request->validate(['user_id' => ['required', Rule::exists('users', 'id')->where('status', 'Active')]]);
+        $request->validate(['user_id' => ['required', Rule::exists('users', 'id')->where(
+            fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+        )]]);
         $customer->update(['user_id' => $request->user_id]);
         return redirect()->back()->with('success', 'Sales PIC berhasil dipindah.');
     }
@@ -450,7 +456,9 @@ class CustomerController extends Controller
             'description'   => 'nullable|string',
             'activity_at'   => 'required|date',
             'status'        => 'required|in:Planned,Pending,Done,Overdue',
-            'user_id' => ['required', Rule::exists('users', 'id')->where('status', 'Active')],
+            'user_id' => ['required', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+            )],
         ]);
         $validated['customer_id'] = $customer->id;
         if (auth()->user()->isSalesExecutive()) {

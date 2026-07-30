@@ -111,13 +111,10 @@
                                             <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px" onclick="openEditPo({{ $po->id }})">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </button>
-                                            <form method="POST" action="{{ route('purchase-orders.destroy', $po) }}" class="d-inline"
-                                                onsubmit="return confirm('Hapus PO {{ $po->po_number }}?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <x-delete-request-button
+                                                module="purchase-orders"
+                                                :model-id="$po->id"
+                                                :label="'PO ' . $po->po_number" />
                                         </td>
                                     </tr>
                                     {{-- Detail row (collapsed) --}}

@@ -135,13 +135,10 @@
                                         onclick="openEditModal({{ $cust->id }})">
                                         <i class="fas fa-edit" style="font-size:.7rem"></i>
                                     </button>
-                                    <form method="POST" action="{{ route('customers.destroy', $cust) }}" class="d-inline"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus customer {{ addslashes($cust->company_name) }}? Tindakan ini tidak dapat dibatalkan.')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
-                                            <i class="fas fa-trash" style="font-size:.7rem"></i>
-                                        </button>
-                                    </form>
+                                    <x-delete-request-button
+                                        module="customers"
+                                        :model-id="$cust->id"
+                                        :label="'customer ' . $cust->company_name" />
                                 </div>
                             </td>
                         </tr>
@@ -250,11 +247,14 @@
                             onclick="openEditModal({{ $selectedCustomer->id }})">
                             <i class="fas fa-edit me-1"></i> Edit
                         </button>
-                        <form method="POST" action="{{ route('customers.destroy', $selectedCustomer) }}" class="flex-fill"
-                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus {{ addslashes($selectedCustomer->company_name) }}? Tindakan ini tidak dapat dibatalkan.')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-size:.75rem"><i class="fas fa-trash me-1"></i> Hapus</button>
-                        </form>
+                        <x-delete-request-button
+                            module="customers"
+                            :model-id="$selectedCustomer->id"
+                            :label="'customer ' . $selectedCustomer->company_name"
+                            wrapper-class="flex-fill"
+                            button-class="btn btn-sm btn-outline-danger w-100"
+                            button-style="font-size:.75rem"
+                            :show-text="true" />
                     </div>
 
                     {{-- Transfer Sales (Admin only) --}}
@@ -310,11 +310,12 @@
                             @if($pic->phone)<div style="font-size:.72rem">{{ $pic->phone }}</div>@endif
                             @if($pic->email)<div style="font-size:.72rem;color:var(--primary)">{{ $pic->email }}</div>@endif
                         </div>
-                        <form method="POST" action="{{ route('customers.pics.destroy', [$selectedCustomer, $pic]) }}"
-                            onsubmit="return confirm('Hapus PIC {{ addslashes($pic->pic_name) }}?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
-                        </form>
+                        <x-delete-request-button
+                            module="customer-pics"
+                            :model-id="$pic->id"
+                            :label="'PIC ' . $pic->pic_name"
+                            button-class="btn btn-sm p-0"
+                            button-style="color:#ef4444;background:none;border:none" />
                     </div>
                     @empty
                     <div class="text-center py-3" style="color:var(--text-muted);font-size:.8rem">Belum ada PIC tambahan.</div>

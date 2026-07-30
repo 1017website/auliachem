@@ -46,7 +46,7 @@ class PipelineController extends Controller
             ->get()
             ->sum(fn ($po) => $po->total_revenue);
 
-        $topSales = User::where('status', 'Active')
+        $topSales = User::assignable()
             ->select('users.*')
             ->selectSub(function ($q) {
                 $q->from('purchase_orders')

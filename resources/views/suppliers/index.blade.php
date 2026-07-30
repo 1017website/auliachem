@@ -155,13 +155,10 @@
                                     onclick="openProductModal({{ $s->id }}, '{{ addslashes($s->supplier_name) }}')">
                                     <i class="fas fa-boxes" style="font-size:.7rem"></i>
                                 </button>
-                                <form method="POST" action="{{ route('suppliers.destroy', $s) }}" class="d-inline"
-                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus supplier {{ addslashes($s->supplier_name) }}? Tindakan ini tidak dapat dibatalkan.')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <x-delete-request-button
+                                    module="suppliers"
+                                    :model-id="$s->id"
+                                    :label="'supplier ' . $s->supplier_name" />
                             </td>
                         </tr>
                         @empty
@@ -257,11 +254,14 @@
                         onclick="openEditSupplier({{ $selectedSupplier->id }})">
                         <i class="fas fa-edit me-1"></i> Edit
                     </button>
-                    <form method="POST" action="{{ route('suppliers.destroy', $selectedSupplier) }}" class="flex-fill"
-                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus {{ addslashes($selectedSupplier->supplier_name) }}? Tindakan ini tidak dapat dibatalkan.')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-size:.75rem"><i class="fas fa-trash me-1"></i> Hapus</button>
-                    </form>
+                    <x-delete-request-button
+                        module="suppliers"
+                        :model-id="$selectedSupplier->id"
+                        :label="'supplier ' . $selectedSupplier->supplier_name"
+                        wrapper-class="flex-fill"
+                        button-class="btn btn-sm btn-outline-danger w-100"
+                        button-style="font-size:.75rem"
+                        :show-text="true" />
                 </div>
             </div>
 
@@ -294,11 +294,12 @@
                         @if($pic->phone)<div style="font-size:.72rem">{{ $pic->phone }}</div>@endif
                         @if($pic->email)<div style="font-size:.72rem;color:var(--primary)">{{ $pic->email }}</div>@endif
                     </div>
-                    <form method="POST" action="{{ route('suppliers.pics.destroy', [$selectedSupplier, $pic]) }}"
-                        onsubmit="return confirm('Hapus PIC {{ addslashes($pic->pic_name) }}?')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
-                    </form>
+                    <x-delete-request-button
+                        module="supplier-pics"
+                        :model-id="$pic->id"
+                        :label="'PIC ' . $pic->pic_name"
+                        button-class="btn btn-sm p-0"
+                        button-style="color:#ef4444;background:none;border:none" />
                 </div>
                 @empty
                 <div class="text-center py-3" style="color:var(--text-muted);font-size:.8rem">Belum ada PIC tambahan.</div>
@@ -778,6 +779,19 @@ function addSupProductRow(containerId, data = {}) {
 // Supplier Products (AJAX via form submit → reload)
 const supplierPics = @json($suppliers->pluck('pics', 'id'));
 const supplierProducts = @json($suppliers->pluck('products', 'id'));
+const pendingSupplierProductIds = @json(\App\Models\DeletionRequest::pendingIdsForModule('supplier-products'));
+const canDeleteSupplierProductDirectly = @json(auth()->user()->isAdmin());
+
+function submitSupplierProductDeletion(form) {
+    if (canDeleteSupplierProductDirectly) {
+        return confirm(`Hapus produk ${form.dataset.label}?`);
+    }
+
+    const reason = prompt('Alasan permintaan hapus (opsional):');
+    if (reason === null) return false;
+    form.elements.reason.value = reason;
+    return confirm(`Ajukan permintaan hapus untuk produk ${form.dataset.label}?`);
+}
 
 function openProductModal(supplierId, supplierName) {
     document.getElementById('spModalName').textContent = supplierName;
@@ -795,11 +809,17 @@ function openProductModal(supplierId, supplierName) {
                     <div style="font-size:.82rem;font-weight:600">${p.product_name}</div>
                     <div style="font-size:.72rem;color:#6b7280">${p.unit}${p.description ? ' · ' + p.description : ''}</div>
                 </div>
-                <form method="POST" action="/suppliers/${supplierId}/products/${p.id}" onsubmit="return confirm('Hapus produk ${p.product_name}?')" style="display:inline">
+                ${pendingSupplierProductIds.includes(Number(p.id)) && !canDeleteSupplierProductDirectly ? `
+                <span class="badge bg-warning text-dark" style="font-size:.65rem"><i class="fas fa-clock me-1"></i>Menunggu Hapus</span>
+                ` : `
+                <form method="POST" action="{{ route('deletion-requests.store') }}" data-label="${escapeHtml(p.product_name)}" onsubmit="return submitSupplierProductDeletion(this)" style="display:inline">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" style="color:#ef4444;background:none;border:none;cursor:pointer"><i class="fas fa-times"></i></button>
+                    <input type="hidden" name="module" value="supplier-products">
+                    <input type="hidden" name="model_id" value="${p.id}">
+                    <input type="hidden" name="reason" value="">
+                    <button type="submit" style="color:${canDeleteSupplierProductDirectly ? '#ef4444' : '#d97706'};background:none;border:none;cursor:pointer"><i class="fas ${canDeleteSupplierProductDirectly ? 'fa-times' : 'fa-trash-restore-alt'}"></i></button>
                 </form>
+                `}
             </div>
         `).join('');
     }

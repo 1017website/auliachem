@@ -101,10 +101,12 @@
                         @if($pic->phone)<div style="font-size:.72rem">{{ $pic->phone }}</div>@endif
                         @if($pic->email)<div style="font-size:.72rem;color:var(--primary)">{{ $pic->email }}</div>@endif
                     </div>
-                    <form method="POST" action="{{ route('leads.pics.destroy', [$lead, $pic]) }}" onsubmit="return confirm('Hapus PIC {{ addslashes($pic->pic_name) }}?')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
-                    </form>
+                    <x-delete-request-button
+                        module="lead-pics"
+                        :model-id="$pic->id"
+                        :label="'PIC ' . $pic->pic_name"
+                        button-class="btn btn-sm p-0"
+                        button-style="color:#ef4444;background:none;border:none" />
                 </div>
                 @empty
                 <div style="font-size:.78rem;color:var(--text-muted)">Belum ada PIC tambahan.</div>
@@ -127,10 +129,12 @@
                         <div style="font-size:.82rem;font-weight:600">{{ $prod->product_name }}</div>
                         <div style="font-size:.72rem;color:var(--text-muted)">{{ number_format($prod->qty, 0, ',', '.') }} {{ $prod->unit }}</div>
                     </div>
-                    <form method="POST" action="{{ route('leads.products.destroy', [$lead, $prod]) }}" onsubmit="return confirm('Hapus produk {{ addslashes($prod->product_name) }}?')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm p-0" style="color:#ef4444;background:none;border:none"><i class="fas fa-times"></i></button>
-                    </form>
+                    <x-delete-request-button
+                        module="lead-products"
+                        :model-id="$prod->id"
+                        :label="'produk ' . $prod->product_name"
+                        button-class="btn btn-sm p-0"
+                        button-style="color:#ef4444;background:none;border:none" />
                 </div>
                 @empty
                 <div style="font-size:.78rem;color:var(--text-muted)">Belum ada produk ditambahkan.</div>
@@ -264,15 +268,17 @@
             </div>
         </div>
 
-        {{-- Hapus Lead --}}
+        {{-- Hapus / Request Hapus Lead --}}
         <div class="card">
             <div class="card-body p-3">
-                <form method="POST" action="{{ route('leads.destroy', $lead) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus lead {{ addslashes($lead->company_name) }}? Tindakan ini tidak dapat dibatalkan.')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                        <i class="fas fa-trash me-1"></i> Hapus Lead Ini
-                    </button>
-                </form>
+                <x-delete-request-button
+                    module="leads"
+                    :model-id="$lead->id"
+                    :label="'lead ' . $lead->company_name"
+                    wrapper-class="d-block"
+                    button-class="btn btn-outline-danger btn-sm w-100"
+                    button-style=""
+                    :show-text="true" />
             </div>
         </div>
     </div>

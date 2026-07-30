@@ -162,13 +162,12 @@
                 onclick="openEditTask({{ $task->id }}, @js($task->subject), '{{ $task->status }}', '{{ $task->activity_at->format('Y-m-d\TH:i') }}', @js($task->description))">
                 <i class="fas fa-edit"></i>
             </button>
-            <form method="POST" action="{{ route('tasks.destroy', $task->id) }}"
-                onsubmit="return confirm('Apakah Anda yakin ingin menghapus task ini? Tindakan ini tidak dapat dibatalkan.')">
-                @csrf @method('DELETE')
-                <button type="submit" class="btn btn-sm" style="padding:4px 8px;border:1px solid #fecaca;border-radius:6px;font-size:11px;color:#dc2626">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </form>
+            <x-delete-request-button
+                module="tasks"
+                :model-id="$task->id"
+                :label="'task ' . $task->subject"
+                button-class="btn btn-sm"
+                button-style="padding:4px 8px;border:1px solid #fecaca;border-radius:6px;font-size:11px;color:#dc2626" />
         </div>
     </div>
 </div>

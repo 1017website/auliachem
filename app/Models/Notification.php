@@ -46,7 +46,11 @@ class Notification extends Model
         $settingKey = self::settingKey($type);
         if ($settingKey && Setting::get($settingKey, '1') !== '1') return;
 
-        $managers = User::whereIn('role', ['Admin', 'Sales Manager'])->where('status', 'Active')->get();
+        $managers = User::whereIn('role', [
+            User::ROLE_ADMIN,
+            User::ROLE_DEVELOPER,
+            User::ROLE_SALES_MANAGER,
+        ])->where('status', 'Active')->get();
         foreach ($managers as $user) {
             static::create([
                 'user_id'    => $user->id,
@@ -59,6 +63,14 @@ class Notification extends Model
                 'is_read'    => false,
             ]);
         }
+    }
+
+    /** Kirim notifikasi khusus kepada akun yang dapat memproses approval. */
+    public static function broadcastToAdministrators(string $type, string $title, string $message, ?string $url = null): void
+    {
+        User::whereIn('role', [User::ROLE_ADMIN, User::ROLE_DEVELOPER])
+            ->where('status', 'Active')
+            ->each(fn (User $user) => self::send($user->id, $type, $title, $message, $url));
     }
 
     /** Kirim ke semua user aktif */
@@ -92,6 +104,7 @@ class Notification extends Model
             'stage_change'  => 'notif_stage',
             'weekly'        => 'notif_weekly',
             'target_warning'=> 'notif_target',
+            'delete_request'=> null,
             default         => null,
         };
     }
@@ -106,6 +119,7 @@ class Notification extends Model
             'stage_change'   => 'filter',
             'target_warning' => 'chart-line',
             'weekly'         => 'file-alt',
+            'delete_request' => 'trash-alt',
             default          => 'bell',
         };
     }
@@ -120,6 +134,7 @@ class Notification extends Model
             'stage_change'   => '#8b5cf6',
             'target_warning' => '#f97316',
             'weekly'         => '#6b7280',
+            'delete_request' => '#ef4444',
             default          => '#3b82f6',
         };
     }

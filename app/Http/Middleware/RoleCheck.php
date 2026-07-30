@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +25,11 @@ class RoleCheck
             abort(403, 'Akun Anda tidak aktif. Hubungi administrator.');
         }
 
-        if (!empty($roles) && !in_array($user->role, $roles)) {
+        $hasRole = empty($roles)
+            || in_array($user->role, $roles, true)
+            || ($user->isDeveloper() && in_array(User::ROLE_ADMIN, $roles, true));
+
+        if (!$hasRole) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 

@@ -37,7 +37,7 @@ class TaskReminderController extends Controller
         $totalUpcoming = Activity::where('activity_at', '>=', now())->where('activity_at', '<=', now()->addDays(7))->where('status', '!=', 'Done')->count();
         $totalDone     = Activity::where('status', 'Done')->count();
 
-        $salesUsers = User::where('status', 'Active')->orderBy('name')->get();
+        $salesUsers = User::assignable()->orderBy('name')->get();
         $customers  = Customer::where('status', 'Existing')->orderBy('company_name')->get();
 
         return view('tasks.index', compact(
@@ -52,7 +52,9 @@ class TaskReminderController extends Controller
         $validated = $request->validate([
             'lead_id'        => 'nullable|exists:leads,id',
             'customer_id'    => 'nullable|exists:customers,id',
-            'user_id'  => ['required', Rule::exists('users', 'id')->where('status', 'Active')],
+            'user_id'  => ['required', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+            )],
             'type'           => 'required|in:Call,Visit,Email,Note,Others',
             'subject'        => 'required|string|max:255',
             'description'    => 'nullable|string',

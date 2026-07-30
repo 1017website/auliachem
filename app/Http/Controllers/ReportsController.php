@@ -60,7 +60,7 @@ class ReportsController extends Controller
                 break;
 
             case 'performance':
-                $reportData = User::where('status', 'Active')->orderBy('name')->get()->map(function ($u) use ($startDate, $endDate) {
+                $reportData = User::assignable()->orderBy('name')->get()->map(function ($u) use ($startDate, $endDate) {
                     $total   = Lead::where('user_id', $u->id)->count();
                     $won     = Lead::where('user_id', $u->id)->where('pipeline_stage', 'Won')->whereBetween('updated_at', [$startDate, $endDate])->count();
                     $revenue = Lead::where('user_id', $u->id)->where('pipeline_stage', 'Won')->sum('potensi_revenue');
@@ -82,7 +82,7 @@ class ReportsController extends Controller
                 break;
         }
 
-        $salesUsers = User::where('status', 'Active')->orderBy('name')->get();
+        $salesUsers = User::assignable()->orderBy('name')->get();
 
         return view('reports.index', compact(
             'reportData', 'revenue', 'grossProfit', 'nettProfit', 'totalDeals',

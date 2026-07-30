@@ -41,7 +41,7 @@ class SalesActivityController extends Controller
         $upcomingActivities = Activity::whereDate('activity_at', '>', today())
             ->with(['lead', 'customer'])->orderBy('activity_at')->limit(5)->get();
 
-        $salesUsers = User::where('status', 'Active')->orderBy('name')->get();
+        $salesUsers = User::assignable()->orderBy('name')->get();
 
         // Pipeline summary for sidebar
         $pipelineSummary = [

@@ -18,6 +18,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ArtisanController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\DeletionRequestController;
 
 // ── Artisan runner (shared hosting) ──
 Route::get('/run/{command}', [ArtisanController::class, 'run'])
@@ -36,7 +37,7 @@ Route::get('/', function () {
 });
 
 // ── Auth required ──────────────────────────────────
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'direct-delete'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search',    [SearchController::class, 'search'])->name('search');
@@ -47,6 +48,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/unread-count',   [NotificationController::class, 'unreadCount'])->name('unread-count');
         Route::post('/mark-all-read', [NotificationController::class, 'markAllRead'])->name('mark-all-read');
         Route::post('/{notification}/read', [NotificationController::class, 'markRead'])->name('mark-read');
+    });
+
+    // Semua role dapat mengajukan; Administrator/Developer dapat meninjau.
+    Route::post('/deletion-requests', [DeletionRequestController::class, 'store'])
+        ->name('deletion-requests.store');
+    Route::middleware('role:Admin')->group(function () {
+        Route::get('/deletion-requests', [DeletionRequestController::class, 'index'])
+            ->name('deletion-requests.index');
+        Route::post('/deletion-requests/{deletionRequest}/approve', [DeletionRequestController::class, 'approve'])
+            ->name('deletion-requests.approve');
+        Route::post('/deletion-requests/{deletionRequest}/reject', [DeletionRequestController::class, 'reject'])
+            ->name('deletion-requests.reject');
     });
 
     // Sales Activity

@@ -64,7 +64,8 @@ class DashboardController extends Controller
             ->orderBy('activity_at','desc')->limit(5)->get();
 
         // ── Top sales ──
-        $topSales = User::withCount(['leads as deals_closed' => fn($q) => $q->where('pipeline_stage','Won')])
+        $topSales = User::withoutSystemAccounts()
+            ->withCount(['leads as deals_closed' => fn($q) => $q->where('pipeline_stage','Won')])
             ->get()->sortByDesc('deals_closed')->take(5);
 
         // ── Revenue chart (30 hari terakhir) ──

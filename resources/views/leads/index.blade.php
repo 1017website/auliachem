@@ -116,13 +116,10 @@
                                             style="padding:3px 7px" title="Lihat Detail">
                                             <i class="fas fa-eye" style="font-size:.7rem"></i>
                                         </a>
-                                        <form method="POST" action="{{ route('leads.destroy', $lead) }}"
-                                            onsubmit="return confirmDelete('Hapus lead {{ addslashes($lead->company_name) }}?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:3px 7px">
-                                                <i class="fas fa-trash" style="font-size:.7rem"></i>
-                                            </button>
-                                        </form>
+                                        <x-delete-request-button
+                                            module="leads"
+                                            :model-id="$lead->id"
+                                            :label="'lead ' . $lead->company_name" />
                                     </div>
                                 </td>
                             </tr>

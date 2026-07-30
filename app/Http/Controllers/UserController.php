@@ -8,6 +8,7 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -18,7 +19,9 @@ class UserController extends Controller
         $status = $request->get('status');
 
         // User Non-Active tidak ditampilkan lagi di list user.
-        $query = User::where('status', 'Active')->withCount([
+        $query = User::where('status', 'Active')
+            ->where('role', '!=', User::ROLE_DEVELOPER)
+            ->withCount([
             'leads',
             'leads as deals_won' => fn($q) => $q->where('pipeline_stage', 'Won'),
         ]);
@@ -34,11 +37,12 @@ class UserController extends Controller
             ->selectRaw('user_id, SUM(potensi_revenue) as total')
             ->groupBy('user_id')->pluck('total', 'user_id');
 
-        $totalUsers   = User::where('status', 'Active')->count();
+        $visibleUsers = User::where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER);
+        $totalUsers   = (clone $visibleUsers)->count();
         $activeUsers  = $totalUsers;
-        $totalSales   = User::where('status', 'Active')->where('role', 'Sales Executive')->count();
-        $totalManager = User::where('status', 'Active')->where('role', 'Sales Manager')->count();
-        $roles        = User::where('status', 'Active')->distinct()->whereNotNull('role')->pluck('role')->sort()->values();
+        $totalSales   = (clone $visibleUsers)->where('role', User::ROLE_SALES_EXECUTIVE)->count();
+        $totalManager = (clone $visibleUsers)->where('role', User::ROLE_SALES_MANAGER)->count();
+        $roles        = (clone $visibleUsers)->distinct()->whereNotNull('role')->pluck('role')->sort()->values();
 
         return view('users.index', compact(
             'users', 'revenues', 'totalUsers', 'activeUsers', 'totalSales', 'totalManager',
@@ -54,7 +58,7 @@ class UserController extends Controller
             'password'          => 'required|string|min:6|confirmed',
             'phone'             => 'nullable|string|max:20',
             'position'          => 'nullable|string|max:100',
-            'role'              => 'required|string|max:100',
+            'role'              => ['required', Rule::in(User::MANAGEABLE_ROLES)],
             'status'            => 'required|in:Active,Non-Active',
             'target'            => 'nullable|numeric|min:0',
         ]);
@@ -65,12 +69,14 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        abort_if($user->isDeveloper(), 404);
+
         $validated = $request->validate([
             'name'     => 'sometimes|string|max:255',
             'email'    => 'nullable|email|unique:users,email,' . $user->id,
             'phone'    => 'nullable|string|max:20',
             'position' => 'nullable|string|max:100',
-            'role'     => 'sometimes|string|max:100',
+            'role'     => ['sometimes', Rule::in(User::MANAGEABLE_ROLES)],
             'status'   => 'sometimes|in:Active,Non-Active',
             'target'   => 'nullable|numeric|min:0',
         ]);
@@ -105,6 +111,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        abort_if($user->isDeveloper(), 404);
+
         if ($user->id === auth()->id()) {
             return redirect()->back()->with('error', 'Tidak bisa menonaktifkan akun sendiri.');
         }

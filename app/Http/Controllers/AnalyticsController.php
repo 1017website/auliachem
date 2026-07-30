@@ -145,7 +145,7 @@ class AnalyticsController extends Controller
         // ── Revenue by route (tidak ada di chemical, kirim collection kosong) ──
         $revenueByRoute = collect();
 
-        $salesUsers = User::where('status', 'Active')->orderBy('name')->get();
+        $salesUsers = User::assignable()->orderBy('name')->get();
 
         return view('analytics.index', compact(
             'revenue','grossProfit','nettProfit','volumePo','dealsClosed','conversionRate',

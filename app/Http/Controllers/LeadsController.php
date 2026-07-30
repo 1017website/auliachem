@@ -35,7 +35,7 @@ class LeadsController extends Controller
         if ($search) $query->where('company_name', 'like', "%$search%");
 
         $leads      = $query->orderBy('updated_at', 'desc')->paginate(15);
-        $salesUsers = User::where('status', 'Active')->orderBy('name')->get();
+        $salesUsers = User::assignable()->orderBy('name')->get();
 
         return view('leads.index', compact('leads', 'salesUsers', 'stage', 'search'));
     }
@@ -43,7 +43,7 @@ class LeadsController extends Controller
     public function show(Lead $lead)
     {
         $lead->load(['salesUser', 'activities.salesUser', 'products', 'pics']);
-        $salesUsers = User::where('status', 'Active')->orderBy('name')->get();
+        $salesUsers = User::assignable()->orderBy('name')->get();
         return view('leads.show', compact('lead', 'salesUsers'));
     }
 
@@ -65,7 +65,9 @@ class LeadsController extends Controller
             'lead_source'     => 'nullable|string|max:100',
             'competitor'      => 'nullable|string|max:255',
             'expected_closing' => 'nullable|date',
-            'user_id'         => ['required', Rule::exists('users', 'id')->where('status', 'Active')],
+            'user_id'         => ['required', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+            )],
             'notes_kebutuhan' => 'nullable|string',
             // inline pics
             'pics'                => 'nullable|array',
@@ -144,7 +146,9 @@ class LeadsController extends Controller
             'lead_source'     => 'nullable|string|max:100',
             'competitor'      => 'nullable|string|max:255',
             'expected_closing' => 'nullable|date',
-            'user_id'         => ['sometimes', Rule::exists('users', 'id')->where('status', 'Active')],
+            'user_id'         => ['sometimes', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+            )],
             'notes_kebutuhan' => 'nullable|string',
             'catatan_internal' => 'nullable|string',
             'next_follow_up'  => 'nullable|date',
@@ -374,7 +378,9 @@ class LeadsController extends Controller
             'description'    => 'nullable|string',
             'activity_at'    => 'required|date',
             'status'         => 'required|in:Planned,Pending,Done,Overdue',
-            'user_id'  => ['required', Rule::exists('users', 'id')->where('status', 'Active')],
+            'user_id'  => ['required', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->where('status', 'Active')->where('role', '!=', User::ROLE_DEVELOPER)
+            )],
             'next_follow_up' => 'nullable|date',
         ]);
 
