@@ -108,6 +108,9 @@
                                         </td>
                                         <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->order_date?->format('d M Y') }}</td>
                                         <td class="py-2">
+                                            <a href="{{ route('purchase-orders.print', $po) }}" target="_blank" class="btn btn-sm btn-outline-primary" style="padding:3px 7px" title="Cetak PO">
+                                                <i class="fas fa-print"></i>
+                                            </a>
                                             <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px" onclick="openEditPo({{ $po->id }})">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </button>
@@ -238,6 +241,14 @@
                                 <label class="form-label">Notes</label>
                                 <input type="text" name="notes" class="form-control" placeholder="Keterangan tambahan">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Alamat Pengiriman</label>
+                                <textarea name="delivery_address" class="form-control" rows="2" placeholder="Kosongkan untuk memakai alamat perusahaan dari Settings"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Instruksi Khusus</label>
+                                <textarea name="special_instructions" class="form-control" rows="2" placeholder="Contoh: Kemasan 50 kg, jadwal pengiriman, dll."></textarea>
+                            </div>
                         </div>
 
                         {{-- Line Items --}}
@@ -345,6 +356,14 @@
                                 <label class="form-label">Notes</label>
                                 <input type="text" name="notes" id="epNotes" class="form-control">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Alamat Pengiriman</label>
+                                <textarea name="delivery_address" id="epDeliveryAddress" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Instruksi Khusus</label>
+                                <textarea name="special_instructions" id="epSpecialInstructions" class="form-control" rows="2"></textarea>
+                            </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <div style="font-size:12px;font-weight:700;color:#374151">ITEM PRODUK</div>
@@ -450,8 +469,21 @@
                 document.getElementById(prefix + 'TotalProfit').style.color = profit >= 0 ? '#10b981' : '#dc2626';
             }
 
-            // Map supplier_id → products dari controller
+            // Produk supplier diprioritaskan, Master Barang menjadi katalog fallback.
             const supplierProductsMap = @json($supplierProducts->groupBy('supplier_id'));
+            const masterProducts = @json($masterProducts);
+
+            function getAvailableProducts(supplierId) {
+                const merged = new Map();
+                const supplierItems = supplierId && supplierProductsMap[supplierId] ? supplierProductsMap[supplierId] : [];
+                supplierItems.forEach(p => merged.set(String(p.product_name).toLowerCase(), {...p}));
+                masterProducts.forEach(p => {
+                    const key = String(p.product_name).toLowerCase();
+                    if (merged.has(key)) Object.assign(merged.get(key), p);
+                    else merged.set(key, p);
+                });
+                return Array.from(merged.values()).sort((a, b) => a.product_name.localeCompare(b.product_name));
+            }
 
             // Map customer_id & company_name → lead info untuk Linked Lead
             const leadsByCustomerId = {};
@@ -469,7 +501,7 @@
                 const body = document.getElementById(bodyId);
                 if (!body) return;
                 body.querySelectorAll('.po-product-select').forEach(function(s) {
-                    const products = supplierId && supplierProductsMap[supplierId] ? supplierProductsMap[supplierId] : [];
+                    const products = getAvailableProducts(supplierId);
                     const hiddenName = s.getAttribute('data-hidden-name');
                     const unitInput  = s.closest('tr').querySelector('.po-unit-input');
                     // Rebuild options
@@ -478,7 +510,9 @@
                         const o = document.createElement('option');
                         o.value = p.product_name;
                         o.dataset.unit = p.unit || '';
-                        o.textContent = p.product_name;
+                        o.dataset.buy = p.buy_price || 0;
+                        o.dataset.sell = p.sell_price || 0;
+                        o.textContent = p.product_name + (p.product_code ? ` (${p.product_code})` : '');
                         s.appendChild(o);
                     });
                     // Tambah opsi manual jika belum ada
@@ -545,6 +579,17 @@
                 if (opt && opt.dataset.unit && unitInput) {
                     unitInput.value = opt.dataset.unit;
                 }
+                if (opt && (Number(opt.dataset.buy) > 0 || Number(opt.dataset.sell) > 0)) {
+                    const buyInput = tr.querySelector('.item-buy');
+                    const sellInput = tr.querySelector('.item-sell');
+                    const buyHidden = tr.querySelector('.item-buy-hidden');
+                    const sellHidden = tr.querySelector('.item-sell-hidden');
+                    if (buyInput && Number(opt.dataset.buy) > 0) buyInput.value = formatNum(opt.dataset.buy);
+                    if (sellInput && Number(opt.dataset.sell) > 0) sellInput.value = formatNum(opt.dataset.sell);
+                    if (buyHidden && Number(opt.dataset.buy) > 0) buyHidden.value = opt.dataset.buy;
+                    if (sellHidden && Number(opt.dataset.sell) > 0) sellHidden.value = opt.dataset.sell;
+                    calcRow(sel);
+                }
             }
 
             function addItemRow(bodyId, data = {}) {
@@ -554,7 +599,7 @@
                 // Cari supplier yang dipilih
                 const supSel = bodyId === 'addItemsBody' ? document.getElementById('addSupplierSelect') : document.getElementById('epSupplier');
                 const supplierId = supSel ? supSel.value : null;
-                const products = supplierId && supplierProductsMap[supplierId] ? supplierProductsMap[supplierId] : [];
+                const products = getAvailableProducts(supplierId);
 
                 // Build product options
                 let productOptions = '<option value="">-- Pilih atau ketik --</option>';
@@ -562,7 +607,7 @@
                 products.forEach(p => {
                     const selected = data.product_name === p.product_name ? 'selected' : '';
                     if (data.product_name === p.product_name) productExists = true;
-                    productOptions += `<option value="${p.product_name}" data-unit="${p.unit||''}" ${selected}>${p.product_name}</option>`;
+                    productOptions += `<option value="${p.product_name}" data-unit="${p.unit||''}" data-buy="${p.buy_price||0}" data-sell="${p.sell_price||0}" ${selected}>${p.product_name}${p.product_code ? ` (${p.product_code})` : ''}</option>`;
                 });
 
                 // Jika product berasal dari input manual / product lama, tetap tampilkan di dropdown saat edit.
@@ -692,6 +737,8 @@
                 document.getElementById('epStatus').value   = po.status;
                 document.getElementById('epCurrency').value = po.currency;
                 document.getElementById('epNotes').value    = po.notes || '';
+                document.getElementById('epDeliveryAddress').value = po.delivery_address || '';
+                document.getElementById('epSpecialInstructions').value = po.special_instructions || '';
 
                 const setSelect2 = (elId, val) => {
                     const el = document.getElementById(elId);

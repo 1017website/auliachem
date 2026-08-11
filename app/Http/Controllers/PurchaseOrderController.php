@@ -10,6 +10,7 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Models\Product;
 
 class PurchaseOrderController extends Controller
 {
@@ -54,10 +55,12 @@ class PurchaseOrderController extends Controller
         // Ambil semua products per supplier untuk dropdown PO items
         $supplierProducts = \App\Models\SupplierProduct::with('supplier')
             ->orderBy('product_name')->get(['id', 'supplier_id', 'product_name', 'unit']);
+        $masterProducts = Product::where('status', 'Active')->orderBy('product_name')
+            ->get(['id', 'product_code', 'product_name', 'unit', 'buy_price', 'sell_price']);
 
         return view('purchase_orders.index', compact(
             'pos', 'revenue', 'grossProfit', 'volumePo', 'totalCost',
-            'customers', 'suppliers', 'leads', 'supplierProducts',
+            'customers', 'suppliers', 'leads', 'supplierProducts', 'masterProducts',
             'search', 'status', 'startDate', 'endDate'
         ));
     }
@@ -72,6 +75,8 @@ class PurchaseOrderController extends Controller
             'status'                 => 'required|in:Done,In Progress,Cancelled',
             'order_date'             => 'required|date',
             'notes'                  => 'nullable|string',
+            'delivery_address'       => 'nullable|string|max:2000',
+            'special_instructions'   => 'nullable|string|max:5000',
             'items'                  => 'required|array|min:1',
             'items.*.product_name'   => 'required|string|max:255',
             'items.*.unit'           => 'required|string|max:50',
@@ -100,6 +105,8 @@ class PurchaseOrderController extends Controller
                 'status'      => $request->status,
                 'order_date'  => $request->order_date,
                 'notes'       => $request->notes,
+                'delivery_address' => $request->delivery_address,
+                'special_instructions' => $request->special_instructions,
             ]);
 
             foreach ($request->items as $item) {
@@ -138,6 +145,8 @@ class PurchaseOrderController extends Controller
             'status'                 => 'required|in:Done,In Progress,Cancelled',
             'order_date'             => 'required|date',
             'notes'                  => 'nullable|string',
+            'delivery_address'       => 'nullable|string|max:2000',
+            'special_instructions'   => 'nullable|string|max:5000',
             'items'                  => 'required|array|min:1',
             'items.*.product_name'   => 'required|string|max:255',
             'items.*.unit'           => 'required|string|max:50',
@@ -158,6 +167,8 @@ class PurchaseOrderController extends Controller
                 'status'      => $request->status,
                 'order_date'  => $request->order_date,
                 'notes'       => $request->notes,
+                'delivery_address' => $request->delivery_address,
+                'special_instructions' => $request->special_instructions,
             ]);
 
             // Hapus items lama, insert baru
@@ -205,6 +216,16 @@ class PurchaseOrderController extends Controller
         $poNumber = $purchaseOrder->po_number;
         $purchaseOrder->delete(); // cascades ke items
         return redirect()->route('purchase-orders.index')->with('success', 'PO ' . $poNumber . ' berhasil dihapus.');
+    }
+
+    public function print(PurchaseOrder $purchaseOrder)
+    {
+        $purchaseOrder->load(['supplier', 'customer', 'items', 'salesUser']);
+
+        return view('purchase_orders.print', [
+            'po' => $purchaseOrder,
+            'settings' => \App\Models\Setting::getAll(),
+        ]);
     }
 
     public function export(Request $request)

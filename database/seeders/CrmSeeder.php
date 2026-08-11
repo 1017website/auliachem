@@ -31,13 +31,16 @@ class CrmSeeder extends Seeder
         ]);
 
         // ── Leads ──
-        DB::table('leads')->insert([
+        $leads = [
             ['lead_code'=>'LEAD-2025-0001','company_name'=>'PT. Maju Kimia Indonesia','pic_name'=>'Budi Santoso','phone'=>'0812-1111-2222','industry'=>'Manufacturing','pipeline_stage'=>'Identifying','temperature'=>'Warm','product_interest'=>'Solvent IPA','volume_estimate'=>'5 Ton/Bulan','potensi_revenue'=>75000000,'probability'=>20,'lead_score'=>45,'lead_source'=>'Website','user_id'=>1,'customer_id'=>1,'created_at'=>$now,'updated_at'=>$now],
             ['lead_code'=>'LEAD-2025-0002','company_name'=>'CV. Solvent Jaya','pic_name'=>'Dewi Rahayu','phone'=>'0811-3333-4444','industry'=>'Coating & Paint','pipeline_stage'=>'Approaching','temperature'=>'Hot','product_interest'=>'Toluene & Xylene','volume_estimate'=>'10 Ton/Bulan','potensi_revenue'=>120000000,'probability'=>40,'lead_score'=>65,'lead_source'=>'Referral','user_id'=>2,'customer_id'=>3,'created_at'=>$now,'updated_at'=>$now],
             ['lead_code'=>'LEAD-2025-0003','company_name'=>'PT. Global Pigment Nusantara','pic_name'=>'Hendra Kusuma','phone'=>'0819-4444-5555','industry'=>'Ink & Pigment','pipeline_stage'=>'Follow Up','temperature'=>'Warm','product_interest'=>'Pigment Paste & Dispersant','volume_estimate'=>'2 Ton/Bulan','potensi_revenue'=>80000000,'probability'=>50,'lead_score'=>60,'lead_source'=>'Cold Call','user_id'=>1,'customer_id'=>4,'created_at'=>$now,'updated_at'=>$now],
             ['lead_code'=>'LEAD-2025-0004','company_name'=>'PT. Cipta Resin Abadi','pic_name'=>'Andi Wijaya','phone'=>'0813-2222-3333','industry'=>'Plastic & Packaging','pipeline_stage'=>'Closing','temperature'=>'Hot','product_interest'=>'Epoxy Resin','volume_estimate'=>'3 Ton/Bulan','potensi_revenue'=>200000000,'probability'=>75,'lead_score'=>82,'lead_source'=>'Referral','user_id'=>1,'customer_id'=>2,'notes_kebutuhan'=>'Butuh kualitas food grade dan sertifikasi COA.','competitor'=>'2 Supplier lain','expected_closing'=>'2025-06-30','next_follow_up'=>'2025-05-22','created_at'=>$now,'updated_at'=>$now],
             ['lead_code'=>'LEAD-2025-0005','company_name'=>'PT. Surya Polimer Mandiri','pic_name'=>'Fajar Nugroho','phone'=>'0812-5555-6666','industry'=>'Polymer & Rubber','pipeline_stage'=>'Won','temperature'=>'Hot','product_interest'=>'Polyethylene HDPE','volume_estimate'=>'20 Ton/Bulan','potensi_revenue'=>350000000,'probability'=>100,'lead_score'=>95,'lead_source'=>'Referral','user_id'=>2,'customer_id'=>5,'created_at'=>$now,'updated_at'=>$now],
-        ]);
+        ];
+        foreach ($leads as $lead) {
+            DB::table('leads')->insert($lead);
+        }
 
         // ── Purchase Orders + Items ──
         $pos = [

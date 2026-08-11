@@ -88,6 +88,24 @@ class DeletionRequest extends Model
             'route' => 'purchase-orders.index',
             'feature' => 'purchase_orders',
         ],
+        'invoices' => [
+            'model' => Invoice::class,
+            'label' => 'invoice_number',
+            'title' => 'Invoice',
+            'route' => 'invoices.index',
+        ],
+        'quotations' => [
+            'model' => Quotation::class,
+            'label' => 'quotation_number',
+            'title' => 'Penawaran',
+            'route' => 'quotations.index',
+        ],
+        'products' => [
+            'model' => Product::class,
+            'label' => 'product_name',
+            'title' => 'Master Barang',
+            'route' => 'products.index',
+        ],
         'tasks' => [
             'model' => Activity::class,
             'label' => 'subject',

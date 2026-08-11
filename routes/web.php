@@ -19,6 +19,9 @@ use App\Http\Controllers\ArtisanController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DeletionRequestController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\ProductController;
 
 // ── Artisan runner (shared hosting) ──
 Route::get('/run/{command}', [ArtisanController::class, 'run'])
@@ -97,6 +100,20 @@ Route::middleware(['auth', 'direct-delete'])->group(function () {
     Route::patch('/customers/{customer}/transfer-sales', [CustomerController::class, 'transferSales'])->name('customers.transfer-sales');
     Route::resource('customers', CustomerController::class);
 
+    Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
+    Route::resource('products', ProductController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
+
+    // Sales documents
+    Route::get('/invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');
+    Route::get('/invoices/{id}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+    Route::get('/invoices/{id}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['invoices' => 'id']);
+
+    Route::get('/quotations/export', [QuotationController::class, 'export'])->name('quotations.export');
+    Route::get('/quotations/{id}/print', [QuotationController::class, 'print'])->name('quotations.print');
+    Route::get('/quotations/{id}/edit', [QuotationController::class, 'edit'])->name('quotations.edit');
+    Route::resource('quotations', QuotationController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['quotations' => 'id']);
+
     // Suppliers & Purchase Orders (Admin & Sales Manager only)
     Route::middleware('role:Admin,Sales Manager')->group(function () {
         Route::get('/suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
@@ -107,6 +124,7 @@ Route::middleware(['auth', 'direct-delete'])->group(function () {
         Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
 
         Route::get('/purchase-orders/export', [PurchaseOrderController::class, 'export'])->name('purchase-orders.export');
+        Route::get('/purchase-orders/{purchaseOrder}/print', [PurchaseOrderController::class, 'print'])->name('purchase-orders.print');
         Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
         Route::resource('purchase-orders', PurchaseOrderController::class)->only(['index', 'store', 'update', 'destroy']);
     });

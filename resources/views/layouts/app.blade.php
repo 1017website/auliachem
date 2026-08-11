@@ -1377,6 +1377,16 @@
                 <i class="fas fa-industry si-icon"></i><span>Database Supplier</span>
             </a>
             @endif
+            <a href="{{ route('products.index') }}" class="sidebar-item {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                <i class="fas fa-boxes si-icon"></i><span>Master Barang</span>
+            </a>
+            <div class="sidebar-section">Dokumen</div>
+            <a href="{{ route('quotations.index') }}" class="sidebar-item {{ request()->routeIs('quotations.*') ? 'active' : '' }}">
+                <i class="fas fa-file-signature si-icon"></i><span>Penawaran</span>
+            </a>
+            <a href="{{ route('invoices.index') }}" class="sidebar-item {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                <i class="fas fa-receipt si-icon"></i><span>Invoice</span>
+            </a>
             @if(auth()->user()->canAccess('purchase_orders'))
             <a href="{{ route('purchase-orders.index') }}" class="sidebar-item {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}">
                 <i class="fas fa-file-invoice si-icon"></i><span>Purchase Orders</span>

@@ -9,13 +9,13 @@ use App\Models\Lead;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class DeletionRequestTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_non_admin_creates_request_instead_of_deleting_data(): void
     {

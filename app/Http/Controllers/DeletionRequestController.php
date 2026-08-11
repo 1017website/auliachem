@@ -10,6 +10,8 @@ use App\Models\Lead;
 use App\Models\LeadPic;
 use App\Models\LeadProduct;
 use App\Models\Notification;
+use App\Models\Invoice;
+use App\Models\Quotation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -208,6 +210,8 @@ class DeletionRequestController extends Controller
             $model instanceof LeadProduct => $model->lead?->user_id,
             $model instanceof CustomerPic => $model->customer?->user_id,
             $model instanceof Activity => $model->sales_user_id ?? $model->user_id,
+            $model instanceof Invoice,
+            $model instanceof Quotation => $model->user_id,
             default => null,
         };
 

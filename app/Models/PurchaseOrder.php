@@ -14,7 +14,7 @@ class PurchaseOrder extends Model
     use SoftDeletes;
     protected $fillable = [
         'po_number','customer_id','supplier_id','lead_id','user_id',
-        'currency','status','order_date','notes'
+        'currency','status','order_date','notes','delivery_address','special_instructions'
     ];
 
     protected $casts = ['order_date' => 'date'];

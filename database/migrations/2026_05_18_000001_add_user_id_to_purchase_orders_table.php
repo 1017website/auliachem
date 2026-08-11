@@ -16,10 +16,16 @@ return new class extends Migration
         });
 
         // Backfill: ambil user_id dari lead jika ada
-        DB::statement('UPDATE purchase_orders po
-            JOIN leads l ON l.id = po.lead_id
-            SET po.user_id = l.user_id
-            WHERE po.user_id IS NULL AND po.lead_id IS NOT NULL');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('UPDATE purchase_orders
+                SET user_id = (SELECT leads.user_id FROM leads WHERE leads.id = purchase_orders.lead_id)
+                WHERE user_id IS NULL AND lead_id IS NOT NULL');
+        } else {
+            DB::statement('UPDATE purchase_orders po
+                JOIN leads l ON l.id = po.lead_id
+                SET po.user_id = l.user_id
+                WHERE po.user_id IS NULL AND po.lead_id IS NOT NULL');
+        }
     }
 
     public function down(): void
