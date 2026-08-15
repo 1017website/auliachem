@@ -173,6 +173,12 @@
                                 value="{{ $settings['company_phone'] ?? '' }}">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label">Tax No.</label>
+                            <input type="text" name="company_tax_number" class="form-control"
+                                value="{{ $settings['company_tax_number'] ?? '' }}" placeholder="Contoh: 71.579.461.6-609.000">
+                            <div style="font-size:11px;color:#6b7280;margin-top:4px">Ditampilkan pada dokumen Penawaran, Invoice, dan Purchase Order.</div>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label">Website</label>
                             <input type="text" name="company_website" class="form-control"
                                 value="{{ $settings['company_website'] ?? '' }}" placeholder="https://example.com">
@@ -257,38 +263,6 @@
                                 style="display:none;margin-top:8px;max-height:48px;border-radius:6px;border:1px solid #e5e7eb">
                         </div>
 
-                        {{-- Logo Kop Surat --}}
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Logo Kop Surat</label>
-                            <div style="font-size:11px;color:#6b7280;margin-bottom:8px">Logo berwarna untuk halaman cetak dan PDF. Gunakan format landscape dengan latar transparan atau putih.</div>
-                            @if(!empty($settings['company_print_logo']))
-                                <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded"
-                                    style="background:#f8f9fa;border:1px solid #e5e7eb">
-                                    <img src="{{ Storage::url($settings['company_print_logo']) }}" alt="Logo Kop Surat"
-                                        style="max-height:48px;max-width:180px;object-fit:contain;border-radius:6px">
-                                    <div>
-                                        <div style="font-size:12px;font-weight:600;color:#374151">Logo kop aktif</div>
-                                        <button type="button" class="btn btn-sm btn-outline-danger mt-1"
-                                            style="font-size:11px;padding:2px 8px" onclick="deleteImage('print_logo')">
-                                            <i class="fas fa-trash me-1"></i> Hapus
-                                        </button>
-                                    </div>
-                                </div>
-                            @endif
-                            <div class="upload-area" onclick="document.getElementById('printLogoInput').click()"
-                                style="border:2px dashed #cbd5e1;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s"
-                                onmouseover="this.style.borderColor='var(--primary)'"
-                                onmouseout="this.style.borderColor='#cbd5e1'">
-                                <i class="fas fa-file-image" style="font-size:1.5rem;color:#9ca3af"></i>
-                                <div style="font-size:12px;color:#6b7280;margin-top:8px">Klik untuk upload logo kop surat</div>
-                                <div id="printLogoFileName" style="font-size:11px;color:var(--primary);margin-top:4px"></div>
-                            </div>
-                            <input type="file" id="printLogoInput" name="company_print_logo" accept="image/*"
-                                style="display:none" onchange="previewFile(this,'printLogoFileName','printLogoPreview')">
-                            <img id="printLogoPreview" src="" alt=""
-                                style="display:none;margin-top:8px;max-height:60px;max-width:220px;border-radius:6px;border:1px solid #e5e7eb">
-                        </div>
-
                         {{-- Favicon --}}
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Favicon</label>
@@ -323,6 +297,51 @@
                             <img id="faviconPreview" src="" alt=""
                                 style="display:none;margin-top:8px;width:32px;height:32px;object-fit:contain;border:1px solid #e5e7eb">
                         </div>
+                    </div>
+
+                    {{-- Logo Dokumen Cetak --}}
+                    <div class="s-divider"></div>
+                    <div class="s-title" style="margin-bottom:6px">Logo Dokumen Cetak</div>
+                    <div class="s-desc" style="margin-bottom:16px">Atur logo kop secara terpisah untuk Penawaran, Invoice, dan Purchase Order. Format: PNG, JPG, WebP, atau SVG; maksimal 2MB.</div>
+                    @php
+                        $documentLogos = [
+                            ['key' => 'quotation_print_logo', 'id' => 'quotationPrintLogo', 'label' => 'Logo Penawaran', 'icon' => 'fa-file-signature'],
+                            ['key' => 'invoice_print_logo', 'id' => 'invoicePrintLogo', 'label' => 'Logo Invoice', 'icon' => 'fa-file-invoice-dollar'],
+                            ['key' => 'purchase_order_print_logo', 'id' => 'purchaseOrderPrintLogo', 'label' => 'Logo Purchase Order', 'icon' => 'fa-file-contract'],
+                        ];
+                    @endphp
+                    <div class="row g-4">
+                        @foreach($documentLogos as $documentLogo)
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ $documentLogo['label'] }}</label>
+                                @if(!empty($settings[$documentLogo['key']]))
+                                    <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded"
+                                        style="background:#f8f9fa;border:1px solid #e5e7eb;min-height:76px">
+                                        <img src="{{ Storage::url($settings[$documentLogo['key']]) }}" alt="{{ $documentLogo['label'] }}"
+                                            style="max-height:48px;max-width:135px;object-fit:contain;border-radius:6px">
+                                        <div>
+                                            <div style="font-size:12px;font-weight:600;color:#374151">Logo aktif</div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger mt-1"
+                                                style="font-size:11px;padding:2px 8px" onclick="deleteImage('{{ $documentLogo['key'] }}')">
+                                                <i class="fas fa-trash me-1"></i> Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="upload-area" onclick="document.getElementById('{{ $documentLogo['id'] }}Input').click()"
+                                    style="border:2px dashed #cbd5e1;border-radius:8px;padding:22px 12px;text-align:center;cursor:pointer;transition:all .2s;min-height:108px"
+                                    onmouseover="this.style.borderColor='var(--primary)'"
+                                    onmouseout="this.style.borderColor='#cbd5e1'">
+                                    <i class="fas {{ $documentLogo['icon'] }}" style="font-size:1.5rem;color:#9ca3af"></i>
+                                    <div style="font-size:12px;color:#6b7280;margin-top:8px">Upload {{ strtolower($documentLogo['label']) }}</div>
+                                    <div id="{{ $documentLogo['id'] }}FileName" style="font-size:11px;color:var(--primary);margin-top:4px"></div>
+                                </div>
+                                <input type="file" id="{{ $documentLogo['id'] }}Input" name="{{ $documentLogo['key'] }}" accept="image/*"
+                                    style="display:none" onchange="previewFile(this,'{{ $documentLogo['id'] }}FileName','{{ $documentLogo['id'] }}Preview')">
+                                <img id="{{ $documentLogo['id'] }}Preview" src="" alt=""
+                                    style="display:none;margin-top:8px;max-height:60px;max-width:100%;border-radius:6px;border:1px solid #e5e7eb">
+                            </div>
+                        @endforeach
                     </div>
 
                     {{-- Tema Warna --}}
@@ -377,7 +396,15 @@
                 }
 
                 function deleteImage(type) {
-                    const labels = { logo: 'logo sidebar', login_logo: 'logo login', print_logo: 'logo kop surat', favicon: 'favicon' };
+                    const labels = {
+                        logo: 'logo sidebar',
+                        login_logo: 'logo login',
+                        print_logo: 'logo kop surat lama',
+                        quotation_print_logo: 'logo Penawaran',
+                        invoice_print_logo: 'logo Invoice',
+                        purchase_order_print_logo: 'logo Purchase Order',
+                        favicon: 'favicon'
+                    };
                     if (!confirm('Hapus ' + (labels[type] || type) + '?')) return;
                     document.getElementById('deleteImageType').value = type;
                     document.getElementById('deleteImageForm').submit();

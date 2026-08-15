@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\PurchaseOrder;
 use App\Models\Quotation;
 use App\Models\Setting;
 use Illuminate\Database\Eloquent\Model;
@@ -13,10 +14,19 @@ class DocumentVerificationController extends Controller
     {
         [$document, $config] = $this->resolveDocument($kind, $id);
 
+        $relations = ['salesUser'];
+        if ($kind === 'purchase_order') {
+            $relations[] = 'supplier';
+        }
+        $document->load($relations);
+
         return view('documents.verify', [
-            'document' => $document->load('salesUser'),
+            'document' => $document,
             'config' => $config,
             'settings' => Setting::getAll(),
+            'counterpartyName' => $kind === 'purchase_order'
+                ? ($document->supplier?->supplier_name ?? '-')
+                : $document->customer_name,
         ]);
     }
 
@@ -35,6 +45,12 @@ class DocumentVerificationController extends Controller
                 'label' => 'Invoice',
                 'number_field' => 'invoice_number',
                 'date_field' => 'invoice_date',
+            ],
+            'purchase_order' => [
+                'model' => PurchaseOrder::class,
+                'label' => 'Purchase Order',
+                'number_field' => 'po_number',
+                'date_field' => 'order_date',
             ],
             default => abort(404),
         };

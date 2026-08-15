@@ -42,7 +42,7 @@ Route::get('/', function () {
 
 // Public, tamper-proof destination for the QR code on signed sales documents.
 Route::get('/documents/verify/{kind}/{id}', [DocumentVerificationController::class, 'show'])
-    ->whereIn('kind', ['quotation', 'invoice'])
+    ->whereIn('kind', ['quotation', 'invoice', 'purchase_order'])
     ->whereNumber('id')
     ->middleware('signed:relative')
     ->name('documents.verify');

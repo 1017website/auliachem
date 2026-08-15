@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Endroid\QrCode\Builder\Builder as QrCodeBuilder;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Writer\PngWriter;
 use App\Models\Customer;
 use App\Models\Lead;
 use App\Models\PurchaseOrder;
@@ -9,6 +12,7 @@ use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use App\Models\Product;
 
@@ -221,10 +225,24 @@ class PurchaseOrderController extends Controller
     public function print(PurchaseOrder $purchaseOrder)
     {
         $purchaseOrder->load(['supplier', 'customer', 'items', 'salesUser']);
+        $verificationPath = URL::signedRoute('documents.verify', [
+            'kind' => 'purchase_order',
+            'id' => $purchaseOrder->getKey(),
+        ], absolute: false);
+        $verificationUrl = request()->getSchemeAndHttpHost().$verificationPath;
+        $signatureQr = (new QrCodeBuilder(
+            writer: new PngWriter(),
+            data: $verificationUrl,
+            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+            size: 260,
+            margin: 8,
+        ))->build()->getDataUri();
 
         return view('purchase_orders.print', [
             'po' => $purchaseOrder,
             'settings' => \App\Models\Setting::getAll(),
+            'signatureQr' => $signatureQr,
+            'verificationUrl' => $verificationUrl,
         ]);
     }
 

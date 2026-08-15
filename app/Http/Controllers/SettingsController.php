@@ -20,9 +20,13 @@ class SettingsController extends Controller
             'company_name' => 'required|string|max:255',
             'company_email' => 'nullable|email|max:255',
             'company_phone' => 'nullable|string|max:20',
+            'company_tax_number' => 'nullable|string|max:100',
             'company_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'company_login_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'company_print_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
+            'quotation_print_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
+            'invoice_print_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
+            'purchase_order_print_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'company_favicon' => 'nullable|mimes:png,jpg,jpeg,ico|max:512',
             'theme_color' => 'nullable|in:blue,red,green,purple,orange,teal',
         ]);
@@ -31,6 +35,7 @@ class SettingsController extends Controller
             'company_name',
             'company_email',
             'company_phone',
+            'company_tax_number',
             'company_address',
             'company_website',
             'currency',
@@ -66,14 +71,21 @@ class SettingsController extends Controller
             Setting::set('company_login_logo', $path);
         }
 
-        // Upload logo berwarna khusus untuk kop surat dokumen cetak.
-        if ($request->hasFile('company_print_logo') && $request->file('company_print_logo')->isValid()) {
-            $oldLogo = Setting::get('company_print_logo');
-            if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
-                Storage::disk('public')->delete($oldLogo);
+        // Logo kop surat dapat dibedakan untuk setiap jenis dokumen.
+        $documentLogoKeys = [
+            'quotation_print_logo',
+            'invoice_print_logo',
+            'purchase_order_print_logo',
+        ];
+        foreach ($documentLogoKeys as $key) {
+            if ($request->hasFile($key) && $request->file($key)->isValid()) {
+                $oldLogo = Setting::get($key);
+                if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
+                    Storage::disk('public')->delete($oldLogo);
+                }
+                $path = $request->file($key)->store('branding', 'public');
+                Setting::set($key, $path);
             }
-            $path = $request->file('company_print_logo')->store('branding', 'public');
-            Setting::set('company_print_logo', $path);
         }
 
         // Upload Favicon
@@ -102,6 +114,9 @@ class SettingsController extends Controller
             'favicon' => 'company_favicon',
             'login_logo' => 'company_login_logo',
             'print_logo' => 'company_print_logo',
+            'quotation_print_logo' => 'quotation_print_logo',
+            'invoice_print_logo' => 'invoice_print_logo',
+            'purchase_order_print_logo' => 'purchase_order_print_logo',
             default => 'company_logo',
         };
         $path = Setting::get($key);

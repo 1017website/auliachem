@@ -20,7 +20,7 @@
             <div class="row"><span>Jenis dokumen</span><span>{{ $config['label'] }}</span></div>
             <div class="row"><span>Nomor dokumen</span><span>{{ $document->{$config['number_field']} }}</span></div>
             <div class="row"><span>Tanggal</span><span>{{ $document->{$config['date_field']}?->translatedFormat('d F Y') }}</span></div>
-            <div class="row"><span>Ditujukan kepada</span><span>{{ $document->customer_name }}</span></div>
+            <div class="row"><span>Ditujukan kepada</span><span>{{ $counterpartyName }}</span></div>
             <div class="row"><span>Ditandatangani oleh</span><span>{{ $document->salesUser?->name ?? 'Administrator' }}</span></div>
             <div class="row"><span>Jabatan</span><span>{{ $document->salesUser?->role ?? 'Administrator' }}</span></div>
             <div class="row"><span>Status</span><span>{{ $document->status }}</span></div>
