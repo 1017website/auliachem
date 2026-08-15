@@ -257,6 +257,38 @@
                                 style="display:none;margin-top:8px;max-height:48px;border-radius:6px;border:1px solid #e5e7eb">
                         </div>
 
+                        {{-- Logo Kop Surat --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Logo Kop Surat</label>
+                            <div style="font-size:11px;color:#6b7280;margin-bottom:8px">Logo berwarna untuk halaman cetak dan PDF. Gunakan format landscape dengan latar transparan atau putih.</div>
+                            @if(!empty($settings['company_print_logo']))
+                                <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded"
+                                    style="background:#f8f9fa;border:1px solid #e5e7eb">
+                                    <img src="{{ Storage::url($settings['company_print_logo']) }}" alt="Logo Kop Surat"
+                                        style="max-height:48px;max-width:180px;object-fit:contain;border-radius:6px">
+                                    <div>
+                                        <div style="font-size:12px;font-weight:600;color:#374151">Logo kop aktif</div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-1"
+                                            style="font-size:11px;padding:2px 8px" onclick="deleteImage('print_logo')">
+                                            <i class="fas fa-trash me-1"></i> Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="upload-area" onclick="document.getElementById('printLogoInput').click()"
+                                style="border:2px dashed #cbd5e1;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s"
+                                onmouseover="this.style.borderColor='var(--primary)'"
+                                onmouseout="this.style.borderColor='#cbd5e1'">
+                                <i class="fas fa-file-image" style="font-size:1.5rem;color:#9ca3af"></i>
+                                <div style="font-size:12px;color:#6b7280;margin-top:8px">Klik untuk upload logo kop surat</div>
+                                <div id="printLogoFileName" style="font-size:11px;color:var(--primary);margin-top:4px"></div>
+                            </div>
+                            <input type="file" id="printLogoInput" name="company_print_logo" accept="image/*"
+                                style="display:none" onchange="previewFile(this,'printLogoFileName','printLogoPreview')">
+                            <img id="printLogoPreview" src="" alt=""
+                                style="display:none;margin-top:8px;max-height:60px;max-width:220px;border-radius:6px;border:1px solid #e5e7eb">
+                        </div>
+
                         {{-- Favicon --}}
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Favicon</label>
@@ -345,7 +377,7 @@
                 }
 
                 function deleteImage(type) {
-                    const labels = { logo: 'logo sidebar', login_logo: 'logo login', favicon: 'favicon' };
+                    const labels = { logo: 'logo sidebar', login_logo: 'logo login', print_logo: 'logo kop surat', favicon: 'favicon' };
                     if (!confirm('Hapus ' + (labels[type] || type) + '?')) return;
                     document.getElementById('deleteImageType').value = type;
                     document.getElementById('deleteImageForm').submit();

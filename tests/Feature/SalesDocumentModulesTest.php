@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Quotation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class SalesDocumentModulesTest extends TestCase
@@ -62,6 +63,23 @@ class SalesDocumentModulesTest extends TestCase
 
         $quotation = Quotation::firstOrFail();
         $this->assertStringStartsWith('QTN-202608-', $quotation->quotation_number);
+
+        $this->actingAs($user)->get(route('quotations.print', $quotation->id))
+            ->assertOk()
+            ->assertSee('CHEMICAL &amp; LABORATORY SOLUTION', false)
+            ->assertSee('data:image/png;base64,', false)
+            ->assertSee('ditandatangani secara elektronik', false);
+
+        $verificationUrl = URL::signedRoute('documents.verify', [
+            'kind' => 'quotation',
+            'id' => $quotation->id,
+        ], absolute: false);
+        $this->get($verificationUrl)
+            ->assertOk()
+            ->assertSee('Dokumen Terverifikasi')
+            ->assertSee($quotation->quotation_number);
+        $this->get(route('documents.verify', ['kind' => 'quotation', 'id' => $quotation->id]))
+            ->assertForbidden();
 
         $this->actingAs($user)->put(route('quotations.update', $quotation->id), [
             'customer_name' => 'PT Agrinesia Raya',

@@ -22,6 +22,7 @@ use App\Http\Controllers\DeletionRequestController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\DocumentVerificationController;
 
 // ── Artisan runner (shared hosting) ──
 Route::get('/run/{command}', [ArtisanController::class, 'run'])
@@ -38,6 +39,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
+
+// Public, tamper-proof destination for the QR code on signed sales documents.
+Route::get('/documents/verify/{kind}/{id}', [DocumentVerificationController::class, 'show'])
+    ->whereIn('kind', ['quotation', 'invoice'])
+    ->whereNumber('id')
+    ->middleware('signed:relative')
+    ->name('documents.verify');
 
 // ── Auth required ──────────────────────────────────
 Route::middleware(['auth', 'direct-delete'])->group(function () {

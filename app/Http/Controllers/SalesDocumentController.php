@@ -10,7 +10,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
+use Endroid\QrCode\Builder\Builder as QrCodeBuilder;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Writer\PngWriter;
 
 abstract class SalesDocumentController extends Controller
 {
@@ -130,12 +134,27 @@ abstract class SalesDocumentController extends Controller
 
     public function print(int $id)
     {
+        $config = $this->config();
         $document = $this->findDocument($id)->load(['items', 'customer', 'salesUser']);
+        $verificationPath = URL::signedRoute('documents.verify', [
+            'kind' => $config['kind'],
+            'id' => $document->getKey(),
+        ], absolute: false);
+        $verificationUrl = request()->getSchemeAndHttpHost().$verificationPath;
+        $signatureQr = (new QrCodeBuilder(
+            writer: new PngWriter(),
+            data: $verificationUrl,
+            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+            size: 260,
+            margin: 8,
+        ))->build()->getDataUri();
 
         return view('documents.print', [
-            'config' => $this->config(),
+            'config' => $config,
             'document' => $document,
             'settings' => Setting::getAll(),
+            'signatureQr' => $signatureQr,
+            'verificationUrl' => $verificationUrl,
         ]);
     }
 

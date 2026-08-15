@@ -22,6 +22,7 @@ class SettingsController extends Controller
             'company_phone' => 'nullable|string|max:20',
             'company_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'company_login_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
+            'company_print_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'company_favicon' => 'nullable|mimes:png,jpg,jpeg,ico|max:512',
             'theme_color' => 'nullable|in:blue,red,green,purple,orange,teal',
         ]);
@@ -65,6 +66,16 @@ class SettingsController extends Controller
             Setting::set('company_login_logo', $path);
         }
 
+        // Upload logo berwarna khusus untuk kop surat dokumen cetak.
+        if ($request->hasFile('company_print_logo') && $request->file('company_print_logo')->isValid()) {
+            $oldLogo = Setting::get('company_print_logo');
+            if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
+                Storage::disk('public')->delete($oldLogo);
+            }
+            $path = $request->file('company_print_logo')->store('branding', 'public');
+            Setting::set('company_print_logo', $path);
+        }
+
         // Upload Favicon
         if ($request->hasFile('company_favicon') && $request->file('company_favicon')->isValid()) {
             $oldFavicon = Setting::get('company_favicon');
@@ -90,6 +101,7 @@ class SettingsController extends Controller
         $key = match ($type) {
             'favicon' => 'company_favicon',
             'login_logo' => 'company_login_logo',
+            'print_logo' => 'company_print_logo',
             default => 'company_logo',
         };
         $path = Setting::get($key);
