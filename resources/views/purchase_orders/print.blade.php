@@ -14,7 +14,7 @@
     $printLogo = $settings['purchase_order_print_logo'] ?? $settings['company_print_logo'] ?? null;
     $companyName = strtoupper($settings['company_name'] ?? 'AULIACHEM PERKASA');
     $signerName = $po->salesUser?->name ?? 'Administrator';
-    $signerRole = $po->salesUser?->role ?? 'Administrator';
+    $signerPosition = $po->salesUser?->position ?: '-';
 @endphp
 <div class="print-actions"><button type="button" data-print-document>Cetak / Simpan PDF</button></div>
 <main class="page">
@@ -75,7 +75,7 @@
             <div class="signature-copy">
                 <div class="signed-by">Dokumen ini ditandatangani secara elektronik oleh:</div>
                 <div class="name">{{ $signerName }}</div>
-                <div class="role">{{ $signerRole }}</div>
+                <div class="role">{{ $signerPosition }}</div>
                 <div>{{ $companyName }}</div>
                 <div class="verify">Pindai QR untuk memverifikasi keaslian dokumen.</div>
             </div>

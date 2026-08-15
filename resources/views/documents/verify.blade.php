@@ -22,7 +22,7 @@
             <div class="row"><span>Tanggal</span><span>{{ $document->{$config['date_field']}?->translatedFormat('d F Y') }}</span></div>
             <div class="row"><span>Ditujukan kepada</span><span>{{ $counterpartyName }}</span></div>
             <div class="row"><span>Ditandatangani oleh</span><span>{{ $document->salesUser?->name ?? 'Administrator' }}</span></div>
-            <div class="row"><span>Jabatan</span><span>{{ $document->salesUser?->role ?? 'Administrator' }}</span></div>
+            <div class="row"><span>Jabatan</span><span>{{ $document->salesUser?->position ?: '-' }}</span></div>
             <div class="row"><span>Status</span><span>{{ $document->status }}</span></div>
         </div>
         <div class="foot">

@@ -20,7 +20,11 @@ class DocumentPrintLogoSettingsTest extends TestCase
     public function test_admin_can_upload_and_use_a_different_logo_for_each_document_type(): void
     {
         Storage::fake('public');
-        $admin = User::factory()->create(['role' => 'Admin', 'status' => 'Active']);
+        $admin = User::factory()->create([
+            'role' => 'Admin',
+            'position' => 'Direktur Utama',
+            'status' => 'Active',
+        ]);
 
         $this->actingAs($admin)->get(route('settings.index'))
             ->assertOk()
@@ -82,11 +86,15 @@ class DocumentPrintLogoSettingsTest extends TestCase
         $this->actingAs($admin)->get(route('quotations.print', $quotation->id))
             ->assertOk()
             ->assertSee(asset('storage/'.$quotationLogo), false)
-            ->assertSee('Tax No: 71.579.461.6-609.000');
+            ->assertSee('Tax No: 71.579.461.6-609.000')
+            ->assertSee('Direktur Utama')
+            ->assertDontSee('<div class="role">Admin</div>', false);
         $this->actingAs($admin)->get(route('invoices.print', $invoice->id))
             ->assertOk()
             ->assertSee(asset('storage/'.$invoiceLogo), false)
-            ->assertSee('Tax No: 71.579.461.6-609.000');
+            ->assertSee('Tax No: 71.579.461.6-609.000')
+            ->assertSee('Direktur Utama')
+            ->assertDontSee('<div class="role">Admin</div>', false);
         $this->actingAs($admin)->get(route('purchase-orders.print', $purchaseOrder))
             ->assertOk()
             ->assertSee(asset('storage/'.$purchaseOrderLogo), false)
@@ -94,6 +102,8 @@ class DocumentPrintLogoSettingsTest extends TestCase
             ->assertSee('71.579.461.6-609.000')
             ->assertSee('data:image/png;base64,', false)
             ->assertSee('ditandatangani secara elektronik', false)
+            ->assertSee('Direktur Utama')
+            ->assertDontSee('<div class="role">Admin</div>', false)
             ->assertSee('data-print-document', false);
 
         $purchaseOrderVerificationUrl = URL::signedRoute('documents.verify', [
@@ -104,7 +114,8 @@ class DocumentPrintLogoSettingsTest extends TestCase
             ->assertOk()
             ->assertSee('Dokumen Terverifikasi')
             ->assertSee($purchaseOrder->po_number)
-            ->assertSee('Purchase Order');
+            ->assertSee('Purchase Order')
+            ->assertSee('Direktur Utama');
 
         $this->actingAs($admin)->post(route('settings.delete-image'), [
             'type' => 'quotation_print_logo',
