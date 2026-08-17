@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Invoice;
 use App\Models\Quotation;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\URL;
@@ -98,6 +99,39 @@ class SalesDocumentModulesTest extends TestCase
 
         $this->assertDatabaseHas('quotations', ['id' => $quotation->id, 'status' => 'Sent']);
         $this->assertDatabaseHas('quotation_items', ['quotation_id' => $quotation->id, 'qty' => 2000]);
+    }
+
+    public function test_quotation_print_hides_company_address_phone_and_recipient_labels(): void
+    {
+        $user = User::factory()->create(['role' => 'Sales Executive', 'status' => 'Active']);
+        Setting::set('company_address', 'Alamat Rahasia Perusahaan');
+        Setting::set('company_phone', '031-555-0000');
+        Setting::set('company_email', 'sales@example.test');
+        Setting::set('company_website', 'https://example.test');
+
+        $quotation = Quotation::createWithUniqueNumber([
+            'user_id' => $user->id,
+            'customer_name' => 'PT Pelanggan Contoh',
+            'customer_address' => 'Sumenep',
+            'customer_phone' => '0812-3456-7890',
+            'quotation_date' => '2026-08-17',
+            'valid_until' => '2026-08-24',
+            'currency' => 'IDR',
+            'tax_percent' => 0,
+            'status' => 'Draft',
+        ]);
+
+        $this->actingAs($user)->get(route('quotations.print', $quotation->id))
+            ->assertOk()
+            ->assertSee('PT Pelanggan Contoh')
+            ->assertSee('Sumenep')
+            ->assertSee('sales@example.test')
+            ->assertSee('example.test')
+            ->assertDontSee('Alamat Rahasia Perusahaan')
+            ->assertDontSee('031-555-0000')
+            ->assertDontSee('Phone &amp; Fax:', false)
+            ->assertDontSee('Kepada:')
+            ->assertDontSee('Telp 0812-3456-7890');
     }
 
     public function test_sales_user_cannot_access_another_users_document(): void

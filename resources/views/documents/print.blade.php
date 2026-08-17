@@ -15,6 +15,7 @@
     $companyName = strtoupper($settings['company_name'] ?? 'AULIACHEM PERKASA');
     $signerName = $document->salesUser?->name ?? 'Administrator';
     $signerPosition = $document->salesUser?->position ?: '-';
+    $isQuotation = $config['kind'] === 'quotation';
 @endphp
 <div class="print-actions"><button type="button" data-print-document>Cetak / Simpan PDF</button></div>
 <main class="page">
@@ -28,18 +29,28 @@
         @endif
         <div class="company-info">
             @if(!empty($settings['company_tax_number']))<div class="tax-number">Tax No: {{ $settings['company_tax_number'] }}</div>@endif
-            {{ $settings['company_address'] ?? 'Bratang Gede IV No. 8, Surabaya - East Java, Indonesia' }}
-            @if(!empty($settings['company_phone'])) &bull; Phone &amp; Fax: {{ $settings['company_phone'] }} @endif
-            @if(!empty($settings['company_email'])) &bull; {{ $settings['company_email'] }} @endif
-            @if(!empty($settings['company_website'])) &bull; {{ preg_replace('#^https?://#', '', $settings['company_website']) }} @endif
+            @if($isQuotation)
+                @php
+                    $quotationHeaderContacts = array_filter([
+                        $settings['company_email'] ?? null,
+                        !empty($settings['company_website']) ? preg_replace('#^https?://#', '', $settings['company_website']) : null,
+                    ]);
+                @endphp
+                {{ implode(' • ', $quotationHeaderContacts) }}
+            @else
+                {{ $settings['company_address'] ?? 'Bratang Gede IV No. 8, Surabaya - East Java, Indonesia' }}
+                @if(!empty($settings['company_phone'])) &bull; Phone &amp; Fax: {{ $settings['company_phone'] }} @endif
+                @if(!empty($settings['company_email'])) &bull; {{ $settings['company_email'] }} @endif
+                @if(!empty($settings['company_website'])) &bull; {{ preg_replace('#^https?://#', '', $settings['company_website']) }} @endif
+            @endif
         </div>
     </header>
 
     <div class="title">{{ $config['title'] }}</div>
     <section class="meta">
         <div>
-            <div class="meta-title">Kepada:</div>
-            <div class="party"><b>{{ $document->customer_name }}</b><br>{!! nl2br(e($document->customer_address ?: '-')) !!}@if($document->customer_phone)<br>Telp {{ $document->customer_phone }}@endif</div>
+            @unless($isQuotation)<div class="meta-title">Kepada:</div>@endunless
+            <div class="party"><b>{{ $document->customer_name }}</b><br>{!! nl2br(e($document->customer_address ?: '-')) !!}@if(!$isQuotation && $document->customer_phone)<br>Telp {{ $document->customer_phone }}@endif</div>
         </div>
         <div class="doc-meta">
             <b>Tanggal</b><span>{{ $document->{$config['date_field']}?->translatedFormat('d F Y') }}</span>
