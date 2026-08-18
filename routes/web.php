@@ -128,6 +128,8 @@ Route::middleware(['auth', 'direct-delete'])->group(function () {
     // Suppliers & Purchase Orders (Admin & Sales Manager only)
     Route::middleware('role:Admin,Sales Manager')->group(function () {
         Route::get('/suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
+        Route::get('/suppliers/template', [SupplierController::class, 'template'])->name('suppliers.template');
+        Route::post('/suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import');
         Route::post('/suppliers/{supplier}/products', [SupplierController::class, 'storeProduct'])->name('suppliers.products.store');
         Route::delete('/suppliers/{supplier}/products/{product}', [SupplierController::class, 'destroyProduct'])->name('suppliers.products.destroy');
         Route::post('/suppliers/{supplier}/pics', [SupplierController::class, 'storePic'])->name('suppliers.pics.store');

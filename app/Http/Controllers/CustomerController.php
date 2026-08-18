@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ExcelExport;
+use App\Helpers\ExcelImport;
 use App\Models\Customer;
 use App\Models\CustomerPic;
 use App\Models\User;
@@ -10,6 +12,7 @@ use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class CustomerController extends Controller
 {
@@ -404,47 +407,109 @@ class CustomerController extends Controller
 
     public function template()
     {
-        $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="template_import_customers.csv"',
-        ];
-        $callback = function () {
-            $f = fopen('php://output', 'w');
-            fputs($f, "\xEF\xBB\xBF");
-            fputcsv($f, ['Company Name', 'PIC Name', 'Position', 'Phone', 'Email', 'Industry', 'Location', 'Sales PIC Email']);
-            fputcsv($f, ['PT. Contoh Kimia', 'Budi Santoso', 'Purchasing Manager', '0812-1234-5678', 'budi@contoh.co.id', 'Manufacturing', 'Surabaya', 'sales@crm.com']);
-            fclose($f);
-        };
-        return response()->stream($callback, 200, $headers);
+        return ExcelExport::download(
+            'template-import-customers',
+            ['Company Name', 'PIC Name', 'Position', 'Phone', 'Email', 'Address', 'Industry', 'Location', 'Sales PIC Email', 'Customer Since'],
+            [['PT. Contoh Kimia', 'Budi Santoso', 'Purchasing Manager', '0812-1234-5678', 'budi@contoh.co.id', 'Jl. Industri No. 1', 'Manufacturing', 'Surabaya', 'sales@crm.com', now()->format('Y-m-d')]],
+            'Template Customer'
+        );
     }
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|file|mimes:csv,txt|max:2048']);
-        $handle   = fopen($request->file('file')->getRealPath(), 'r');
-        $header   = fgetcsv($handle);
-        $imported = 0;
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:5120'],
+        ]);
 
-        while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) < 3 || empty(trim($row[0]))) continue;
-            $salesUser = User::where('name', trim($row[7] ?? ''))->first();
-            // Revisi #1: import dari menu Customer = Existing
-            Customer::create([
-                'company_name'   => trim($row[0]),
-                'pic_name'       => trim($row[1]),
-                'pic_position'   => trim($row[2] ?? ''),
-                'phone'          => trim($row[3] ?? ''),
-                'email'          => trim($row[4] ?? ''),
-                'industry'       => trim($row[5] ?? ''),
-                'location'       => trim($row[6] ?? ''),
-                'status'         => 'Existing',
-                'user_id'        => $salesUser?->id,
-                'customer_since' => now()->toDateString(),
-            ]);
-            $imported++;
+        $processed = 0;
+        $skipped = 0;
+
+        try {
+            $rows = ExcelImport::rows($request->file('file'));
+        } catch (\Throwable) {
+            return back()->withErrors(['file' => 'File tidak dapat dibaca. Pastikan format Excel/CSV valid.']);
         }
-        fclose($handle);
-        return redirect()->route('customers.index')->with('success', "Berhasil import {$imported} customer.");
+
+        foreach ($rows as $row) {
+            $data = [
+                'company_name' => trim((string) ExcelImport::value($row, 'company_name', 'nama_perusahaan')),
+                'pic_name' => trim((string) ExcelImport::value($row, 'pic_name', 'nama_pic')),
+                'pic_position' => trim((string) ExcelImport::value($row, 'position', 'pic_position', 'jabatan')),
+                'phone' => trim((string) ExcelImport::value($row, 'phone', 'telepon')),
+                'email' => trim((string) ExcelImport::value($row, 'email')),
+                'address' => trim((string) ExcelImport::value($row, 'address', 'alamat')),
+                'industry' => trim((string) ExcelImport::value($row, 'industry', 'industri')),
+                'location' => trim((string) ExcelImport::value($row, 'location', 'lokasi')),
+                'sales_email' => trim((string) ExcelImport::value($row, 'sales_pic_email', 'email_sales')),
+                'customer_since' => trim((string) ExcelImport::value($row, 'customer_since')),
+            ];
+
+            $validator = Validator::make($data, [
+                'company_name' => ['required', 'string', 'max:255'],
+                'pic_name' => ['required', 'string', 'max:255'],
+                'phone' => ['required', 'string', 'max:20'],
+                'email' => ['nullable', 'email', 'max:255'],
+                'sales_email' => ['nullable', 'email', 'max:255'],
+                'customer_since' => ['nullable', 'date'],
+            ]);
+
+            if ($validator->fails()) {
+                $skipped++;
+                continue;
+            }
+
+            $salesUser = $request->user()->isSalesExecutive()
+                ? $request->user()
+                : User::assignable()->where('email', $data['sales_email'])->first();
+            $salesUser ??= $request->user()->isDeveloper() ? null : $request->user();
+
+            try {
+                DB::transaction(function () use ($data, $salesUser) {
+                    $customer = Customer::updateOrCreate(
+                        ['company_name' => $data['company_name']],
+                        [
+                            'pic_name' => $data['pic_name'],
+                            'pic_position' => $data['pic_position'] ?: null,
+                            'phone' => $data['phone'],
+                            'email' => $data['email'] ?: null,
+                            'address' => $data['address'] ?: null,
+                            'industry' => $data['industry'] ?: null,
+                            'location' => $data['location'] ?: null,
+                            'status' => 'Existing',
+                            'user_id' => $salesUser?->id,
+                            'customer_since' => $data['customer_since'] ?: now()->toDateString(),
+                        ]
+                    );
+
+                    if ($customer->wasRecentlyCreated) {
+                        Lead::createWithUniqueCode([
+                            'customer_id' => $customer->id,
+                            'company_name' => $customer->company_name,
+                            'pic_name' => $customer->pic_name,
+                            'pic_position' => $customer->pic_position,
+                            'phone' => $customer->phone,
+                            'email' => $customer->email,
+                            'address' => $customer->address,
+                            'industry' => $customer->industry,
+                            'location' => $customer->location,
+                            'pipeline_stage' => 'Maintaining',
+                            'temperature' => 'Warm',
+                            'user_id' => $customer->user_id,
+                        ]);
+                    } else {
+                        self::syncToLeads($customer);
+                    }
+                });
+                $processed++;
+            } catch (\Throwable) {
+                $skipped++;
+            }
+        }
+
+        return redirect()->route('customers.index')->with(
+            'success',
+            "Import Customer selesai: {$processed} data diproses, {$skipped} baris dilewati."
+        );
     }
 
     // AJAX: Add activity ke customer

@@ -160,8 +160,10 @@ class SalesDocumentModulesTest extends TestCase
             ->assertOk()
             ->assertSee('PT Pelanggan Contoh')
             ->assertSee('Sumenep')
-            ->assertSee('class="letterhead quotation-letterhead"', false)
-            ->assertSee('class="quotation-company-info"', false)
+            ->assertSee('class="letterhead split-letterhead quotation-letterhead"', false)
+            ->assertSee('class="split-company-info"', false)
+            ->assertSee('.letterhead.split-letterhead{display:grid;', false)
+            ->assertSee('.split-company-info{text-align:right;font-size:11.5px', false)
             ->assertSeeInOrder([
                 'Tax Company',
                 '71.579.461.6-609.000',

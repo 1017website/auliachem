@@ -36,6 +36,10 @@ class DocumentPrintLogoSettingsTest extends TestCase
         $this->actingAs($admin)->put(route('settings.update'), [
             'company_name' => 'Auliachem Perkasa',
             'company_tax_number' => '71.579.461.6-609.000',
+            'company_address' => 'Jl. Industri No. 8, Surabaya',
+            'company_phone' => '031-555-0000',
+            'company_website' => 'https://auliachem.example',
+            'company_email' => 'admin@auliachem.example',
             'quotation_print_logo' => UploadedFile::fake()->image('quotation.png', 600, 120),
             'invoice_print_logo' => UploadedFile::fake()->image('invoice.png', 600, 120),
             'purchase_order_print_logo' => UploadedFile::fake()->image('purchase-order.png', 600, 120),
@@ -88,19 +92,32 @@ class DocumentPrintLogoSettingsTest extends TestCase
             ->assertSee(asset('storage/'.$quotationLogo), false)
             ->assertSee('Tax Company')
             ->assertSee('71.579.461.6-609.000')
+            ->assertDontSee('Jl. Industri No. 8, Surabaya')
+            ->assertDontSee('031-555-0000')
             ->assertSee('Direktur Utama')
             ->assertDontSee('<div class="role">Admin</div>', false);
         $this->actingAs($admin)->get(route('invoices.print', $invoice->id))
             ->assertOk()
             ->assertSee(asset('storage/'.$invoiceLogo), false)
-            ->assertSee('Tax No: 71.579.461.6-609.000')
+            ->assertSee('class="letterhead split-letterhead"', false)
+            ->assertSee('Tax Company')
+            ->assertSee('71.579.461.6-609.000')
+            ->assertSee('Address')
+            ->assertSee('Jl. Industri No. 8, Surabaya')
+            ->assertSee('Phone')
+            ->assertSee('031-555-0000')
             ->assertSee('Direktur Utama')
             ->assertDontSee('<div class="role">Admin</div>', false);
         $this->actingAs($admin)->get(route('purchase-orders.print', $purchaseOrder))
             ->assertOk()
             ->assertSee(asset('storage/'.$purchaseOrderLogo), false)
-            ->assertSee('Tax No:')
+            ->assertSee('class="letterhead split-letterhead"', false)
+            ->assertSee('Tax Company')
             ->assertSee('71.579.461.6-609.000')
+            ->assertSee('Alamat')
+            ->assertSee('Jl. Industri No. 8, Surabaya')
+            ->assertSee('Telepon')
+            ->assertSee('031-555-0000')
             ->assertSee('data:image/png;base64,', false)
             ->assertSee('ditandatangani secara elektronik', false)
             ->assertSee('Direktur Utama')

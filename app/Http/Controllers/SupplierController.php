@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ExcelExport;
+use App\Helpers\ExcelImport;
 use App\Models\Supplier;
 use App\Models\SupplierProduct;
 use App\Models\SupplierPic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
 {
@@ -312,6 +315,100 @@ class SupplierController extends Controller
         ])->toArray();
 
         return \App\Helpers\ExcelExport::download('suppliers-' . date('Ymd'), $headers, $rows, 'Suppliers');
+    }
+
+    public function template()
+    {
+        return ExcelExport::download(
+            'template-import-suppliers',
+            ['Supplier Name', 'Source Type', 'PIC Name', 'Position', 'Phone', 'Email', 'Address', 'Product Category', 'Origin Country', 'Payment Term', 'Status', 'Relationship', 'Preferred', 'Rating', 'Supplier Since'],
+            [['PT. Supplier Contoh', 'Local', 'Budi Santoso', 'Sales Manager', '0812-1234-5678', 'budi@supplier.co.id', 'Jl. Industri No. 2', 'Industrial Chemical', 'Indonesia', '30 Hari', 'Active', 'Existing', 'No', 4.5, now()->format('Y-m-d')]],
+            'Template Supplier'
+        );
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:5120'],
+        ]);
+
+        $processed = 0;
+        $skipped = 0;
+
+        try {
+            $rows = ExcelImport::rows($request->file('file'));
+        } catch (\Throwable) {
+            return back()->withErrors(['file' => 'File tidak dapat dibaca. Pastikan format Excel/CSV valid.']);
+        }
+
+        foreach ($rows as $row) {
+            $preferredValue = strtolower(trim((string) ExcelImport::value($row, 'preferred', 'is_preferred')));
+            $data = [
+                'supplier_name' => trim((string) ExcelImport::value($row, 'supplier_name', 'nama_supplier')),
+                'source_type' => trim((string) ExcelImport::value($row, 'source_type', 'tipe_sumber')) ?: 'Local',
+                'pic_name' => trim((string) ExcelImport::value($row, 'pic_name', 'pic')),
+                'pic_position' => trim((string) ExcelImport::value($row, 'position', 'pic_position', 'jabatan')),
+                'phone' => trim((string) ExcelImport::value($row, 'phone', 'telepon')),
+                'email' => trim((string) ExcelImport::value($row, 'email')),
+                'address' => trim((string) ExcelImport::value($row, 'address', 'alamat')),
+                'product_category' => trim((string) ExcelImport::value($row, 'product_category', 'kategori_produk')),
+                'origin_country' => trim((string) ExcelImport::value($row, 'origin_country', 'negara_asal')),
+                'payment_term' => trim((string) ExcelImport::value($row, 'payment_term', 'termin_pembayaran')),
+                'status' => trim((string) ExcelImport::value($row, 'status')) ?: 'Active',
+                'relationship_status' => trim((string) ExcelImport::value($row, 'relationship', 'relationship_status', 'hubungan')) ?: 'Potential',
+                'is_preferred' => in_array($preferredValue, ['yes', 'ya', '1', 'true'], true),
+                'rating' => ExcelImport::value($row, 'rating') === null ? 0 : (float) ExcelImport::value($row, 'rating'),
+                'supplier_since' => trim((string) ExcelImport::value($row, 'supplier_since')),
+            ];
+
+            $validator = Validator::make($data, [
+                'supplier_name' => ['required', 'string', 'max:255'],
+                'source_type' => ['required', 'in:Local,Import'],
+                'pic_name' => ['required', 'string', 'max:255'],
+                'phone' => ['required', 'string', 'max:20'],
+                'email' => ['nullable', 'email', 'max:255'],
+                'status' => ['required', 'in:Active,Non-Active'],
+                'relationship_status' => ['required', 'in:Potential,Existing'],
+                'rating' => ['numeric', 'min:0', 'max:5'],
+                'supplier_since' => ['nullable', 'date'],
+            ]);
+
+            if ($validator->fails()) {
+                $skipped++;
+                continue;
+            }
+
+            try {
+                Supplier::updateOrCreate(
+                    ['supplier_name' => $data['supplier_name']],
+                    [
+                        'source_type' => $data['source_type'],
+                        'pic_name' => $data['pic_name'],
+                        'pic_position' => $data['pic_position'] ?: null,
+                        'phone' => $data['phone'],
+                        'email' => $data['email'] ?: null,
+                        'address' => $data['address'] ?: null,
+                        'product_category' => $data['product_category'] ?: null,
+                        'origin_country' => $data['origin_country'] ?: null,
+                        'payment_term' => $data['payment_term'] ?: null,
+                        'status' => $data['status'],
+                        'relationship_status' => $data['relationship_status'],
+                        'is_preferred' => $data['is_preferred'],
+                        'rating' => $data['rating'],
+                        'supplier_since' => $data['supplier_since'] ?: now()->toDateString(),
+                    ]
+                );
+                $processed++;
+            } catch (\Throwable) {
+                $skipped++;
+            }
+        }
+
+        return redirect()->route('suppliers.index')->with(
+            'success',
+            "Import Supplier selesai: {$processed} data diproses, {$skipped} baris dilewati."
+        );
     }
 
 }

@@ -9,13 +9,16 @@
 
     {{-- Header --}}
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
                 <i class="fas fa-plus me-1"></i> Tambah Supplier
             </button>
             <a href="{{ route('suppliers.export', request()->query()) }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-download me-1"></i> Export Excel
             </a>
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importSupplierModal">
+                <i class="fas fa-file-import me-1"></i> Import Excel
+            </button>
         </div>
         <div class="d-flex gap-3 flex-wrap">
             @foreach([[$totalSupplier,'Total','#111'],[$localSupplier,'Local','var(--primary)'],[$importSupplier,'Import','#7c3aed'],[$existingSupplier,'Existing','#059669'],[$potentialSupplier,'Potential','#f97316']] as $s)
@@ -574,6 +577,25 @@
             </form>
         </div>
     </div>
+</div>
+
+{{-- Modal Import Supplier --}}
+<div class="modal fade" id="importSupplierModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h6 class="modal-title fw-bold">Import Database Supplier</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form method="POST" action="{{ route('suppliers.import') }}" enctype="multipart/form-data">@csrf
+            <div class="modal-body">
+                <div class="alert alert-info py-2" style="font-size:.75rem">
+                    Gunakan template agar susunan kolom sesuai. Data dengan nama supplier yang sama akan diperbarui.
+                </div>
+                <label class="form-label">File Excel</label>
+                <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                <div class="form-text">Format: XLSX, XLS, atau CSV. Maksimal 5 MB.</div>
+                <a href="{{ route('suppliers.template') }}" class="btn btn-link btn-sm px-0 mt-2"><i class="fas fa-download me-1"></i> Download Template Excel Supplier</a>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-file-import me-1"></i> Import</button></div>
+        </form>
+    </div></div>
 </div>
 
 {{-- Modal Produk Supplier --}}
