@@ -7,10 +7,11 @@ use App\Models\PurchaseOrder;
 use App\Models\Quotation;
 use App\Models\Setting;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class DocumentVerificationController extends Controller
 {
-    public function show(string $kind, int $id)
+    public function show(Request $request, string $kind, int $id)
     {
         [$document, $config] = $this->resolveDocument($kind, $id);
 
@@ -24,6 +25,7 @@ class DocumentVerificationController extends Controller
             'document' => $document,
             'config' => $config,
             'settings' => Setting::getAll(),
+            'language' => $kind === 'purchase_order' && $request->query('lang') === 'en' ? 'en' : 'id',
             'counterpartyName' => $kind === 'purchase_order'
                 ? ($document->supplier?->supplier_name ?? '-')
                 : $document->customer_name,

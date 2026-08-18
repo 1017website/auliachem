@@ -429,6 +429,15 @@
                     <input type="hidden" name="company_email" value="{{ $settings['company_email'] ?? '' }}">
                     <div class="row g-3">
                         <div class="col-md-6">
+                            <label class="form-label">Prefix Nama File Dokumen</label>
+                            <input type="text" name="document_file_prefix" class="form-control"
+                                value="{{ old('document_file_prefix', $settings['document_file_prefix'] ?? 'AP') }}"
+                                maxlength="30" pattern="[A-Za-z0-9_-]+" placeholder="AP" required>
+                            <div style="font-size:11px;color:#9ca3af;margin-top:3px">
+                                Kode nama file: <strong>AP1</strong> Penawaran, <strong>AP2</strong> Invoice, dan <strong>AP3</strong> Purchase Order. Nomor dokumen atau timestamp ditambahkan otomatis.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label">Currency</label>
                             <select name="currency" class="form-select">
                                 @foreach(['IDR', 'USD', 'SGD', 'EUR'] as $c)

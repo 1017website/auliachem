@@ -86,7 +86,8 @@ class DocumentPrintLogoSettingsTest extends TestCase
         $this->actingAs($admin)->get(route('quotations.print', $quotation->id))
             ->assertOk()
             ->assertSee(asset('storage/'.$quotationLogo), false)
-            ->assertSee('Tax No: 71.579.461.6-609.000')
+            ->assertSee('Tax Company')
+            ->assertSee('71.579.461.6-609.000')
             ->assertSee('Direktur Utama')
             ->assertDontSee('<div class="role">Admin</div>', false);
         $this->actingAs($admin)->get(route('invoices.print', $invoice->id))

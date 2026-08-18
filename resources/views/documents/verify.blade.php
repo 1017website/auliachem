@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ $language ?? 'id' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,25 +9,26 @@
     </style>
 </head>
 <body>
+@php($isEnglish = ($language ?? 'id') === 'en')
 <main class="wrap">
     <section class="card">
         <header class="head">
             <div class="check">✓</div>
-            <h1>Dokumen Terverifikasi</h1>
-            <p>Tautan tanda tangan elektronik valid dan diterbitkan oleh sistem CRM.</p>
+            <h1>{{ $isEnglish ? 'Verified Document' : 'Dokumen Terverifikasi' }}</h1>
+            <p>{{ $isEnglish ? 'The electronic signature link is valid and was issued by the CRM system.' : 'Tautan tanda tangan elektronik valid dan diterbitkan oleh sistem CRM.' }}</p>
         </header>
         <div class="body">
-            <div class="row"><span>Jenis dokumen</span><span>{{ $config['label'] }}</span></div>
-            <div class="row"><span>Nomor dokumen</span><span>{{ $document->{$config['number_field']} }}</span></div>
-            <div class="row"><span>Tanggal</span><span>{{ $document->{$config['date_field']}?->translatedFormat('d F Y') }}</span></div>
-            <div class="row"><span>Ditujukan kepada</span><span>{{ $counterpartyName }}</span></div>
-            <div class="row"><span>Ditandatangani oleh</span><span>{{ $document->salesUser?->name ?? 'Administrator' }}</span></div>
-            <div class="row"><span>Jabatan</span><span>{{ $document->salesUser?->position ?: '-' }}</span></div>
+            <div class="row"><span>{{ $isEnglish ? 'Document type' : 'Jenis dokumen' }}</span><span>{{ $config['label'] }}</span></div>
+            <div class="row"><span>{{ $isEnglish ? 'Document number' : 'Nomor dokumen' }}</span><span>{{ $document->{$config['number_field']} }}</span></div>
+            <div class="row"><span>{{ $isEnglish ? 'Date' : 'Tanggal' }}</span><span>{{ $document->{$config['date_field']}?->locale($isEnglish ? 'en' : 'id')->translatedFormat('d F Y') }}</span></div>
+            <div class="row"><span>{{ $isEnglish ? 'Issued to' : 'Ditujukan kepada' }}</span><span>{{ $counterpartyName }}</span></div>
+            <div class="row"><span>{{ $isEnglish ? 'Signed by' : 'Ditandatangani oleh' }}</span><span>{{ $document->salesUser?->name ?? 'Administrator' }}</span></div>
+            <div class="row"><span>{{ $isEnglish ? 'Position' : 'Jabatan' }}</span><span>{{ $document->salesUser?->position ?: '-' }}</span></div>
             <div class="row"><span>Status</span><span>{{ $document->status }}</span></div>
         </div>
         <div class="foot">
             {{ strtoupper($settings['company_name'] ?? 'AULIACHEM PERKASA') }}<br>
-            Kode QR pada dokumen dapat dipindai kembali untuk membuka halaman verifikasi ini.
+            {{ $isEnglish ? 'Scan the QR code on the document to reopen this verification page.' : 'Kode QR pada dokumen dapat dipindai kembali untuk membuka halaman verifikasi ini.' }}
         </div>
     </section>
 </main>

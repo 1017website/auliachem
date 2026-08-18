@@ -115,7 +115,10 @@ Route::middleware(['auth', 'direct-delete'])->group(function () {
     Route::get('/invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');
     Route::get('/invoices/{id}/print', [InvoiceController::class, 'print'])->name('invoices.print');
     Route::get('/invoices/{id}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
-    Route::resource('invoices', InvoiceController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['invoices' => 'id']);
+    Route::post('/invoices', [InvoiceController::class, 'store'])
+        ->middleware('role:Admin,Sales Manager,Marketing')
+        ->name('invoices.store');
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'update', 'destroy'])->parameters(['invoices' => 'id']);
 
     Route::get('/quotations/export', [QuotationController::class, 'export'])->name('quotations.export');
     Route::get('/quotations/{id}/print', [QuotationController::class, 'print'])->name('quotations.print');

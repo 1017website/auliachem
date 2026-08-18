@@ -14,9 +14,9 @@ class SalesDocumentModulesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_sales_user_can_create_and_print_an_invoice(): void
+    public function test_sales_manager_can_create_and_print_an_invoice(): void
     {
-        $user = User::factory()->create(['role' => 'Sales Executive', 'status' => 'Active']);
+        $user = User::factory()->create(['role' => 'Sales Manager', 'status' => 'Active']);
 
         $response = $this->actingAs($user)->post(route('invoices.store'), [
             'customer_name' => 'PT Contoh Customer',
@@ -40,6 +40,40 @@ class SalesDocumentModulesTest extends TestCase
         $this->assertSame(15884100.0, $invoice->grand_total);
         $this->actingAs($user)->get(route('invoices.print', $invoice->id))
             ->assertOk()->assertSee($invoice->invoice_number)->assertSee('INVOICE');
+    }
+
+    public function test_sales_executive_can_only_create_quotations_not_invoices_or_purchase_orders(): void
+    {
+        $user = User::factory()->create(['role' => 'Sales Executive', 'status' => 'Active']);
+
+        $this->actingAs($user)->get(route('invoices.index'))
+            ->assertOk()
+            ->assertDontSee('Tambah Invoice')
+            ->assertDontSee('id="addDocumentModal"', false);
+
+        $invoicePayload = [
+            'customer_name' => 'PT Tidak Diizinkan',
+            'invoice_date' => '2026-08-18',
+            'currency' => 'IDR',
+            'tax_percent' => 0,
+            'status' => 'Draft',
+            'items' => [[
+                'item_name' => 'Produk',
+                'unit' => 'Kg',
+                'qty' => 1,
+                'unit_price' => 1000,
+            ]],
+        ];
+
+        $this->actingAs($user)->post(route('invoices.store'), $invoicePayload)->assertForbidden();
+        $this->actingAs($user)->post(route('purchase-orders.store'), [])->assertForbidden();
+        $this->assertDatabaseCount('invoices', 0);
+        $this->assertDatabaseCount('purchase_orders', 0);
+
+        $this->actingAs($user)->get(route('quotations.index'))
+            ->assertOk()
+            ->assertSee('Tambah Penawaran')
+            ->assertSee('id="addDocumentModal"', false);
     }
 
     public function test_sales_user_can_create_and_update_a_quotation(): void
@@ -108,6 +142,7 @@ class SalesDocumentModulesTest extends TestCase
         Setting::set('company_phone', '031-555-0000');
         Setting::set('company_email', 'sales@example.test');
         Setting::set('company_website', 'https://example.test');
+        Setting::set('company_tax_number', '71.579.461.6-609.000');
 
         $quotation = Quotation::createWithUniqueNumber([
             'user_id' => $user->id,
@@ -125,6 +160,16 @@ class SalesDocumentModulesTest extends TestCase
             ->assertOk()
             ->assertSee('PT Pelanggan Contoh')
             ->assertSee('Sumenep')
+            ->assertSee('class="letterhead quotation-letterhead"', false)
+            ->assertSee('class="quotation-company-info"', false)
+            ->assertSeeInOrder([
+                'Tax Company',
+                '71.579.461.6-609.000',
+                'Website',
+                'example.test',
+                'Email',
+                'sales@example.test',
+            ])
             ->assertSee('sales@example.test')
             ->assertSee('example.test')
             ->assertDontSee('Alamat Rahasia Perusahaan')

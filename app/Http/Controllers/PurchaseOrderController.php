@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use App\Models\Product;
+use App\Support\DocumentDownloadName;
 
 class PurchaseOrderController extends Controller
 {
@@ -222,13 +223,18 @@ class PurchaseOrderController extends Controller
         return redirect()->route('purchase-orders.index')->with('success', 'PO ' . $poNumber . ' berhasil dihapus.');
     }
 
-    public function print(PurchaseOrder $purchaseOrder)
+    public function print(Request $request, PurchaseOrder $purchaseOrder)
     {
+        $language = $request->query('lang') === 'en' ? 'en' : 'id';
         $purchaseOrder->load(['supplier', 'customer', 'items', 'salesUser']);
-        $verificationPath = URL::signedRoute('documents.verify', [
+        $verificationParameters = [
             'kind' => 'purchase_order',
             'id' => $purchaseOrder->getKey(),
-        ], absolute: false);
+        ];
+        if ($language === 'en') {
+            $verificationParameters['lang'] = 'en';
+        }
+        $verificationPath = URL::signedRoute('documents.verify', $verificationParameters, absolute: false);
         $verificationUrl = request()->getSchemeAndHttpHost().$verificationPath;
         $signatureQr = (new QrCodeBuilder(
             writer: new PngWriter(),
@@ -241,6 +247,9 @@ class PurchaseOrderController extends Controller
         return view('purchase_orders.print', [
             'po' => $purchaseOrder,
             'settings' => \App\Models\Setting::getAll(),
+            'language' => $language,
+            'downloadFilename' => DocumentDownloadName::forDocument('purchase_order', $purchaseOrder->po_number)
+                . ($language === 'en' ? '-EN' : ''),
             'signatureQr' => $signatureQr,
             'verificationUrl' => $verificationUrl,
         ]);
@@ -280,7 +289,7 @@ class PurchaseOrderController extends Controller
         }
 
         return \App\Helpers\ExcelExport::download(
-            'purchase-orders-' . $startDate . '-sd-' . $endDate,
+            DocumentDownloadName::forExport('purchase_order'),
             $headers, $rows, 'Purchase Orders'
         );
     }

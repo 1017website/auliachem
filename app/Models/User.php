@@ -51,6 +51,11 @@ class User extends Authenticatable
     public function isSalesManager(): bool   { return $this->role === self::ROLE_SALES_MANAGER; }
     public function isSalesExecutive(): bool { return $this->role === self::ROLE_SALES_EXECUTIVE; }
 
+    public function canCreateSalesDocument(string $documentType): bool
+    {
+        return $documentType === 'quotation' || ! $this->isSalesExecutive();
+    }
+
     public function scopeWithoutSystemAccounts(Builder $query): Builder
     {
         return $query->where('role', '!=', self::ROLE_DEVELOPER);

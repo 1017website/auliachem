@@ -108,9 +108,14 @@
                                         </td>
                                         <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->order_date?->format('d M Y') }}</td>
                                         <td class="py-2">
-                                            <a href="{{ route('purchase-orders.print', $po) }}" target="_blank" class="btn btn-sm btn-outline-primary" style="padding:3px 7px" title="Cetak PO">
-                                                <i class="fas fa-print"></i>
-                                            </a>
+                                            <div class="btn-group btn-group-sm" role="group" aria-label="Pilihan bahasa cetak PO">
+                                                <a href="{{ route('purchase-orders.print', ['purchaseOrder' => $po, 'lang' => 'id']) }}" target="_blank" class="btn btn-outline-primary" style="padding:3px 7px" title="Cetak PO Bahasa Indonesia">
+                                                    <i class="fas fa-print me-1"></i>ID
+                                                </a>
+                                                <a href="{{ route('purchase-orders.print', ['purchaseOrder' => $po, 'lang' => 'en']) }}" target="_blank" class="btn btn-outline-primary" style="padding:3px 7px" title="Print PO in English">
+                                                    EN
+                                                </a>
+                                            </div>
                                             <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px" onclick="openEditPo({{ $po->id }})">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </button>

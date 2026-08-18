@@ -6,9 +6,11 @@
 @section('content')
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div class="d-flex gap-2">
+        @if(auth()->user()->canCreateSalesDocument($config['kind']))
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
             <i class="fas fa-plus me-1"></i> Tambah {{ $config['label'] }}
         </button>
+        @endif
         <a href="{{ route($config['route_prefix'] . '.export', request()->query()) }}" class="btn btn-outline-secondary btn-sm">
             <i class="fas fa-download me-1"></i> Export Excel
         </a>
@@ -81,7 +83,12 @@
 
 <datalist id="masterProductOptions">@foreach($masterProducts as $masterProduct)<option value="{{ $masterProduct->product_name }}">{{ $masterProduct->product_code }} · {{ $masterProduct->unit }}</option>@endforeach</datalist>
 
-@foreach(['add' => 'Tambah', 'edit' => 'Edit'] as $mode => $heading)
+@php
+    $documentFormModes = auth()->user()->canCreateSalesDocument($config['kind'])
+        ? ['add' => 'Tambah', 'edit' => 'Edit']
+        : ['edit' => 'Edit'];
+@endphp
+@foreach($documentFormModes as $mode => $heading)
 <div class="modal fade" id="{{ $mode }}DocumentModal" tabindex="-1">
     <div class="modal-dialog modal-xl"><div class="modal-content">
         <div class="modal-header"><h6 class="modal-title fw-bold">{{ $heading }} {{ $config['label'] }} <span id="editDocumentNumber"></span></h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -225,8 +232,11 @@ async function openEditDocument(id) {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('editDocumentModal')).show();
 }
 
-document.getElementById('addDocumentModal').addEventListener('shown.bs.modal', function () {
-    if (!document.getElementById('addItemsBody').children.length) addDocumentItem('add');
-});
+const addDocumentModal = document.getElementById('addDocumentModal');
+if (addDocumentModal) {
+    addDocumentModal.addEventListener('shown.bs.modal', function () {
+        if (!document.getElementById('addItemsBody').children.length) addDocumentItem('add');
+    });
+}
 </script>
 @endpush

@@ -6,6 +6,7 @@ use App\Helpers\ExcelExport;
 use App\Models\Customer;
 use App\Models\Setting;
 use App\Models\Product;
+use App\Support\DocumentDownloadName;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -153,6 +154,10 @@ abstract class SalesDocumentController extends Controller
             'config' => $config,
             'document' => $document,
             'settings' => Setting::getAll(),
+            'downloadFilename' => DocumentDownloadName::forDocument(
+                $config['kind'],
+                (string) $document->{$config['number_field']}
+            ),
             'signatureQr' => $signatureQr,
             'verificationUrl' => $verificationUrl,
         ]);
@@ -188,7 +193,7 @@ abstract class SalesDocumentController extends Controller
         }
 
         return ExcelExport::download(
-            $config['route_prefix'] . '-' . $startDate . '-sd-' . $endDate,
+            DocumentDownloadName::forExport($config['kind']),
             ['Nomor', 'Customer', 'Item', 'Unit', 'Qty', 'Harga', 'Subtotal', 'Pajak %', 'Grand Total', 'Currency', 'Status', 'Tanggal'],
             $rows,
             $config['label_plural']

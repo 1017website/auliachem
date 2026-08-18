@@ -5,8 +5,11 @@
     if (!button) return;
 
     button.addEventListener('click', async function () {
+        const originalText = button.textContent;
         button.disabled = true;
-        button.textContent = 'Menyiapkan dokumen...';
+        button.textContent = document.documentElement.lang === 'en'
+            ? 'Preparing document...'
+            : 'Menyiapkan dokumen...';
 
         try {
             const images = Array.from(document.images).filter((image) => !image.complete);
@@ -19,7 +22,7 @@
             window.print();
         } finally {
             button.disabled = false;
-            button.textContent = 'Cetak / Simpan PDF';
+            button.textContent = originalText;
         }
     });
 }());
