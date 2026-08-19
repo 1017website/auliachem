@@ -2,32 +2,21 @@
 
 namespace App\Support;
 
-use App\Models\Setting;
-use InvalidArgumentException;
-
 final class DocumentDownloadName
 {
-    private const TYPE_SUFFIXES = [
-        'quotation' => '1',
-        'invoice' => '2',
-        'purchase_order' => '3',
-    ];
-
     public static function for(string $documentType): string
     {
-        if (! array_key_exists($documentType, self::TYPE_SUFFIXES)) {
-            throw new InvalidArgumentException("Jenis dokumen tidak dikenal: {$documentType}");
-        }
-
-        $prefix = trim((string) Setting::get('document_file_prefix', 'AP'));
-        $prefix = preg_replace('/[^A-Za-z0-9_-]/', '', $prefix) ?: 'AP';
-
-        return $prefix . self::TYPE_SUFFIXES[$documentType];
+        return DocumentPrefix::for($documentType);
     }
 
     public static function forDocument(string $documentType, string $documentNumber): string
     {
-        return self::for($documentType) . '-' . self::sanitizeSegment($documentNumber);
+        $prefix = self::for($documentType);
+        $number = self::sanitizeSegment($documentNumber);
+
+        return str_starts_with($number, $prefix . '-')
+            ? $number
+            : $prefix . '-' . $number;
     }
 
     public static function forExport(string $documentType): string

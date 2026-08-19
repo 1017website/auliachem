@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\DocumentPrefix;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,7 +53,7 @@ class PurchaseOrder extends Model
 
     public static function generatePoNumber(): string
     {
-        $prefix = 'PO-' . date('Ym') . '-';
+        $prefix = DocumentPrefix::for('purchase_order') . '-' . now()->format('Ym') . '-';
 
         // Pakai withTrashed() karena po_number tetap terkunci oleh unique index
         // meskipun PO sudah soft delete. lockForUpdate() membantu mencegah

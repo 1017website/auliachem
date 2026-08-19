@@ -60,8 +60,21 @@ class ProductMasterTest extends TestCase
             'status' => 'Active',
         ]);
 
-        $this->actingAs($user)->get(route('invoices.index'))->assertOk()->assertSee('Caustic Soda Flake');
-        $this->actingAs($user)->get(route('quotations.index'))->assertOk()->assertSee('Caustic Soda Flake');
-        $this->actingAs($user)->get(route('purchase-orders.index'))->assertOk()->assertSee('Caustic Soda Flake');
+        $this->actingAs($user)->get(route('invoices.index'))
+            ->assertOk()
+            ->assertSee('Caustic Soda Flake')
+            ->assertSee('Qty: titik = ribuan, koma = desimal')
+            ->assertSee('inputmode="decimal"', false)
+            ->assertSee('doc-qty-hidden', false);
+        $this->actingAs($user)->get(route('quotations.index'))
+            ->assertOk()
+            ->assertSee('Caustic Soda Flake')
+            ->assertSee('Qty: titik = ribuan, koma = desimal');
+        $this->actingAs($user)->get(route('purchase-orders.index'))
+            ->assertOk()
+            ->assertSee('Caustic Soda Flake')
+            ->assertSee('Qty: titik = ribuan, koma = desimal')
+            ->assertSee('inputmode="decimal"', false)
+            ->assertSee('item-qty-hidden', false);
     }
 }

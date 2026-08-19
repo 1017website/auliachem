@@ -258,7 +258,7 @@
 
                         {{-- Line Items --}}
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div style="font-size:12px;font-weight:700;color:#374151">ITEM PRODUK</div>
+                            <div style="font-size:12px;font-weight:700;color:#374151">ITEM PRODUK <span class="fw-normal text-muted ms-2">Qty: titik = ribuan, koma = desimal (contoh 1.000,50)</span></div>
                             <button type="button" class="btn btn-outline-primary btn-sm"
                                 onclick="addItemRow('addItemsBody')">
                                 <i class="fas fa-plus me-1"></i> Tambah Item
@@ -371,7 +371,7 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div style="font-size:12px;font-weight:700;color:#374151">ITEM PRODUK</div>
+                            <div style="font-size:12px;font-weight:700;color:#374151">ITEM PRODUK <span class="fw-normal text-muted ms-2">Qty: titik = ribuan, koma = desimal (contoh 1.000,50)</span></div>
                             <button type="button" class="btn btn-outline-primary btn-sm"
                                 onclick="addItemRow('editItemsBody')">
                                 <i class="fas fa-plus me-1"></i> Tambah Item
@@ -425,6 +425,26 @@
                 return parseFloat(String(str).replace(/\./g, '').replace(',', '.')) || 0;
             }
 
+            function formatQuantity(value) {
+                const number = Number(value || 0);
+                return number.toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 3});
+            }
+
+            function syncQuantity(el) {
+                const row = el.closest('tr');
+                const hidden = row.querySelector('.item-qty-hidden');
+                const value = String(el.value || '');
+                const commaPosition = value.indexOf(',');
+                const integerPart = (commaPosition >= 0 ? value.slice(0, commaPosition) : value).replace(/\D/g, '');
+                const decimalPart = commaPosition >= 0 ? value.slice(commaPosition + 1).replace(/\D/g, '').slice(0, 3) : '';
+                const formattedInteger = integerPart === '' ? '' : Number(integerPart).toLocaleString('id-ID');
+                el.value = formattedInteger + (commaPosition >= 0 ? ',' + decimalPart : '');
+
+                const normalized = integerPart === '' ? '' : String(Number(integerPart)) + (decimalPart ? '.' + decimalPart : '');
+                if (hidden) hidden.value = normalized;
+                el.setCustomValidity(Number(normalized) >= 0.001 ? '' : 'Qty minimal 0,001. Gunakan titik untuk ribuan dan koma untuk desimal.');
+            }
+
             function formatPriceInput(el) {
                 const raw = parseNum(el.value);
                 if (raw > 0) el.value = formatNum(raw);
@@ -449,7 +469,7 @@
 
             function calcRow(el) {
                 const row = el.closest('tr');
-                const qty = parseFloat(row.querySelector('.item-qty')?.value) || 0;
+                const qty = parseFloat(row.querySelector('.item-qty-hidden')?.value) || 0;
                 const buy = parseNum(row.querySelector('.item-buy')?.value);
                 const sell = parseNum(row.querySelector('.item-sell')?.value);
                 const profit = (sell - buy) * qty;
@@ -463,7 +483,7 @@
                 const prefix = bodyId === 'addItemsBody' ? 'add' : 'edit';
                 let revenue = 0, profit = 0;
                 body.querySelectorAll('tr').forEach(row => {
-                    const qty = parseFloat(row.querySelector('.item-qty')?.value) || 0;
+                    const qty = parseFloat(row.querySelector('.item-qty-hidden')?.value) || 0;
                     const buy = parseNum(row.querySelector('.item-buy')?.value);
                     const sell = parseNum(row.querySelector('.item-sell')?.value);
                     revenue += qty * sell;
@@ -631,7 +651,7 @@
                     </select>
                 </td>
                 <td><input type="text" name="${prefix}[${idx}][unit]" class="form-control form-control-sm po-unit-input" value="${data.unit || 'kg'}"></td>
-                <td><input type="number" name="${prefix}[${idx}][qty]" class="form-control form-control-sm item-qty" step="0.001" min="0" value="${data.qty || ''}" required oninput="calcRow(this)"></td>
+                <td><input type="hidden" name="${prefix}[${idx}][qty]" class="item-qty-hidden" value="${data.qty || ''}"><input type="text" inputmode="decimal" class="form-control form-control-sm item-qty text-end" value="${data.qty ? formatQuantity(data.qty) : ''}" placeholder="1.000,50" title="Titik untuk ribuan, koma untuk desimal" required oninput="syncQuantity(this);calcRow(this)"></td>
                 <td>
                     <input type="hidden" name="${prefix}[${idx}][buy_price]" class="item-buy-hidden" value="${data.buy_price || 0}">
                     <input type="text" class="form-control form-control-sm item-buy" value="${data.buy_price ? formatNum(data.buy_price) : ''}" placeholder="0"

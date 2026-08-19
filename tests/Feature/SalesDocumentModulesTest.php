@@ -36,7 +36,7 @@ class SalesDocumentModulesTest extends TestCase
 
         $invoice = Invoice::with('items')->firstOrFail();
         $response->assertRedirect(route('invoices.index'));
-        $this->assertStringStartsWith('INV-202608-', $invoice->invoice_number);
+        $this->assertStringStartsWith('AP2-202608-', $invoice->invoice_number);
         $this->assertSame(15884100.0, $invoice->grand_total);
         $this->actingAs($user)->get(route('invoices.print', $invoice->id))
             ->assertOk()->assertSee($invoice->invoice_number)->assertSee('INVOICE');
@@ -97,7 +97,7 @@ class SalesDocumentModulesTest extends TestCase
         ])->assertRedirect(route('quotations.index'));
 
         $quotation = Quotation::firstOrFail();
-        $this->assertStringStartsWith('QTN-202608-', $quotation->quotation_number);
+        $this->assertStringStartsWith('AP1-202608-', $quotation->quotation_number);
 
         $this->actingAs($user)->get(route('quotations.print', $quotation->id))
             ->assertOk()

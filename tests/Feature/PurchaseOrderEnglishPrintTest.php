@@ -44,7 +44,7 @@ class PurchaseOrderEnglishPrintTest extends TestCase
         ]))
             ->assertOk()
             ->assertSee('<html lang="en">', false)
-            ->assertSee('<title>AP3-' . $purchaseOrder->po_number . '-EN</title>', false)
+            ->assertSee('<title>' . $purchaseOrder->po_number . '-EN</title>', false)
             ->assertSee('class="letterhead split-letterhead"', false)
             ->assertSee('SHIP TO')
             ->assertSee('DESCRIPTION')

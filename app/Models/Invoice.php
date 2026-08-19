@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasSalesDocumentNumber;
+use App\Support\DocumentPrefix;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -25,7 +26,7 @@ class Invoice extends Model
     ];
 
     protected static function numberColumn(): string { return 'invoice_number'; }
-    protected static function numberPrefix(): string { return 'INV'; }
+    protected static function numberPrefix(): string { return DocumentPrefix::for('invoice'); }
 
     public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
     public function purchaseOrder(): BelongsTo { return $this->belongsTo(PurchaseOrder::class); }

@@ -114,7 +114,7 @@
                     <div class="col-md-3"><label class="form-label">PPN (%)</label><input type="number" name="tax_percent" id="{{ $mode }}Tax" min="0" max="100" step="0.01" value="{{ $config['default_tax'] }}" class="form-control" oninput="recalcDocument('{{ $mode }}')" required></div>
                 </div>
 
-                <div class="d-flex align-items-center justify-content-between mt-4 mb-2"><div style="font-size:12px;font-weight:700;color:#374151">ITEM DOKUMEN</div><button type="button" class="btn btn-outline-primary btn-sm" onclick="addDocumentItem('{{ $mode }}')"><i class="fas fa-plus me-1"></i>Tambah Item</button></div>
+                <div class="d-flex align-items-center justify-content-between mt-4 mb-2"><div style="font-size:12px;font-weight:700;color:#374151">ITEM DOKUMEN <span class="fw-normal text-muted ms-2">Qty: titik = ribuan, koma = desimal (contoh 1.000,50)</span></div><button type="button" class="btn btn-outline-primary btn-sm" onclick="addDocumentItem('{{ $mode }}')"><i class="fas fa-plus me-1"></i>Tambah Item</button></div>
                 <div class="table-responsive"><table class="table table-bordered mb-2" style="font-size:12px">
                     <thead style="background:#f8f9fa"><tr><th style="min-width:190px">Item</th><th style="min-width:180px">Deskripsi</th><th style="width:80px">Unit</th><th style="width:100px">Qty</th><th style="width:150px">Harga Satuan</th><th style="width:150px">Jumlah</th><th style="width:42px"></th></tr></thead>
                     <tbody id="{{ $mode }}ItemsBody"></tbody>
@@ -142,6 +142,24 @@ const masterProducts = @json($masterProducts);
 let documentItemIndex = 0;
 
 function docParse(value) { return parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')) || 0; }
+function docFormatQuantity(value) {
+    const number = Number(value || 0);
+    return number.toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 3});
+}
+function syncDocQuantity(input) {
+    const row = input.closest('tr');
+    const hidden = row.querySelector('.doc-qty-hidden');
+    const value = String(input.value || '');
+    const commaPosition = value.indexOf(',');
+    const integerPart = (commaPosition >= 0 ? value.slice(0, commaPosition) : value).replace(/\D/g, '');
+    const decimalPart = commaPosition >= 0 ? value.slice(commaPosition + 1).replace(/\D/g, '').slice(0, 3) : '';
+    const formattedInteger = integerPart === '' ? '' : Number(integerPart).toLocaleString('id-ID');
+    input.value = formattedInteger + (commaPosition >= 0 ? ',' + decimalPart : '');
+
+    const normalized = integerPart === '' ? '' : String(Number(integerPart)) + (decimalPart ? '.' + decimalPart : '');
+    if (hidden) hidden.value = normalized;
+    input.setCustomValidity(Number(normalized) >= 0.001 ? '' : 'Qty minimal 0,001. Gunakan titik untuk ribuan dan koma untuk desimal.');
+}
 function docMoney(value, mode) {
     const currency = document.getElementById(mode + 'Currency')?.value || 'IDR';
     return (currency === 'IDR' ? 'Rp ' : currency + ' ') + Math.round(value).toLocaleString('id-ID');
@@ -153,7 +171,7 @@ function addDocumentItem(mode, item = {}) {
     row.innerHTML = `<td><input class="form-control form-control-sm doc-item-name" list="masterProductOptions" name="items[${index}][item_name]" value="${escapeDoc(item.item_name || '')}" onchange="applyMasterProduct(this, '${mode}')" placeholder="Pilih atau ketik" required></td>
         <td><input class="form-control form-control-sm" name="items[${index}][description]" value="${escapeDoc(item.description || '')}"></td>
         <td><input class="form-control form-control-sm" name="items[${index}][unit]" value="${escapeDoc(item.unit || 'Kg')}" required></td>
-        <td><input type="number" min="0.001" step="0.001" class="form-control form-control-sm doc-qty" name="items[${index}][qty]" value="${item.qty || 1}" oninput="recalcDocument('${mode}')" required></td>
+        <td><input type="hidden" class="doc-qty-hidden" name="items[${index}][qty]" value="${item.qty || 1}"><input type="text" inputmode="decimal" class="form-control form-control-sm doc-qty text-end" value="${docFormatQuantity(item.qty || 1)}" placeholder="1.000,50" title="Titik untuk ribuan, koma untuk desimal" oninput="syncDocQuantity(this);recalcDocument('${mode}')" required></td>
         <td><input class="form-control form-control-sm idr-input doc-price text-end" name="items[${index}][unit_price]" value="${item.unit_price ? Math.round(item.unit_price).toLocaleString('id-ID') : ''}" oninput="recalcDocument('${mode}')" required></td>
         <td class="text-end align-middle fw-bold doc-line-total">Rp 0</td>
         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="this.closest('tr').remove();recalcDocument('${mode}')"><i class="fas fa-times"></i></button></td>`;
@@ -176,7 +194,7 @@ function applyMasterProduct(input, mode) {
 function recalcDocument(mode) {
     let subtotal = 0;
     document.querySelectorAll(`#${mode}ItemsBody tr`).forEach(row => {
-        const total = (parseFloat(row.querySelector('.doc-qty').value) || 0) * docParse(row.querySelector('.doc-price').value);
+        const total = (parseFloat(row.querySelector('.doc-qty-hidden').value) || 0) * docParse(row.querySelector('.doc-price').value);
         subtotal += total; row.querySelector('.doc-line-total').textContent = docMoney(total, mode);
     });
     const tax = subtotal * ((parseFloat(document.getElementById(mode + 'Tax').value) || 0) / 100);

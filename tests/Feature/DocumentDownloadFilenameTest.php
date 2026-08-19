@@ -59,12 +59,16 @@ class DocumentDownloadFilenameTest extends TestCase
             'status' => 'In Progress',
         ]);
 
+        $this->assertStringStartsWith('DOC1-202608-', $quotation->quotation_number);
+        $this->assertStringStartsWith('DOC2-202608-', $invoice->invoice_number);
+        $this->assertStringStartsWith('DOC3-202608-', $purchaseOrder->po_number);
+
         $this->actingAs($admin)->get(route('quotations.print', $quotation->id))
-            ->assertOk()->assertSee('<title>DOC1-' . $quotation->quotation_number . '</title>', false);
+            ->assertOk()->assertSee('<title>' . $quotation->quotation_number . '</title>', false);
         $this->actingAs($admin)->get(route('invoices.print', $invoice->id))
-            ->assertOk()->assertSee('<title>DOC2-' . $invoice->invoice_number . '</title>', false);
+            ->assertOk()->assertSee('<title>' . $invoice->invoice_number . '</title>', false);
         $this->actingAs($admin)->get(route('purchase-orders.print', $purchaseOrder))
-            ->assertOk()->assertSee('<title>DOC3-' . $purchaseOrder->po_number . '</title>', false);
+            ->assertOk()->assertSee('<title>' . $purchaseOrder->po_number . '</title>', false);
 
         $this->actingAs($admin)->get(route('quotations.export'))
             ->assertOk()->assertDownload('DOC1-20260818-143025.xlsx');
