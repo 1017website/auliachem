@@ -70,6 +70,7 @@
                 <td class="py-2"><span style="font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600;background:{{ $colors[0] }};color:{{ $colors[1] }}">{{ $document->status }}</span></td>
                 <td class="py-2 text-end pe-3" style="white-space:nowrap">
                     <a class="btn btn-sm btn-outline-primary" style="padding:3px 7px" target="_blank" href="{{ route($config['route_prefix'] . '.print', $document->id) }}" title="Cetak"><i class="fas fa-print"></i></a>
+                    <a class="btn btn-sm btn-outline-primary" style="padding:3px 7px" target="_blank" href="{{ route($config['route_prefix'] . '.print', ['id' => $document->id, 'lang' => 'en']) }}" title="Print {{ $config['kind'] === 'quotation' ? 'Quotation' : 'Invoice' }} in English"><i class="fas fa-print"></i> EN</a>
                     <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px" onclick="openEditDocument({{ $document->id }})" title="Edit"><i class="fas fa-pencil-alt"></i></button>
                     <x-delete-request-button module="{{ $config['route_prefix'] }}" :model-id="$document->id" :label="$config['label'] . ' ' . $number" />
                 </td>

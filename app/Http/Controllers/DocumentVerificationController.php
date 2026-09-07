@@ -14,6 +14,10 @@ class DocumentVerificationController extends Controller
     public function show(Request $request, string $kind, int $id)
     {
         [$document, $config] = $this->resolveDocument($kind, $id);
+        $language = $request->query('lang') === 'en' ? 'en' : 'id';
+        if ($language === 'en' && $kind === 'quotation') {
+            $config['label'] = 'Quotation';
+        }
 
         $relations = ['salesUser'];
         if ($kind === 'purchase_order') {
@@ -25,7 +29,7 @@ class DocumentVerificationController extends Controller
             'document' => $document,
             'config' => $config,
             'settings' => Setting::getAll(),
-            'language' => $kind === 'purchase_order' && $request->query('lang') === 'en' ? 'en' : 'id',
+            'language' => $language,
             'counterpartyName' => $kind === 'purchase_order'
                 ? ($document->supplier?->supplier_name ?? '-')
                 : $document->customer_name,

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ $language ?? 'id' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,9 +15,10 @@
     $companyName = strtoupper($settings['company_name'] ?? 'AULIACHEM PERKASA');
     $signerName = $document->salesUser?->name ?? 'Administrator';
     $signerPosition = $document->salesUser?->position ?: '-';
+    $isEnglish = ($language ?? 'id') === 'en';
     $isQuotation = $config['kind'] === 'quotation';
 @endphp
-<div class="print-actions"><button type="button" data-print-document>Cetak / Simpan PDF</button></div>
+<div class="print-actions"><button type="button" data-print-document>{!! $isEnglish ? 'Print / Save PDF' : 'Cetak / Simpan PDF' !!}</button></div>
 <main class="page">
     <header @class(['letterhead', 'split-letterhead', 'quotation-letterhead' => $isQuotation])>
         <div class="letterhead-brand">
@@ -38,55 +39,55 @@
         </div>
     </header>
 
-    <div class="title">{{ $config['title'] }}</div>
+    <div class="title">{{ $isEnglish && $isQuotation ? 'QUOTATION' : $config['title'] }}</div>
     <section class="meta">
         <div>
-            @unless($isQuotation)<div class="meta-title">Kepada:</div>@endunless
-            <div class="party"><b>{{ $document->customer_name }}</b><br>{!! nl2br(e($document->customer_address ?: '-')) !!}@if(!$isQuotation && $document->customer_phone)<br>Telp {{ $document->customer_phone }}@endif</div>
+            @unless($isQuotation)<div class="meta-title">{!! $isEnglish ? 'To:' : 'Kepada:' !!}</div>@endunless
+            <div class="party"><b>{{ $document->customer_name }}</b><br>{!! nl2br(e($document->customer_address ?: '-')) !!}@if(!$isQuotation && $document->customer_phone)<br>{{ $isEnglish ? 'Phone' : 'Telp' }} {{ $document->customer_phone }}@endif</div>
         </div>
         <div class="doc-meta">
-            <b>Tanggal</b><span>{{ $document->{$config['date_field']}?->translatedFormat('d F Y') }}</span>
-            <b>No. {{ $config['label'] }}</b><span>{{ $document->{$config['number_field']} }}</span>
-            <b>{{ $config['secondary_date_label'] }}</b><span>{{ $document->{$config['secondary_date_field']}?->translatedFormat('d F Y') ?? '-' }}</span>
+            <b>{!! $isEnglish ? 'Date' : 'Tanggal' !!}</b><span>{{ $document->{$config['date_field']}?->locale($isEnglish ? 'en' : 'id')->translatedFormat('d F Y') }}</span>
+            <b>No. {{ $isEnglish && $isQuotation ? 'Quotation' : $config['label'] }}</b><span>{{ $document->{$config['number_field']} }}</span>
+            <b>{{ $isEnglish ? ($isQuotation ? 'Valid Until' : 'Due Date') : $config['secondary_date_label'] }}</b><span>{{ $document->{$config['secondary_date_field']}?->locale($isEnglish ? 'en' : 'id')->translatedFormat('d F Y') ?? '-' }}</span>
             @if($config['kind'] === 'invoice' && $document->purchaseOrder)<b>No. PO</b><span>{{ $document->purchaseOrder->po_number }}</span>@endif
         </div>
     </section>
 
     <table class="items">
-        <thead><tr><th style="width:36px">NO</th><th>DESKRIPSI</th><th style="width:62px">UNIT</th><th style="width:82px">QTY</th><th style="width:115px">HARGA</th><th style="width:125px">JUMLAH</th></tr></thead>
+        <thead><tr><th style="width:36px">NO</th><th>{!! $isEnglish ? 'DESCRIPTION' : 'DESKRIPSI' !!}</th><th style="width:62px">UNIT</th><th style="width:82px">QTY</th><th style="width:115px">{!! $isEnglish ? 'PRICE' : 'HARGA' !!}</th><th style="width:125px">{!! $isEnglish ? 'AMOUNT' : 'JUMLAH' !!}</th></tr></thead>
         <tbody>
         @foreach($document->items as $index => $item)
-            <tr><td class="center">{{ $index + 1 }}</td><td><b>{{ $item->item_name }}</b>@if($item->description)<br><span style="font-size:9px">{{ $item->description }}</span>@endif</td><td class="center">{{ $item->unit }}</td><td class="num">{{ number_format((float)$item->qty, 3, ',', '.') }}</td><td class="num">{{ $document->currency === 'IDR' ? idr($item->unit_price) : $document->currency . ' ' . number_format($item->unit_price, 2) }}</td><td class="num">{{ $document->currency === 'IDR' ? idr($item->subtotal) : $document->currency . ' ' . number_format($item->subtotal, 2) }}</td></tr>
+            <tr><td class="center">{{ $index + 1 }}</td><td><b>{{ $item->item_name }}</b>@if($item->description)<br><span style="font-size:9px">{{ $item->description }}</span>@endif</td><td class="center">{{ $item->unit }}</td><td class="num">{{ number_format((float)$item->qty, 3, $isEnglish ? '.' : ',', $isEnglish ? ',' : '.') }}</td><td class="num">{{ $document->currency === 'IDR' ? idr($item->unit_price) : $document->currency . ' ' . number_format($item->unit_price, 2) }}</td><td class="num">{{ $document->currency === 'IDR' ? idr($item->subtotal) : $document->currency . ' ' . number_format($item->subtotal, 2) }}</td></tr>
         @endforeach
         @for($i=$document->items->count();$i<8;$i++)<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>@endfor
         </tbody>
     </table>
     <table class="totals">
         <tr><td>Subtotal</td><td>{{ $document->currency === 'IDR' ? idr($document->subtotal) : $document->currency . ' ' . number_format($document->subtotal, 2) }}</td></tr>
-        @if((float)$document->tax_percent > 0)<tr><td>PPN {{ number_format((float)$document->tax_percent, 0) }}%</td><td>{{ $document->currency === 'IDR' ? idr($document->tax_amount) : $document->currency . ' ' . number_format($document->tax_amount, 2) }}</td></tr>@endif
+        @if((float)$document->tax_percent > 0)<tr><td>{{ $isEnglish ? 'VAT' : 'PPN' }} {{ number_format((float)$document->tax_percent, 0) }}%</td><td>{{ $document->currency === 'IDR' ? idr($document->tax_amount) : $document->currency . ' ' . number_format($document->tax_amount, 2) }}</td></tr>@endif
         <tr class="grand"><td>TOTAL</td><td>{{ $document->currency === 'IDR' ? idr($document->grand_total) : $document->currency . ' ' . number_format($document->grand_total, 2) }}</td></tr>
     </table>
 
     <section class="notes">
-        <div>@if($document->notes)<b>Catatan:</b><div class="note-box">{{ $document->notes }}</div>@endif</div>
-        <div>@if($document->terms)<b>Syarat &amp; Ketentuan:</b><div class="note-box">{{ $document->terms }}</div>@endif</div>
+        <div>@if($document->notes)<b>{!! $isEnglish ? 'Notes:' : 'Catatan:' !!}</b><div class="note-box">{{ $document->notes }}</div>@endif</div>
+        <div>@if($document->terms)<b>{!! $isEnglish ? 'Terms &amp; Conditions:' : 'Syarat &amp; Ketentuan:' !!}</b><div class="note-box">{{ $document->terms }}</div>@endif</div>
     </section>
-    @if($config['kind'] === 'invoice' && $document->bank_details)<div class="bank"><b>INFORMASI PEMBAYARAN</b><br>{{ $document->bank_details }}</div>@endif
+    @if($config['kind'] === 'invoice' && $document->bank_details)<div class="bank"><b>{!! $isEnglish ? 'PAYMENT INFORMATION' : 'INFORMASI PEMBAYARAN' !!}</b><br>{{ $document->bank_details }}</div>@endif
 
     <section class="signatures">
-        <div class="receiver">Diterima oleh:<div class="signature-space"></div><div class="line">Nama &amp; tanda tangan</div></div>
+        <div class="receiver">{!! $isEnglish ? 'Received by:' : 'Diterima oleh:' !!}<div class="signature-space"></div><div class="line">{!! $isEnglish ? 'Name &amp; signature' : 'Nama &amp; tanda tangan' !!}</div></div>
         <div class="digital-signature">
-            <a href="{{ $verificationUrl }}" target="_blank" rel="noopener" title="Buka verifikasi dokumen"><img src="{{ $signatureQr }}" alt="QR verifikasi tanda tangan elektronik"></a>
+            <a href="{{ $verificationUrl }}" target="_blank" rel="noopener" title="{!! $isEnglish ? 'Open document verification' : 'Buka verifikasi dokumen' !!}"><img src="{{ $signatureQr }}" alt="{!! $isEnglish ? 'Electronic signature verification QR' : 'QR verifikasi tanda tangan elektronik' !!}"></a>
             <div class="signature-copy">
-                <div class="signed-by">Dokumen ini ditandatangani secara elektronik oleh:</div>
+                <div class="signed-by">{!! $isEnglish ? 'This document is electronically signed by:' : 'Dokumen ini ditandatangani secara elektronik oleh:' !!}</div>
                 <div class="name">{{ $signerName }}</div>
                 <div class="role">{{ $signerPosition }}</div>
                 <div>{{ $companyName }}</div>
-                <div class="verify">Pindai QR untuk memverifikasi keaslian dokumen.</div>
+                <div class="verify">{!! $isEnglish ? 'Scan the QR code to verify this document.' : 'Pindai QR untuk memverifikasi keaslian dokumen.' !!}</div>
             </div>
         </div>
     </section>
-    <div class="print-footer">Tanda tangan elektronik pada dokumen ini dapat diverifikasi melalui kode QR di atas.</div>
+    <div class="print-footer">{!! $isEnglish ? 'The electronic signature on this document can be verified using the QR code above.' : 'Tanda tangan elektronik pada dokumen ini dapat diverifikasi melalui kode QR di atas.' !!}</div>
 </main>
 </body>
 </html>

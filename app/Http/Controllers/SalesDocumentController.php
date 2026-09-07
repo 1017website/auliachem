@@ -135,12 +135,17 @@ abstract class SalesDocumentController extends Controller
 
     public function print(int $id)
     {
+        $language = request()->query('lang') === 'en' ? 'en' : 'id';
         $config = $this->config();
         $document = $this->findDocument($id)->load(['items', 'customer', 'salesUser']);
-        $verificationPath = URL::signedRoute('documents.verify', [
+        $verificationParameters = [
             'kind' => $config['kind'],
             'id' => $document->getKey(),
-        ], absolute: false);
+        ];
+        if ($language === 'en') {
+            $verificationParameters['lang'] = 'en';
+        }
+        $verificationPath = URL::signedRoute('documents.verify', $verificationParameters, absolute: false);
         $verificationUrl = request()->getSchemeAndHttpHost().$verificationPath;
         $signatureQr = (new QrCodeBuilder(
             writer: new PngWriter(),
@@ -151,13 +156,14 @@ abstract class SalesDocumentController extends Controller
         ))->build()->getDataUri();
 
         return view('documents.print', [
+            'language' => $language,
             'config' => $config,
             'document' => $document,
             'settings' => Setting::getAll(),
             'downloadFilename' => DocumentDownloadName::forDocument(
                 $config['kind'],
                 (string) $document->{$config['number_field']}
-            ),
+            ) . ($language === 'en' ? '-EN' : ''),
             'signatureQr' => $signatureQr,
             'verificationUrl' => $verificationUrl,
         ]);
