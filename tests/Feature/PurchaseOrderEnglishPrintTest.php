@@ -14,6 +14,7 @@ class PurchaseOrderEnglishPrintTest extends TestCase
 
     public function test_purchase_order_can_be_printed_and_verified_in_english(): void
     {
+        $this->travelTo(now()->setDate(2026, 8, 18));
         $admin = User::factory()->create([
             'role' => 'Admin',
             'status' => 'Active',
@@ -64,5 +65,34 @@ class PurchaseOrderEnglishPrintTest extends TestCase
             ->assertSee('Verified Document')
             ->assertSee('Document number')
             ->assertSee('Signed by');
+    }
+    public function test_print_uses_purchase_order_currency_in_both_languages(): void
+    {
+        $admin = User::factory()->create(['role' => 'Admin', 'status' => 'Active']);
+        $this->actingAs($admin);
+
+        foreach (['IDR', 'USD'] as $currency) {
+            $po = PurchaseOrder::createWithUniqueNumber([
+                'user_id' => $admin->id,
+                'order_date' => now(),
+                'currency' => $currency,
+                'status' => 'In Progress',
+            ]);
+            $po->items()->create([
+                'product_name' => 'Chemical Product', 'unit' => 'Kg', 'qty' => 2.5,
+                'buy_price' => 1235, 'sell_price' => 1500,
+            ]);
+
+            foreach (['id', 'en'] as $language) {
+                $response = $this->get(route('purchase-orders.print', [
+                    'purchaseOrder' => $po, 'lang' => $language,
+                ]))->assertOk();
+                $price = $currency === 'IDR' ? 'Rp 1.235' : 'USD 1,235.00';
+                $total = $currency === 'IDR' ? 'Rp 3.088' : 'USD 3,087.50';
+                $response->assertSee($price)->assertSee($total);
+                $this->assertSame(3, substr_count($response->getContent(), $total));
+                $response->assertDontSee($currency === 'IDR' ? 'USD ' : 'Rp ');
+            }
+        }
     }
 }

@@ -16,6 +16,9 @@
     $signerName = $po->salesUser?->name ?? 'Administrator';
     $signerPosition = $po->salesUser?->position ?: '-';
     $isEnglish = $language === 'en';
+    $formatMoney = fn ($amount) => $po->currency === 'IDR'
+        ? idr($amount)
+        : $po->currency . ' ' . number_format((float) $amount, 2);
 @endphp
 <div class="print-actions"><button type="button" data-print-document>{{ $isEnglish ? 'Print / Save PDF' : 'Cetak / Simpan PDF' }}</button></div>
 <main class="page">
@@ -61,14 +64,14 @@
         <thead><tr><th style="width:36px">NO</th><th>{{ $isEnglish ? 'DESCRIPTION' : 'DESKRIPSI' }}</th><th style="width:62px">UNIT</th><th style="width:82px">QTY</th><th style="width:120px">{{ $isEnglish ? 'PRICE / UNIT' : 'HARGA / UNIT' }}</th><th style="width:125px">{{ $isEnglish ? 'AMOUNT' : 'JUMLAH' }}</th></tr></thead>
         <tbody>
         @foreach($po->items as $index => $item)
-            <tr><td class="center">{{ $index + 1 }}</td><td><b>{{ $item->product_name }}</b>@if($item->description)<br><span style="font-size:9px">{{ $item->description }}</span>@endif</td><td class="center">{{ $item->unit }}</td><td class="right">{{ number_format((float)$item->qty, 3, ',', '.') }}</td><td class="right">{{ idr($item->buy_price) }}</td><td class="right">{{ idr($item->subtotal_cost) }}</td></tr>
+            <tr><td class="center">{{ $index + 1 }}</td><td><b>{{ $item->product_name }}</b>@if($item->description)<br><span style="font-size:9px">{{ $item->description }}</span>@endif</td><td class="center">{{ $item->unit }}</td><td class="right">{{ number_format((float)$item->qty, 3, ',', '.') }}</td><td class="right">{{ $formatMoney($item->buy_price) }}</td><td class="right">{{ $formatMoney($item->subtotal_cost) }}</td></tr>
         @endforeach
         @for($i=$po->items->count();$i<9;$i++)<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>@endfor
         </tbody>
     </table>
     <table class="summary">
-        <tr><td>Subtotal</td><td>{{ idr($po->total_cost) }}</td></tr>
-        <tr class="total"><td>TOTAL</td><td>{{ idr($po->total_cost) }}</td></tr>
+        <tr><td>Subtotal</td><td>{{ $formatMoney($po->total_cost) }}</td></tr>
+        <tr class="total"><td>TOTAL</td><td>{{ $formatMoney($po->total_cost) }}</td></tr>
     </table>
 
     <section class="bottom">
