@@ -15,10 +15,15 @@ class PurchaseOrder extends Model
     use SoftDeletes;
     protected $fillable = [
         'po_number','customer_id','supplier_id','lead_id','user_id',
-        'currency','status','order_date','notes','delivery_address','special_instructions'
+        'po_type','currency','status','order_date','notes','delivery_address','special_instructions'
     ];
 
     protected $casts = ['order_date' => 'date'];
+
+    public function printLanguage(): string
+    {
+        return $this->po_type === 'Import' ? 'en' : 'id';
+    }
 
     public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
     public function supplier(): BelongsTo { return $this->belongsTo(Supplier::class); }

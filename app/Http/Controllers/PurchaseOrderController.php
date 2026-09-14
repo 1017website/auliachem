@@ -73,6 +73,7 @@ class PurchaseOrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'po_type'                => 'required|in:Local,Import',
             'customer_id'            => ['nullable', Rule::exists('customers', 'id')->where('status', 'Existing')],
             'supplier_id'            => 'nullable|exists:suppliers,id',
             'lead_id'                => 'nullable|exists:leads,id',
@@ -102,6 +103,7 @@ class PurchaseOrderController extends Controller
             $userId = $userId ?? auth()->id();
 
             $po = PurchaseOrder::createWithUniqueNumber([
+                'po_type'     => $request->po_type,
                 'customer_id' => $request->customer_id,
                 'supplier_id' => $request->supplier_id,
                 'lead_id'     => $request->lead_id,
@@ -143,6 +145,7 @@ class PurchaseOrderController extends Controller
     public function update(Request $request, PurchaseOrder $purchaseOrder)
     {
         $request->validate([
+            'po_type'                => 'required|in:Local,Import',
             'customer_id'            => ['nullable', Rule::exists('customers', 'id')->where('status', 'Existing')],
             'supplier_id'            => 'nullable|exists:suppliers,id',
             'lead_id'                => 'nullable|exists:leads,id',
@@ -165,6 +168,7 @@ class PurchaseOrderController extends Controller
 
         DB::transaction(function () use ($request, $purchaseOrder) {
             $purchaseOrder->update([
+                'po_type'     => $request->po_type,
                 'customer_id' => $request->customer_id,
                 'supplier_id' => $request->supplier_id,
                 'lead_id'     => $request->lead_id,
@@ -225,7 +229,7 @@ class PurchaseOrderController extends Controller
 
     public function print(Request $request, PurchaseOrder $purchaseOrder)
     {
-        $language = $request->query('lang') === 'en' ? 'en' : 'id';
+        $language = $purchaseOrder->printLanguage();
         $purchaseOrder->load(['supplier', 'customer', 'items', 'salesUser']);
         $verificationParameters = [
             'kind' => 'purchase_order',

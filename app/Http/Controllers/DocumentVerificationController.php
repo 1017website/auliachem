@@ -15,6 +15,9 @@ class DocumentVerificationController extends Controller
     {
         [$document, $config] = $this->resolveDocument($kind, $id);
         $language = $request->query('lang') === 'en' ? 'en' : 'id';
+        if ($document instanceof PurchaseOrder) {
+            $language = $document->printLanguage();
+        }
         if ($language === 'en' && $kind === 'quotation') {
             $config['label'] = 'Quotation';
         }

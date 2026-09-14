@@ -21,6 +21,7 @@ class PurchaseOrderEnglishPrintTest extends TestCase
             'position' => 'Director',
         ]);
         $purchaseOrder = PurchaseOrder::createWithUniqueNumber([
+            'po_type' => 'Import',
             'user_id' => $admin->id,
             'order_date' => '2026-08-18',
             'currency' => 'IDR',
@@ -34,14 +35,9 @@ class PurchaseOrderEnglishPrintTest extends TestCase
             'sell_price' => 1200,
         ]);
 
-        $this->actingAs($admin)->get(route('purchase-orders.index'))
-            ->assertOk()
-            ->assertSee('Print PO in English')
-            ->assertSee('lang=en', false);
-
         $this->actingAs($admin)->get(route('purchase-orders.print', [
             'purchaseOrder' => $purchaseOrder,
-            'lang' => 'en',
+            'lang' => 'id',
         ]))
             ->assertOk()
             ->assertSee('<html lang="en">', false)
@@ -84,9 +80,11 @@ class PurchaseOrderEnglishPrintTest extends TestCase
             ]);
 
             foreach (['id', 'en'] as $language) {
+                $po->update(['po_type' => $language === 'en' ? 'Import' : 'Local']);
                 $response = $this->get(route('purchase-orders.print', [
-                    'purchaseOrder' => $po, 'lang' => $language,
+                    'purchaseOrder' => $po, 'lang' => $language === 'en' ? 'id' : 'en',
                 ]))->assertOk();
+                $response->assertSee('<html lang="'.$language.'">', false);
                 $price = $currency === 'IDR' ? 'Rp 1.235' : 'USD 1,235.00';
                 $total = $currency === 'IDR' ? 'Rp 3.088' : 'USD 3,087.50';
                 $response->assertSee($price)->assertSee($total);
