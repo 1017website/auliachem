@@ -12,6 +12,28 @@ class PurchaseOrderTypeTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_forms_offer_po_type_and_each_order_has_one_automatic_print_link(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'Admin', 'status' => 'Active']));
+        $orders = [];
+        foreach (['Local', 'Import'] as $type) {
+            $orders[] = PurchaseOrder::createWithUniqueNumber([
+                'po_type' => $type, 'currency' => 'IDR', 'status' => 'In Progress', 'order_date' => now(),
+            ]);
+        }
+
+        $response = $this->get(route('purchase-orders.index'))->assertOk()
+            ->assertSee('id="addPoType"', false)
+            ->assertSee('id="epPoType"', false)
+            ->assertSee('Lokal (Bahasa Indonesia)')
+            ->assertSee('Import (Bahasa Inggris)')
+            ->assertSee('Cetak ID')->assertSee('Cetak EN')
+            ->assertDontSee('lang=en', false)->assertDontSee('lang=id', false);
+        foreach ($orders as $order) {
+            $this->assertSame(1, substr_count($response->getContent(), route('purchase-orders.print', $order)));
+        }
+    }
+
     public function test_type_is_required_and_can_be_saved_and_changed(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'Admin', 'status' => 'Active']));

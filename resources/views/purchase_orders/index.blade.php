@@ -95,7 +95,10 @@
                                             </button>
                                         </td>
                                         <td class="px-3 py-2" style="color:#9ca3af;font-size:.75rem">{{ $pos->firstItem() + $i }}</td>
-                                        <td class="px-3 py-2" style="font-weight:700;color:var(--primary)">{{ $po->po_number }}</td>
+                                        <td class="px-3 py-2" style="font-weight:700;color:var(--primary)">
+                                            {{ $po->po_number }}
+                                            <div class="small text-muted fw-normal">{{ $po->po_type === 'Import' ? 'Import' : 'Lokal' }}</div>
+                                        </td>
                                         <td class="py-2" style="font-size:12px">{{ $po->customer?->company_name ?? '-' }}</td>
                                         <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->supplier?->supplier_name ?? '-' }}</td>
                                         <td class="py-2" style="font-size:12px;font-weight:600">{{ $po->salesUser?->name ?? '-' }}</td>
@@ -108,14 +111,9 @@
                                         </td>
                                         <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->order_date?->format('d M Y') }}</td>
                                         <td class="py-2">
-                                            <div class="btn-group btn-group-sm" role="group" aria-label="Pilihan bahasa cetak PO">
-                                                <a href="{{ route('purchase-orders.print', ['purchaseOrder' => $po, 'lang' => 'id']) }}" target="_blank" class="btn btn-outline-primary" style="padding:3px 7px" title="Cetak PO Bahasa Indonesia">
-                                                    <i class="fas fa-print me-1"></i>ID
-                                                </a>
-                                                <a href="{{ route('purchase-orders.print', ['purchaseOrder' => $po, 'lang' => 'en']) }}" target="_blank" class="btn btn-outline-primary" style="padding:3px 7px" title="Print PO in English">
-                                                    EN
-                                                </a>
-                                            </div>
+                                            <a href="{{ route('purchase-orders.print', $po) }}" target="_blank" class="btn btn-sm btn-outline-primary" style="padding:3px 7px" title="{{ $po->po_type === 'Import' ? 'Cetak PO Import dalam bahasa Inggris' : 'Cetak PO Lokal dalam bahasa Indonesia' }}">
+                                                <i class="fas fa-print me-1"></i>Cetak {{ strtoupper($po->printLanguage()) }}
+                                            </a>
                                             <button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px" onclick="openEditPo({{ $po->id }})">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </button>
@@ -195,6 +193,16 @@
                 <form method="POST" action="{{ route('purchase-orders.store') }}">
                     @csrf
                     <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="addPoType" class="form-label">Jenis PO <span class="text-danger">*</span></label>
+                            <select name="po_type" id="addPoType" class="form-select" required aria-describedby="addPoTypeHelp">
+                                <option value="">-- Pilih Jenis PO --</option>
+                                <option value="Local" @selected(old('po_type') === 'Local')>Lokal (Bahasa Indonesia)</option>
+                                <option value="Import" @selected(old('po_type') === 'Import')>Import (Bahasa Inggris)</option>
+                            </select>
+                            <div id="addPoTypeHelp" class="form-text">Bahasa cetak mengikuti jenis PO yang dipilih.</div>
+                            @error('po_type')<div class="text-danger small">{{ $message }}</div>@enderror
+                        </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label">Customer</label>
@@ -311,6 +319,14 @@
                 <form method="POST" id="editPoForm">
                     @csrf @method('PUT')
                     <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="epPoType" class="form-label">Jenis PO <span class="text-danger">*</span></label>
+                            <select name="po_type" id="epPoType" class="form-select" required aria-describedby="epPoTypeHelp">
+                                <option value="Local">Lokal (Bahasa Indonesia)</option>
+                                <option value="Import">Import (Bahasa Inggris)</option>
+                            </select>
+                            <div id="epPoTypeHelp" class="form-text">Bahasa cetak mengikuti jenis PO yang dipilih.</div>
+                        </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label">Customer</label>
@@ -777,6 +793,7 @@
 
                 setSelect2('epCustomer', po.customer_id);
                 setSelect2('epSupplier', po.supplier_id);
+                setSelect2('epPoType', po.po_type || 'Local');
 
                 // Auto-fill linked lead berdasarkan customer
                 const epCustEl = document.getElementById('epCustomer');
