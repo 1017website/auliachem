@@ -37,7 +37,7 @@
             <td class="py-2"><div style="font-weight:600">{{ $product->product_name }}</div><div class="text-muted text-truncate" style="font-size:11px;max-width:250px">{{ $product->description ?: '-' }}</div></td>
             <td class="py-2">{{ $product->category ?: '-' }}</td><td class="py-2">{{ $product->unit }}</td>
             <td class="py-2 text-end">{{ idr($product->buy_price) }}</td><td class="py-2 text-end" style="font-weight:600;color:var(--primary)">{{ idr($product->sell_price) }}</td>
-            <td class="py-2 text-end"><span style="font-weight:700;color:{{ $product->is_low_stock ? '#dc2626' : '#111827' }}">{{ number_format((float)$product->current_stock, 3, ',', '.') }}</span><div class="text-muted" style="font-size:10px">Min. {{ number_format((float)$product->minimum_stock, 3, ',', '.') }}</div></td>
+            <td class="py-2 text-end"><span style="font-weight:700;color:{{ $product->is_low_stock ? '#dc2626' : '#111827' }}">{{ format_number((float)$product->current_stock) }}</span><div class="text-muted" style="font-size:10px">Min. {{ format_number((float)$product->minimum_stock) }}</div></td>
             <td class="py-2"><span style="font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600;background:{{ $product->status === 'Active' ? '#d1fae5' : '#f3f4f6' }};color:{{ $product->status === 'Active' ? '#059669' : '#6b7280' }}">{{ $product->status }}</span></td>
             <td class="py-2 text-end pe-3"><button class="btn btn-sm btn-outline-secondary" style="padding:3px 7px" onclick="openEditProduct({{ $product->id }})"><i class="fas fa-pencil-alt"></i></button> <x-delete-request-button module="products" :model-id="$product->id" :label="$product->product_code . ' - ' . $product->product_name" /></td>
         </tr>
@@ -80,8 +80,8 @@ async function openEditProduct(id) {
     document.getElementById('editCategory').value = product.category || '';
     document.getElementById('editUnit').value = product.unit || '';
     document.getElementById('editDescription').value = product.description || '';
-    document.getElementById('editBuyPrice').value = Number(product.buy_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
-    document.getElementById('editSellPrice').value = Number(product.sell_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+    document.getElementById('editBuyPrice').value = Number(product.buy_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3});
+    document.getElementById('editSellPrice').value = Number(product.sell_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3});
     document.getElementById('editCurrentStock').value = product.current_stock || 0;
     document.getElementById('editMinimumStock').value = product.minimum_stock || 0;
     document.getElementById('editStatus').value = product.status;

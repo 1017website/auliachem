@@ -148,7 +148,7 @@
                                                     <tr style="border-bottom:1px solid #e5e7eb">
                                                         <td style="padding:5px 8px;font-weight:600">{{ $item->product_name }}</td>
                                                         <td style="padding:5px 8px;text-align:center;color:#6b7280">{{ $item->unit }}</td>
-                                                        <td style="padding:5px 8px;text-align:right">{{ number_format($item->qty, 3, ',', '.') }}</td>
+                                                        <td style="padding:5px 8px;text-align:right">{{ format_number($item->qty) }}</td>
                                                         <td style="padding:5px 8px;text-align:right;color:#dc2626">{{ idr($item->buy_price) }}</td>
                                                         <td style="padding:5px 8px;text-align:right;color:var(--primary)">{{ idr($item->sell_price) }}</td>
                                                         <td style="padding:5px 8px;text-align:right;font-weight:600;color:var(--primary)">{{ idr($item->qty * $item->sell_price) }}</td>
@@ -291,8 +291,8 @@
                                 <tfoot>
                                     <tr style="background:#f8f9fa;font-weight:700">
                                         <td colspan="4" class="text-end">Total:</td>
-                                        <td id="addTotalRevenue" class="text-end" style="color:var(--primary)">Rp 0,000</td>
-                                        <td id="addTotalProfit" class="text-end" style="color:#10b981">Rp 0,000</td>
+                                        <td id="addTotalRevenue" class="text-end" style="color:var(--primary)">Rp 0,00</td>
+                                        <td id="addTotalProfit" class="text-end" style="color:#10b981">Rp 0,00</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -410,8 +410,8 @@
                                 <tfoot>
                                     <tr style="background:#f8f9fa;font-weight:700">
                                         <td colspan="4" class="text-end">Total:</td>
-                                        <td id="editTotalRevenue" class="text-end" style="color:var(--primary)">Rp 0,000</td>
-                                        <td id="editTotalProfit" class="text-end" style="color:#10b981">Rp 0,000</td>
+                                        <td id="editTotalRevenue" class="text-end" style="color:var(--primary)">Rp 0,00</td>
+                                        <td id="editTotalProfit" class="text-end" style="color:#10b981">Rp 0,00</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -433,7 +433,7 @@
 
             function formatNum(n) {
                 if (!n && n !== 0) return '';
-                return Number(n).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+                return Number(n).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3});
             }
 
             function parseNum(str) {
@@ -443,7 +443,7 @@
 
             function formatQuantity(value) {
                 const number = Number(value || 0);
-                return number.toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+                return number.toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 3});
             }
 
             function syncQuantity(el) {
@@ -467,7 +467,7 @@
                 calcRow(el);
             }
 
-            function formatRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3}); }
+            function formatRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3}); }
 
             function syncHidden(el, hiddenClass) {
                 const row = el.closest('tr');
@@ -683,7 +683,7 @@
                         oninput="syncHidden(this,'item-sell-hidden');calcRow(this)"
                         onblur="formatPriceInput(this)">
                 </td>
-                <td class="item-profit text-end" style="font-weight:600;color:#10b981;vertical-align:middle">Rp 0,000</td>
+                <td class="item-profit text-end" style="font-weight:600;color:#10b981;vertical-align:middle">Rp 0,00</td>
                 <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)" style="padding:2px 6px"><i class="fas fa-times"></i></button></td>
             `;
                 body.appendChild(tr);

@@ -36,6 +36,8 @@ class SalesDocumentEnglishPrintTest extends TestCase
             $response->assertOk()->assertSee('<html lang="en">', false)
                 ->assertSee('<title>' . $document->{$kind . '_number'} . '-EN</title>', false)
                 ->assertSee('DESCRIPTION')->assertSee('PRICE')->assertSee('AMOUNT')
+                ->assertSee('Rp 1,000.00')
+                ->assertSee('<td class="num">2</td>', false)
                 ->assertSee('This document is electronically signed by:')
                 ->assertSee('Original customer notes')->assertSee('Custom payment terms')
                 ->assertSee($kind === 'quotation' ? 'Valid Until' : 'Due Date')
@@ -49,7 +51,8 @@ class SalesDocumentEnglishPrintTest extends TestCase
             foreach ([null, 'fr'] as $language) {
                 $this->get(route($route . '.print', ['id' => $document->id, 'lang' => $language]))
                     ->assertOk()->assertSee('<html lang="id">', false)
-                    ->assertSee('DESKRIPSI')->assertSee('Cetak / Simpan PDF');
+                    ->assertSee('DESKRIPSI')->assertSee('Cetak / Simpan PDF')
+                    ->assertSee('Rp 1.000,00');
             }
         }
     }

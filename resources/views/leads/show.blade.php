@@ -127,7 +127,7 @@
                 <div class="d-flex align-items-center justify-content-between mb-2 pb-2" style="border-bottom:1px solid #f9fafb">
                     <div>
                         <div style="font-size:.82rem;font-weight:600">{{ $prod->product_name }}</div>
-                        <div style="font-size:.72rem;color:var(--text-muted)">{{ number_format($prod->qty, 3, ',', '.') }} {{ $prod->unit }}</div>
+                        <div style="font-size:.72rem;color:var(--text-muted)">{{ format_number($prod->qty) }} {{ $prod->unit }}</div>
                     </div>
                     <x-delete-request-button
                         module="lead-products"

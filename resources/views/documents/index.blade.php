@@ -119,7 +119,7 @@
                 <div class="table-responsive"><table class="table table-bordered mb-2" style="font-size:12px">
                     <thead style="background:#f8f9fa"><tr><th style="min-width:190px">Item</th><th style="min-width:180px">Deskripsi</th><th style="width:80px">Unit</th><th style="width:100px">Qty</th><th style="width:150px">Harga Satuan</th><th style="width:150px">Jumlah</th><th style="width:42px"></th></tr></thead>
                     <tbody id="{{ $mode }}ItemsBody"></tbody>
-                    <tfoot><tr><td colspan="5" class="text-end fw-bold">Subtotal</td><td class="text-end fw-bold" id="{{ $mode }}Subtotal">Rp 0,000</td><td></td></tr><tr><td colspan="5" class="text-end fw-bold">PPN</td><td class="text-end" id="{{ $mode }}TaxAmount">Rp 0,000</td><td></td></tr><tr style="background:var(--primary-soft)"><td colspan="5" class="text-end fw-bold">TOTAL</td><td class="text-end fw-bold" style="color:var(--primary)" id="{{ $mode }}GrandTotal">Rp 0,000</td><td></td></tr></tfoot>
+                    <tfoot><tr><td colspan="5" class="text-end fw-bold">Subtotal</td><td class="text-end fw-bold" id="{{ $mode }}Subtotal">Rp 0,00</td><td></td></tr><tr><td colspan="5" class="text-end fw-bold">PPN</td><td class="text-end" id="{{ $mode }}TaxAmount">Rp 0,00</td><td></td></tr><tr style="background:var(--primary-soft)"><td colspan="5" class="text-end fw-bold">TOTAL</td><td class="text-end fw-bold" style="color:var(--primary)" id="{{ $mode }}GrandTotal">Rp 0,00</td><td></td></tr></tfoot>
                 </table></div>
 
                 <div class="row g-3 mt-2">
@@ -145,7 +145,7 @@ let documentItemIndex = 0;
 function docParse(value) { return parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')) || 0; }
 function docFormatQuantity(value) {
     const number = Number(value || 0);
-    return number.toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+    return number.toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 3});
 }
 function syncDocQuantity(input) {
     const row = input.closest('tr');
@@ -163,7 +163,7 @@ function syncDocQuantity(input) {
 }
 function docMoney(value, mode) {
     const currency = document.getElementById(mode + 'Currency')?.value || 'IDR';
-    return (currency === 'IDR' ? 'Rp ' : currency + ' ') + Number(value).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+    return (currency === 'IDR' ? 'Rp ' : currency + ' ') + Number(value).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3});
 }
 
 function addDocumentItem(mode, item = {}) {
@@ -173,8 +173,8 @@ function addDocumentItem(mode, item = {}) {
         <td><input class="form-control form-control-sm" name="items[${index}][description]" value="${escapeDoc(item.description || '')}"></td>
         <td><input class="form-control form-control-sm" name="items[${index}][unit]" value="${escapeDoc(item.unit || 'Kg')}" required></td>
         <td><input type="hidden" class="doc-qty-hidden" name="items[${index}][qty]" value="${item.qty || 1}"><input type="text" inputmode="decimal" class="form-control form-control-sm doc-qty text-end" value="${docFormatQuantity(item.qty || 1)}" placeholder="1.000,500" title="Titik untuk ribuan, koma untuk desimal" oninput="syncDocQuantity(this);recalcDocument('${mode}')" required></td>
-        <td><input class="form-control form-control-sm idr-input doc-price text-end" name="items[${index}][unit_price]" value="${item.unit_price ? Number(item.unit_price).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3}) : ''}" oninput="recalcDocument('${mode}')" required></td>
-        <td class="text-end align-middle fw-bold doc-line-total">Rp 0,000</td>
+        <td><input class="form-control form-control-sm idr-input doc-price text-end" name="items[${index}][unit_price]" value="${item.unit_price ? Number(item.unit_price).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3}) : ''}" oninput="recalcDocument('${mode}')" required></td>
+        <td class="text-end align-middle fw-bold doc-line-total">Rp 0,00</td>
         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="this.closest('tr').remove();recalcDocument('${mode}')"><i class="fas fa-times"></i></button></td>`;
     document.getElementById(mode + 'ItemsBody').appendChild(row);
     recalcDocument(mode);
@@ -188,7 +188,7 @@ function applyMasterProduct(input, mode) {
     const row = input.closest('tr');
     row.querySelector('input[name*="[description]"]').value = product.description || '';
     row.querySelector('input[name*="[unit]"]').value = product.unit || 'Kg';
-    row.querySelector('.doc-price').value = Number(product.sell_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+    row.querySelector('.doc-price').value = Number(product.sell_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3});
     recalcDocument(mode);
 }
 

@@ -89,7 +89,7 @@
                                     <div style="font-size:.8rem">
                                         @if($lead->products->count())
                                             @foreach($lead->products->take(2) as $p)
-                                                <div>{{ $p->product_name }} <span style="color:var(--text-muted);font-size:.7rem">{{ number_format($p->qty, 3, ',', '.') }} {{ $p->unit }}</span></div>
+                                                <div>{{ $p->product_name }} <span style="color:var(--text-muted);font-size:.7rem">{{ format_number($p->qty) }} {{ $p->unit }}</span></div>
                                             @endforeach
                                             @if($lead->products->count() > 2)
                                                 <div style="font-size:.7rem;color:var(--text-muted)">+{{ $lead->products->count() - 2 }} lainnya</div>

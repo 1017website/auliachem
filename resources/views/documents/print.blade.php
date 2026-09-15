@@ -57,15 +57,15 @@
         <thead><tr><th style="width:36px">NO</th><th>{!! $isEnglish ? 'DESCRIPTION' : 'DESKRIPSI' !!}</th><th style="width:62px">UNIT</th><th style="width:82px">QTY</th><th style="width:115px">{!! $isEnglish ? 'PRICE' : 'HARGA' !!}</th><th style="width:125px">{!! $isEnglish ? 'AMOUNT' : 'JUMLAH' !!}</th></tr></thead>
         <tbody>
         @foreach($document->items as $index => $item)
-            <tr><td class="center">{{ $index + 1 }}</td><td><b>{{ $item->item_name }}</b>@if($item->description)<br><span style="font-size:9px">{{ $item->description }}</span>@endif</td><td class="center">{{ $item->unit }}</td><td class="num">{{ number_format((float)$item->qty, 3, $isEnglish ? '.' : ',', $isEnglish ? ',' : '.') }}</td><td class="num">{{ $document->currency === 'IDR' ? idr($item->unit_price) : $document->currency . ' ' . number_format($item->unit_price, 3) }}</td><td class="num">{{ $document->currency === 'IDR' ? idr($item->subtotal) : $document->currency . ' ' . number_format($item->subtotal, 3) }}</td></tr>
+            <tr><td class="center">{{ $index + 1 }}</td><td><b>{{ $item->item_name }}</b>@if($item->description)<br><span style="font-size:9px">{{ $item->description }}</span>@endif</td><td class="center">{{ $item->unit }}</td><td class="num">{{ format_number($item->qty, 0, $language ?? 'id') }}</td><td class="num">{{ format_money($item->unit_price, $document->currency, $language ?? 'id') }}</td><td class="num">{{ format_money($item->subtotal, $document->currency, $language ?? 'id') }}</td></tr>
         @endforeach
         @for($i=$document->items->count();$i<8;$i++)<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>@endfor
         </tbody>
     </table>
     <table class="totals">
-        <tr><td>Subtotal</td><td>{{ $document->currency === 'IDR' ? idr($document->subtotal) : $document->currency . ' ' . number_format($document->subtotal, 3) }}</td></tr>
-        @if((float)$document->tax_percent > 0)<tr><td>{{ $isEnglish ? 'VAT' : 'PPN' }} {{ number_format((float)$document->tax_percent, 0) }}%</td><td>{{ $document->currency === 'IDR' ? idr($document->tax_amount) : $document->currency . ' ' . number_format($document->tax_amount, 3) }}</td></tr>@endif
-        <tr class="grand"><td>TOTAL</td><td>{{ $document->currency === 'IDR' ? idr($document->grand_total) : $document->currency . ' ' . number_format($document->grand_total, 3) }}</td></tr>
+        <tr><td>Subtotal</td><td>{{ format_money($document->subtotal, $document->currency, $language ?? 'id') }}</td></tr>
+        @if((float)$document->tax_percent > 0)<tr><td>{{ $isEnglish ? 'VAT' : 'PPN' }} {{ format_number($document->tax_percent, 0, $language ?? 'id') }}%</td><td>{{ format_money($document->tax_amount, $document->currency, $language ?? 'id') }}</td></tr>@endif
+        <tr class="grand"><td>TOTAL</td><td>{{ format_money($document->grand_total, $document->currency, $language ?? 'id') }}</td></tr>
     </table>
 
     <section class="notes">

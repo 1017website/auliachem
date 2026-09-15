@@ -114,7 +114,7 @@
                                     <div style="display:flex;flex-wrap:wrap;gap:3px">
                                         @foreach($cust->productItems as $p)
                                             <span style="background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
-                                                {{ $p->product_name }}{{ $p->qty > 0 ? ' '.number_format($p->qty, 3, ',', '.').' '.$p->unit : ($p->unit ? ' ('.$p->unit.')' : '') }}
+                                                {{ $p->product_name }}{{ $p->qty > 0 ? ' '.format_number($p->qty).' '.$p->unit : ($p->unit ? ' ('.$p->unit.')' : '') }}
                                             </span>
                                         @endforeach
                                     </div>
@@ -215,7 +215,7 @@
                         @foreach($selectedCustomer->productItems as $cp)
                         <div style="font-size:.78rem">
                             • {{ $cp->product_name }}
-                            <span style="color:var(--text-muted);font-size:.7rem">{{ number_format($cp->qty, 3, ',', '.') }} {{ $cp->unit }}</span>
+                            <span style="color:var(--text-muted);font-size:.7rem">{{ format_number($cp->qty) }} {{ $cp->unit }}</span>
                         </div>
                         @endforeach
                     </div>
@@ -224,7 +224,7 @@
                     <div class="row g-2 mt-3 mb-3 text-center">
                         <div class="col-6">
                             <div style="background:var(--primary-soft);border-radius:8px;padding:10px">
-                                <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedCustomer->total_revenue > 0 ? idrm($selectedCustomer->total_revenue) : 'Rp 0,000' }}</div>
+                                <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedCustomer->total_revenue > 0 ? idrm($selectedCustomer->total_revenue) : 'Rp 0,00' }}</div>
                                 <div style="font-size:.65rem;color:var(--text-muted)">Total Revenue</div>
                             </div>
                         </div>

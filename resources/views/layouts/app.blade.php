@@ -2175,7 +2175,7 @@
                 if (this.value === '') return;
                 const value = Number(this.value.replace(/\./g, '').replace(',', '.'));
                 if (Number.isFinite(value)) this.value = value.toLocaleString('id-ID', {
-                    minimumFractionDigits: 3, maximumFractionDigits: 3
+                    minimumFractionDigits: this.matches('.doc-qty, .item-qty') ? 0 : 2, maximumFractionDigits: 3
                 });
             });
 
