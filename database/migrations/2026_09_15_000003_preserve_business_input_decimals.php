@@ -10,15 +10,23 @@ return new class extends Migration
     {
         foreach (['products' => ['buy_price', 'sell_price'], 'quotation_items' => ['unit_price'],
             'invoice_items' => ['unit_price']] as $name => $fields) {
-            Schema::table($name, function (Blueprint $table) use ($fields) {
-                foreach ($fields as $field) $table->decimal($field, 19, 3)->default(0)->change();
-            });
+            foreach ($fields as $field) $this->changeDecimal($name, $field, 19, 0);
         }
-        Schema::table('users', fn (Blueprint $table) => $table->decimal('target', 22, 3)->default(500000000)->change());
-        Schema::table('leads', fn (Blueprint $table) => $table->decimal('probability', 6, 3)->default(0)->change());
-        Schema::table('suppliers', fn (Blueprint $table) => $table->decimal('rating', 5, 3)->default(0)->change());
-        Schema::table('quotations', fn (Blueprint $table) => $table->decimal('tax_percent', 6, 3)->default(0)->change());
-        Schema::table('invoices', fn (Blueprint $table) => $table->decimal('tax_percent', 6, 3)->default(11)->change());
+        $this->changeDecimal('users', 'target', 22, 500000000);
+        $this->changeDecimal('leads', 'probability', 6, 0);
+        $this->changeDecimal('suppliers', 'rating', 5, 0);
+        $this->changeDecimal('quotations', 'tax_percent', 6, 0);
+        $this->changeDecimal('invoices', 'tax_percent', 6, 11);
+    }
+
+    private function changeDecimal(string $name, string $field, int $precision, int $default): void
+    {
+        $column = collect(Schema::getColumns($name))->firstWhere('name', $field);
+        Schema::table($name, function (Blueprint $table) use ($field, $precision, $default, $column) {
+            $table->decimal($field, $precision, 3)
+                ->nullable($column['nullable'])
+                ->default($default)->change();
+        });
     }
 
     public function down(): void
