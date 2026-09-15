@@ -17,8 +17,8 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'buy_price' => 'decimal:2',
-        'sell_price' => 'decimal:2',
+        'buy_price' => 'decimal:3',
+        'sell_price' => 'decimal:3',
         'current_stock' => 'decimal:3',
         'minimum_stock' => 'decimal:3',
     ];

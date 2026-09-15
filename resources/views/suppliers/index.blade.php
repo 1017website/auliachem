@@ -410,7 +410,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Rating (0-5)</label>
-                            <input type="number" name="rating" class="form-control" min="0" max="5" step="0.1" value="0">
+                            <input type="text" inputmode="decimal" data-decimal-input name="rating" class="form-control" min="0" max="5" step="0.1" value="0">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Status</label>
@@ -517,7 +517,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Rating</label>
-                            <input type="number" name="rating" id="esRating" class="form-control" min="0" max="5" step="0.1">
+                            <input type="text" inputmode="decimal" data-decimal-input name="rating" id="esRating" class="form-control" min="0" max="5" step="0.1">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Status</label>

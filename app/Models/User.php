@@ -31,7 +31,7 @@ class User extends Authenticatable
     ];
 
     protected $hidden = ['password', 'remember_token'];
-    protected $casts  = ['password' => 'hashed'];
+    protected $casts  = ['password' => 'hashed', 'target' => 'decimal:3'];
 
     // ── Relasi Sales ──
     public function leads(): HasMany      { return $this->hasMany(Lead::class, 'user_id'); }

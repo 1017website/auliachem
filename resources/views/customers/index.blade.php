@@ -628,7 +628,7 @@ function addCustProductRow(containerId, data = {}) {
     const i = custProdIdx++;
     const html = `<div class="row g-2 mb-2 align-items-center" id="custProd_${i}">
         <div class="col-5"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(safeValue(data.product_name))}" required></div>
-        <div class="col-3"><input type="number" name="products_list[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.001" value="${escapeHtml(safeValue(data.qty))}"></div>
+        <div class="col-3"><input type="text" inputmode="decimal" data-decimal-input name="products_list[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.001" value="${escapeHtml(safeValue(data.qty))}"></div>
         <div class="col-3"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)" value="${escapeHtml(safeValue(data.unit))}"></div>
         <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;

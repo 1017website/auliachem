@@ -102,9 +102,9 @@
                                         <td class="py-2" style="font-size:12px">{{ $po->customer?->company_name ?? '-' }}</td>
                                         <td class="py-2" style="color:#6b7280;font-size:12px">{{ $po->supplier?->supplier_name ?? '-' }}</td>
                                         <td class="py-2" style="font-size:12px;font-weight:600">{{ $po->salesUser?->name ?? '-' }}</td>
-                                        <td class="py-2" style="font-weight:600;color:var(--primary);white-space:nowrap">{{ idr($po->total_revenue) }}</td>
-                                        <td class="py-2" style="color:#dc2626;font-size:12px;white-space:nowrap">{{ idr($po->total_cost) }}</td>
-                                        <td class="py-2" style="font-weight:600;color:#10b981;white-space:nowrap">{{ idr($po->gross_profit) }}</td>
+                                        <td class="py-2" style="font-weight:600;color:var(--primary);white-space:nowrap">{{ format_money($po->total_revenue, $po->currency) }}</td>
+                                        <td class="py-2" style="color:#dc2626;font-size:12px;white-space:nowrap">{{ format_money($po->total_cost, $po->currency) }}</td>
+                                        <td class="py-2" style="font-weight:600;color:#10b981;white-space:nowrap">{{ format_money($po->gross_profit, $po->currency) }}</td>
                                         <td class="py-2" style="font-size:12px;color:#6b7280">{{ $po->gross_margin }}%</td>
                                         <td class="py-2">
                                             <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:{{ $c[0] }};color:{{ $c[1] }}">{{ $po->status }}</span>
@@ -149,18 +149,18 @@
                                                         <td style="padding:5px 8px;font-weight:600">{{ $item->product_name }}</td>
                                                         <td style="padding:5px 8px;text-align:center;color:#6b7280">{{ $item->unit }}</td>
                                                         <td style="padding:5px 8px;text-align:right">{{ format_number($item->qty) }}</td>
-                                                        <td style="padding:5px 8px;text-align:right;color:#dc2626">{{ idr($item->buy_price) }}</td>
-                                                        <td style="padding:5px 8px;text-align:right;color:var(--primary)">{{ idr($item->sell_price) }}</td>
-                                                        <td style="padding:5px 8px;text-align:right;font-weight:600;color:var(--primary)">{{ idr($item->qty * $item->sell_price) }}</td>
-                                                        <td style="padding:5px 8px;text-align:right;font-weight:600;color:#10b981">{{ idr(($item->sell_price - $item->buy_price) * $item->qty) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:#dc2626">{{ format_money($item->buy_price, $po->currency) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:var(--primary)">{{ format_money($item->sell_price, $po->currency) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;font-weight:600;color:var(--primary)">{{ format_money($item->qty * $item->sell_price, $po->currency) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;font-weight:600;color:#10b981">{{ format_money(($item->sell_price - $item->buy_price) * $item->qty, $po->currency) }}</td>
                                                     </tr>
                                                     @endforeach
                                                 </tbody>
                                                 <tfoot>
                                                     <tr style="background:#f0f4ff;font-weight:700">
                                                         <td colspan="5" style="padding:5px 8px;text-align:right;font-size:11px;color:#6b7280">TOTAL</td>
-                                                        <td style="padding:5px 8px;text-align:right;color:var(--primary)">{{ idr($po->total_revenue) }}</td>
-                                                        <td style="padding:5px 8px;text-align:right;color:#10b981">{{ idr($po->gross_profit) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:var(--primary)">{{ format_money($po->total_revenue, $po->currency) }}</td>
+                                                        <td style="padding:5px 8px;text-align:right;color:#10b981">{{ format_money($po->gross_profit, $po->currency) }}</td>
                                                     </tr>
                                                 </tfoot>
                                             </table>
@@ -244,7 +244,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Currency</label>
-                                <select name="currency" class="form-select">
+                                <select name="currency" class="form-select" onchange="recalcTotal('addItemsBody')">
                                     <option value="IDR">IDR</option>
                                     <option value="USD">USD</option>
                                     <option value="SGD">SGD</option>
@@ -367,7 +367,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Currency</label>
-                                <select name="currency" id="epCurrency" class="form-select">
+                                <select name="currency" id="epCurrency" class="form-select" onchange="recalcTotal('editItemsBody')">
                                     <option value="IDR">IDR</option>
                                     <option value="USD">USD</option>
                                     <option value="SGD">SGD</option>
@@ -452,7 +452,7 @@
                 const value = String(el.value || '');
                 const commaPosition = value.indexOf(',');
                 const integerPart = (commaPosition >= 0 ? value.slice(0, commaPosition) : value).replace(/\D/g, '');
-                const decimalPart = commaPosition >= 0 ? value.slice(commaPosition + 1).replace(/\D/g, '').slice(0, 3) : '';
+                const decimalPart = commaPosition >= 0 ? value.slice(commaPosition + 1).replace(/\D/g, '') : '';
                 const formattedInteger = integerPart === '' ? '' : Number(integerPart).toLocaleString('id-ID');
                 el.value = formattedInteger + (commaPosition >= 0 ? ',' + decimalPart : '');
 
@@ -462,12 +462,17 @@
             }
 
             function formatPriceInput(el) {
+                if (!validateDecimalInput(el)) return;
                 const raw = parseNum(el.value);
                 if (raw > 0) el.value = formatNum(raw);
                 calcRow(el);
             }
 
-            function formatRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 3}); }
+            function formatPoMoney(n, bodyId) {
+                const body = document.getElementById(bodyId);
+                const currency = body.closest('form').querySelector('[name="currency"]').value || 'IDR';
+                return (currency === 'IDR' ? 'Rp' : currency) + ' ' + formatNum(n);
+            }
 
             function syncHidden(el, hiddenClass) {
                 const row = el.closest('tr');
@@ -476,7 +481,7 @@
                 const pos = el.selectionStart;
                 const parts = el.value.split(',');
                 const integer = parts[0].replace(/\D/g, '');
-                const decimal = parts.length > 1 ? parts[1].replace(/\D/g, '').slice(0, 3) : '';
+                const decimal = parts.length > 1 ? parts[1].replace(/\D/g, '') : '';
                 const raw = integer + (decimal ? '.' + decimal : '');
                 const formatted = (integer ? Number(integer).toLocaleString('id-ID') : '') + (parts.length > 1 ? ',' + decimal : '');
                 const diff = formatted.length - el.value.length;
@@ -492,7 +497,7 @@
                 const buy = parseNum(row.querySelector('.item-buy')?.value);
                 const sell = parseNum(row.querySelector('.item-sell')?.value);
                 const profit = (sell - buy) * qty;
-                row.querySelector('.item-profit').textContent = formatRp(profit);
+                row.querySelector('.item-profit').textContent = formatPoMoney(profit, row.closest('tbody').id);
                 row.querySelector('.item-profit').style.color = profit >= 0 ? '#10b981' : '#dc2626';
                 recalcTotal(row.closest('tbody').id);
             }
@@ -507,9 +512,10 @@
                     const sell = parseNum(row.querySelector('.item-sell')?.value);
                     revenue += qty * sell;
                     profit += (sell - buy) * qty;
+                    row.querySelector('.item-profit').textContent = formatPoMoney((sell - buy) * qty, bodyId);
                 });
-                document.getElementById(prefix + 'TotalRevenue').textContent = formatRp(revenue);
-                document.getElementById(prefix + 'TotalProfit').textContent = formatRp(profit);
+                document.getElementById(prefix + 'TotalRevenue').textContent = formatPoMoney(revenue, bodyId);
+                document.getElementById(prefix + 'TotalProfit').textContent = formatPoMoney(profit, bodyId);
                 document.getElementById(prefix + 'TotalProfit').style.color = profit >= 0 ? '#10b981' : '#dc2626';
             }
 
@@ -718,9 +724,7 @@
                     }
                 }
 
-                if (data.qty && data.buy_price && data.sell_price) {
-                    calcRow(tr.querySelector('.item-qty'));
-                }
+                calcRow(tr.querySelector('.item-qty'));
             }
 
             function removeRow(btn) {
@@ -797,6 +801,7 @@
                 setSelect2('epCustomer', po.customer_id);
                 setSelect2('epSupplier', po.supplier_id);
                 setSelect2('epPoType', po.po_type || 'Local');
+                setSelect2('epCurrency', po.currency);
 
                 // Auto-fill linked lead berdasarkan customer
                 const epCustEl = document.getElementById('epCustomer');

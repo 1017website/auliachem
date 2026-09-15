@@ -345,7 +345,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Probability (%)</label>
-                            <input type="number" name="probability" class="form-control" min="0" max="100" value="{{ $lead->probability }}">
+                            <input type="text" inputmode="decimal" data-decimal-input name="probability" class="form-control" min="0" max="100" value="{{ $lead->probability }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Expected Closing</label>
@@ -442,7 +442,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Probability (%)</label>
-                            <input type="number" name="probability" class="form-control" min="0" max="100" value="{{ $lead->probability }}">
+                            <input type="text" inputmode="decimal" data-decimal-input name="probability" class="form-control" min="0" max="100" value="{{ $lead->probability }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Expected Closing</label>
@@ -481,7 +481,7 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label">Qty / Volume</label>
-                            <input type="number" name="qty" class="form-control" step="0.001" placeholder="0">
+                            <input type="text" inputmode="decimal" data-decimal-input name="qty" class="form-control" step="0.001" placeholder="0">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Satuan</label>

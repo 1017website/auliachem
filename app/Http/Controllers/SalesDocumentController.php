@@ -218,7 +218,7 @@ abstract class SalesDocumentController extends Controller
             $config['date_field'] => ['required', 'date'],
             $config['secondary_date_field'] => ['nullable', 'date', 'after_or_equal:' . $config['date_field']],
             'currency' => ['required', Rule::in(['IDR', 'USD', 'SGD'])],
-            'tax_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'tax_percent' => ['required', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
             'status' => ['required', Rule::in($config['statuses'])],
             'notes' => ['nullable', 'string', 'max:5000'],
             'terms' => ['nullable', 'string', 'max:5000'],
@@ -226,8 +226,8 @@ abstract class SalesDocumentController extends Controller
             'items.*.item_name' => ['required', 'string', 'max:255'],
             'items.*.description' => ['nullable', 'string', 'max:1000'],
             'items.*.unit' => ['required', 'string', 'max:50'],
-            'items.*.qty' => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.qty' => ['required', 'numeric', 'decimal:0,3', 'min:0.001'],
+            'items.*.unit_price' => ['required', 'numeric', 'decimal:0,3', 'min:0'],
         ];
 
         if ($config['kind'] === 'invoice') {

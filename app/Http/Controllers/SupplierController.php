@@ -68,7 +68,7 @@ class SupplierController extends Controller
             'status'              => 'required|in:Active,Non-Active',
             'relationship_status' => 'required|in:Potential,Existing',
             'is_preferred'        => 'boolean',
-            'rating'              => 'nullable|numeric|min:0|max:5',
+            'rating'              => 'nullable|numeric|decimal:0,3|min:0|max:5',
             'supplier_since'      => 'nullable|date',
             // inline pics & products
             'pics'                => 'nullable|array',
@@ -143,7 +143,7 @@ class SupplierController extends Controller
             'status'              => 'sometimes|in:Active,Non-Active',
             'relationship_status' => 'sometimes|in:Potential,Existing',
             'is_preferred'        => 'boolean',
-            'rating'              => 'nullable|numeric|min:0|max:5',
+            'rating'              => 'nullable|numeric|decimal:0,3|min:0|max:5',
             'pics'                => 'nullable|array',
             'pics.*.pic_name'     => 'nullable|string|max:255',
             'pics.*.pic_position' => 'nullable|string|max:100',
@@ -370,7 +370,7 @@ class SupplierController extends Controller
                 'email' => ['nullable', 'email', 'max:255'],
                 'status' => ['required', 'in:Active,Non-Active'],
                 'relationship_status' => ['required', 'in:Potential,Existing'],
-                'rating' => ['numeric', 'min:0', 'max:5'],
+                'rating' => ['numeric', 'decimal:0,3', 'min:0', 'max:5'],
                 'supplier_since' => ['nullable', 'date'],
             ]);
 

@@ -100,10 +100,10 @@ class ProductController extends Controller
             'category' => ['nullable', 'string', 'max:100'],
             'unit' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'buy_price' => ['required', 'numeric', 'min:0'],
-            'sell_price' => ['required', 'numeric', 'min:0'],
-            'current_stock' => ['required', 'numeric', 'min:0'],
-            'minimum_stock' => ['required', 'numeric', 'min:0'],
+            'buy_price' => ['required', 'numeric', 'decimal:0,3', 'min:0'],
+            'sell_price' => ['required', 'numeric', 'decimal:0,3', 'min:0'],
+            'current_stock' => ['required', 'numeric', 'decimal:0,3', 'min:0'],
+            'minimum_stock' => ['required', 'numeric', 'decimal:0,3', 'min:0'],
             'status' => ['required', Rule::in(['Active', 'Inactive'])],
         ];
     }

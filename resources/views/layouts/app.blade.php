@@ -2168,11 +2168,12 @@
                 const parts = this.value.split(',');
                 const integer = parts[0].replace(/\D/g, '');
                 this.value = (integer ? Number(integer).toLocaleString('id-ID') : '')
-                    + (parts.length > 1 ? ',' + parts[1].replace(/\D/g, '').slice(0, 3) : '');
+                    + (parts.length > 1 ? ',' + parts[1].replace(/\D/g, '') : '');
             });
 
             $(document).on('focusout', '.idr-input, .doc-qty, .item-qty, .item-buy, .item-sell', function() {
                 if (this.value === '') return;
+                if (!validateDecimalInput(this)) return;
                 const value = Number(this.value.replace(/\./g, '').replace(',', '.'));
                 if (Number.isFinite(value)) this.value = value.toLocaleString('id-ID', {
                     minimumFractionDigits: this.matches('.doc-qty, .item-qty') ? 0 : 2, maximumFractionDigits: 3
@@ -2187,6 +2188,7 @@
         });
     </script>
 
+    <script src="{{ asset('js/decimal-inputs.js') }}"></script>
     @stack('scripts')
 </body>
 

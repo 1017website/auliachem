@@ -82,7 +82,7 @@ class CustomerController extends Controller
             // Kebutuhan produk — field disamakan dengan leads (product_name, qty, unit)
             'products_list'                => 'nullable|array',
             'products_list.*.product_name' => 'required_with:products_list|string|max:255',
-            'products_list.*.qty'          => 'nullable|numeric|min:0',
+            'products_list.*.qty'          => 'nullable|numeric|decimal:0,3|min:0',
             'products_list.*.unit'         => 'nullable|string|max:100',
         ]);
 
@@ -185,7 +185,7 @@ class CustomerController extends Controller
             // Kebutuhan produk — product_name, qty, unit (sama seperti leads)
             'products_list'                => 'nullable|array',
             'products_list.*.product_name' => 'nullable|string|max:255',
-            'products_list.*.qty'          => 'nullable|numeric|min:0',
+            'products_list.*.qty'          => 'nullable|numeric|decimal:0,3|min:0',
             'products_list.*.unit'         => 'nullable|string|max:100',
         ]);
 

@@ -18,6 +18,7 @@ class Supplier extends Model
 
     protected $casts = [
         'supplier_since' => 'date',
+        'rating' => 'decimal:3',
         'is_preferred'   => 'boolean',
     ];
 

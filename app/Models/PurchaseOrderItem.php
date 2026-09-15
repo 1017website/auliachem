@@ -14,8 +14,8 @@ class PurchaseOrderItem extends Model
 
     protected $casts = [
         'qty'        => 'decimal:3',
-        'buy_price'  => 'decimal:0',
-        'sell_price' => 'decimal:0',
+        'buy_price'  => 'decimal:3',
+        'sell_price' => 'decimal:3',
     ];
 
     public function purchaseOrder(): BelongsTo { return $this->belongsTo(PurchaseOrder::class); }

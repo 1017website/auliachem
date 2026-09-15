@@ -59,8 +59,8 @@
             <div class="col-12"><label class="form-label">Deskripsi / Spesifikasi</label><textarea name="description" id="{{ $mode }}Description" class="form-control" rows="2"></textarea></div>
             <div class="col-md-6"><label class="form-label">Harga Beli</label><div class="input-group"><span class="input-group-text">Rp</span><input name="buy_price" id="{{ $mode }}BuyPrice" class="form-control idr-input text-end" value="0" required></div></div>
             <div class="col-md-6"><label class="form-label">Harga Jual</label><div class="input-group"><span class="input-group-text">Rp</span><input name="sell_price" id="{{ $mode }}SellPrice" class="form-control idr-input text-end" value="0" required></div></div>
-            <div class="col-md-6"><label class="form-label">Stok Saat Ini</label><input type="number" name="current_stock" id="{{ $mode }}CurrentStock" class="form-control" min="0" step="0.001" value="0" required></div>
-            <div class="col-md-6"><label class="form-label">Minimum Stok</label><input type="number" name="minimum_stock" id="{{ $mode }}MinimumStock" class="form-control" min="0" step="0.001" value="0" required></div>
+            <div class="col-md-6"><label class="form-label">Stok Saat Ini</label><input type="text" inputmode="decimal" data-decimal-input name="current_stock" id="{{ $mode }}CurrentStock" class="form-control" min="0" step="0.001" value="0" required></div>
+            <div class="col-md-6"><label class="form-label">Minimum Stok</label><input type="text" inputmode="decimal" data-decimal-input name="minimum_stock" id="{{ $mode }}MinimumStock" class="form-control" min="0" step="0.001" value="0" required></div>
         </div></div>
         <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm">Simpan Barang</button></div>
     </form>

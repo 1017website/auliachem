@@ -314,7 +314,7 @@
             const i = leadProdIdx++;
             const html = `<div class="row g-2 mb-2 align-items-center" id="leadProd_${i}">
                 <div class="col-5"><input type="text" name="products[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" required></div>
-                <div class="col-3"><input type="number" name="products[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.001"></div>
+                <div class="col-3"><input type="text" inputmode="decimal" data-decimal-input name="products[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.001"></div>
                 <div class="col-3"><input type="text" name="products[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)"></div>
                 <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('leadProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
             </div>`;

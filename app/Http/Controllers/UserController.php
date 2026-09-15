@@ -60,7 +60,7 @@ class UserController extends Controller
             'position'          => 'nullable|string|max:100',
             'role'              => ['required', Rule::in(User::MANAGEABLE_ROLES)],
             'status'            => 'required|in:Active,Non-Active',
-            'target'            => 'nullable|numeric|min:0',
+            'target'            => 'nullable|numeric|decimal:0,3|min:0',
         ]);
         $validated['password'] = Hash::make($validated['password']);
         User::create($validated);
@@ -78,7 +78,7 @@ class UserController extends Controller
             'position' => 'nullable|string|max:100',
             'role'     => ['sometimes', Rule::in(User::MANAGEABLE_ROLES)],
             'status'   => 'sometimes|in:Active,Non-Active',
-            'target'   => 'nullable|numeric|min:0',
+            'target'   => 'nullable|numeric|decimal:0,3|min:0',
         ]);
 
         if ($request->filled('new_password')) {

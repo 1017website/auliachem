@@ -22,7 +22,7 @@ class Quotation extends Model
     protected $casts = [
         'quotation_date' => 'date',
         'valid_until' => 'date',
-        'tax_percent' => 'decimal:2',
+        'tax_percent' => 'decimal:3',
     ];
 
     protected static function numberColumn(): string { return 'quotation_number'; }

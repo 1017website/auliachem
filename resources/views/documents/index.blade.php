@@ -112,7 +112,7 @@
                     <div class="col-md-3"><label class="form-label">{{ $config['secondary_date_label'] }}</label><input type="date" name="{{ $config['secondary_date_field'] }}" id="{{ $mode }}SecondaryDate" value="{{ date('Y-m-d', strtotime('+7 days')) }}" class="form-control"></div>
                     <div class="col-md-3"><label class="form-label">Status</label><select name="status" id="{{ $mode }}Status" class="form-select">@foreach($config['statuses'] as $option)<option value="{{ $option }}">{{ $option }}</option>@endforeach</select></div>
                     <div class="col-md-3"><label class="form-label">Mata Uang</label><select name="currency" id="{{ $mode }}Currency" class="form-select"><option>IDR</option><option>USD</option><option>SGD</option></select></div>
-                    <div class="col-md-3"><label class="form-label">PPN (%)</label><input type="number" name="tax_percent" id="{{ $mode }}Tax" min="0" max="100" step="0.01" value="{{ $config['default_tax'] }}" class="form-control" oninput="recalcDocument('{{ $mode }}')" required></div>
+                    <div class="col-md-3"><label class="form-label">PPN (%)</label><input type="text" inputmode="decimal" data-decimal-input name="tax_percent" id="{{ $mode }}Tax" min="0" max="100" step="0.01" value="{{ $config['default_tax'] }}" class="form-control" oninput="recalcDocument('{{ $mode }}')" required></div>
                 </div>
 
                 <div class="d-flex align-items-center justify-content-between mt-4 mb-2"><div style="font-size:12px;font-weight:700;color:#374151">ITEM DOKUMEN <span class="fw-normal text-muted ms-2">Qty: titik = ribuan, koma = desimal (contoh 1.000,50)</span></div><button type="button" class="btn btn-outline-primary btn-sm" onclick="addDocumentItem('{{ $mode }}')"><i class="fas fa-plus me-1"></i>Tambah Item</button></div>
@@ -153,7 +153,7 @@ function syncDocQuantity(input) {
     const value = String(input.value || '');
     const commaPosition = value.indexOf(',');
     const integerPart = (commaPosition >= 0 ? value.slice(0, commaPosition) : value).replace(/\D/g, '');
-    const decimalPart = commaPosition >= 0 ? value.slice(commaPosition + 1).replace(/\D/g, '').slice(0, 3) : '';
+    const decimalPart = commaPosition >= 0 ? value.slice(commaPosition + 1).replace(/\D/g, '') : '';
     const formattedInteger = integerPart === '' ? '' : Number(integerPart).toLocaleString('id-ID');
     input.value = formattedInteger + (commaPosition >= 0 ? ',' + decimalPart : '');
 
@@ -198,7 +198,7 @@ function recalcDocument(mode) {
         const total = (parseFloat(row.querySelector('.doc-qty-hidden').value) || 0) * docParse(row.querySelector('.doc-price').value);
         subtotal += total; row.querySelector('.doc-line-total').textContent = docMoney(total, mode);
     });
-    const tax = subtotal * ((parseFloat(document.getElementById(mode + 'Tax').value) || 0) / 100);
+    const tax = subtotal * ((Number(decimalInputValue(document.getElementById(mode + 'Tax'))) || 0) / 100);
     document.getElementById(mode + 'Subtotal').textContent = docMoney(subtotal, mode);
     document.getElementById(mode + 'TaxAmount').textContent = docMoney(tax, mode);
     document.getElementById(mode + 'GrandTotal').textContent = docMoney(subtotal + tax, mode);

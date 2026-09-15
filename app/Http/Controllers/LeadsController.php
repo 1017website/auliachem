@@ -61,7 +61,7 @@ class LeadsController extends Controller
             'pipeline_stage'  => 'nullable|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
             'volume_estimate' => 'nullable|string|max:100',
-            'probability'     => 'nullable|integer|min:0|max:100',
+            'probability'     => 'nullable|numeric|decimal:0,3|min:0|max:100',
             'lead_source'     => 'nullable|string|max:100',
             'competitor'      => 'nullable|string|max:255',
             'expected_closing' => 'nullable|date',
@@ -78,7 +78,7 @@ class LeadsController extends Controller
             // inline products
             'products'                => 'nullable|array',
             'products.*.product_name' => 'required_with:products|string|max:255',
-            'products.*.qty'          => 'nullable|numeric|min:0',
+            'products.*.qty'          => 'nullable|numeric|decimal:0,3|min:0',
             'products.*.unit'         => 'nullable|string|max:50',
         ]);
 
@@ -142,7 +142,7 @@ class LeadsController extends Controller
             'pipeline_stage'  => 'sometimes|in:Identifying,Approaching,Follow Up,Won,Lost,Maintaining',
             'temperature'     => 'nullable|in:Hot,Warm,Cold',
             'volume_estimate' => 'nullable|string|max:100',
-            'probability'     => 'nullable|integer|min:0|max:100',
+            'probability'     => 'nullable|numeric|decimal:0,3|min:0|max:100',
             'lead_source'     => 'nullable|string|max:100',
             'competitor'      => 'nullable|string|max:255',
             'expected_closing' => 'nullable|date',
@@ -321,7 +321,7 @@ class LeadsController extends Controller
     {
         $request->validate([
             'product_name' => 'required|string|max:255',
-            'qty'          => 'nullable|numeric|min:0',
+            'qty'          => 'nullable|numeric|decimal:0,3|min:0',
             'unit'         => 'required|string|max:50',
         ]);
         $lead->products()->create([

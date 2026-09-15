@@ -22,7 +22,7 @@ class Invoice extends Model
     protected $casts = [
         'invoice_date' => 'date',
         'due_date' => 'date',
-        'tax_percent' => 'decimal:2',
+        'tax_percent' => 'decimal:3',
     ];
 
     protected static function numberColumn(): string { return 'invoice_number'; }

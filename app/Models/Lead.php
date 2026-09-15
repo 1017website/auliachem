@@ -25,6 +25,7 @@ class Lead extends Model
         'expected_closing' => 'date',
         'next_follow_up'   => 'date',
         'lead_score'       => 'decimal:1',
+        'probability' => 'decimal:3',
     ];
 
     public function salesUser(): BelongsTo  { return $this->belongsTo(User::class, 'user_id'); }
