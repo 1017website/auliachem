@@ -231,7 +231,7 @@
                 },
                 tooltip: {
                     callbacks: {
-                        label: ctx => ` ${ctx.label}: Rp ${ctx.parsed.toFixed(1)} Jt`
+                        label: ctx => ` ${ctx.label}: Rp ${ctx.parsed.toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3})} Jt`
                     }
                 }
             },

@@ -240,7 +240,7 @@
                 <div class="row g-2 mt-3 mb-3 text-center">
                     <div class="col-6">
                         <div style="background:var(--primary-soft);border-radius:8px;padding:10px">
-                            <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedSupplier->total_revenue > 0 ? idrm($selectedSupplier->total_revenue) : 'Rp 0' }}</div>
+                            <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedSupplier->total_revenue > 0 ? idrm($selectedSupplier->total_revenue) : 'Rp 0,000' }}</div>
                             <div style="font-size:.65rem;color:var(--text-muted)">Total Pembelian</div>
                         </div>
                     </div>

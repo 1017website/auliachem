@@ -2164,21 +2164,24 @@
                 if (form) form.removeAttribute('data-dirty');
             });
 
-            // ── Format input IDR — separator real-time saat ketik ──
-            $(document).on('keyup input', '.idr-input', function() {
-                let raw = $(this).val().replace(/\D/g, '');
-                if (raw === '') {
-                    $(this).val('');
-                    return;
-                }
-                let formatted = parseInt(raw, 10).toLocaleString('id-ID');
-                $(this).val(formatted);
+            $(document).on('input', '.idr-input', function() {
+                const parts = this.value.split(',');
+                const integer = parts[0].replace(/\D/g, '');
+                this.value = (integer ? Number(integer).toLocaleString('id-ID') : '')
+                    + (parts.length > 1 ? ',' + parts[1].replace(/\D/g, '').slice(0, 3) : '');
             });
 
-            // Strip separator sebelum form submit agar validasi numeric lolos
+            $(document).on('focusout', '.idr-input, .doc-qty, .item-qty, .item-buy, .item-sell', function() {
+                if (this.value === '') return;
+                const value = Number(this.value.replace(/\./g, '').replace(',', '.'));
+                if (Number.isFinite(value)) this.value = value.toLocaleString('id-ID', {
+                    minimumFractionDigits: 3, maximumFractionDigits: 3
+                });
+            });
+
             $(document).on('submit', 'form', function() {
                 $(this).find('.idr-input').each(function() {
-                    $(this).val($(this).val().replace(/\./g, '').replace(/,/g, ''));
+                    this.value = this.value.replace(/\./g, '').replace(',', '.');
                 });
             });
         });

@@ -241,7 +241,7 @@ function openEditUser(id, name, email, phone, position, role, status, target) {
     document.getElementById('euStatus').value   = status;
     // Format target dengan separator
     const raw = parseInt(String(target).replace(/\D/g,'')) || 0;
-    document.getElementById('euTarget').value   = raw > 0 ? raw.toLocaleString('id-ID') : '';
+    document.getElementById('euTarget').value   = raw > 0 ? raw.toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3}) : '';
     new bootstrap.Modal(document.getElementById('editUserModal')).show();
 }
 </script>

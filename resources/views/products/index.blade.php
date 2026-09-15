@@ -80,8 +80,8 @@ async function openEditProduct(id) {
     document.getElementById('editCategory').value = product.category || '';
     document.getElementById('editUnit').value = product.unit || '';
     document.getElementById('editDescription').value = product.description || '';
-    document.getElementById('editBuyPrice').value = Math.round(product.buy_price || 0).toLocaleString('id-ID');
-    document.getElementById('editSellPrice').value = Math.round(product.sell_price || 0).toLocaleString('id-ID');
+    document.getElementById('editBuyPrice').value = Number(product.buy_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+    document.getElementById('editSellPrice').value = Number(product.sell_price || 0).toLocaleString('id-ID', {minimumFractionDigits: 3, maximumFractionDigits: 3});
     document.getElementById('editCurrentStock').value = product.current_stock || 0;
     document.getElementById('editMinimumStock').value = product.minimum_stock || 0;
     document.getElementById('editStatus').value = product.status;

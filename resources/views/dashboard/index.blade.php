@@ -242,7 +242,7 @@ function growthBadge($val, $prev_label) {
                                     <span>{{ $s->name }}</span>
                                 </div>
                             </td>
-                            <td>Rp {{ number_format($s->deals_closed * 50000000 / 1000000, 0) }}M</td>
+                            <td>Rp {{ number_format($s->deals_closed * 50000000 / 1000000, 3, ',', '.') }}M</td>
                             <td>{{ $s->deals_closed }}</td>
                         </tr>
                         @endforeach

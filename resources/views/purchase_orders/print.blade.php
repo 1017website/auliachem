@@ -18,7 +18,7 @@
     $isEnglish = $language === 'en';
     $formatMoney = fn ($amount) => $po->currency === 'IDR'
         ? idr($amount)
-        : $po->currency . ' ' . number_format((float) $amount, 2);
+        : $po->currency . ' ' . number_format((float) $amount, 3);
 @endphp
 <div class="print-actions"><button type="button" data-print-document>{{ $isEnglish ? 'Print / Save PDF' : 'Cetak / Simpan PDF' }}</button></div>
 <main class="page">

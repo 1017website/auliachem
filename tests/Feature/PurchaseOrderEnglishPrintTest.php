@@ -85,8 +85,8 @@ class PurchaseOrderEnglishPrintTest extends TestCase
                     'purchaseOrder' => $po, 'lang' => $language === 'en' ? 'id' : 'en',
                 ]))->assertOk();
                 $response->assertSee('<html lang="'.$language.'">', false);
-                $price = $currency === 'IDR' ? 'Rp 1.235' : 'USD 1,235.00';
-                $total = $currency === 'IDR' ? 'Rp 3.088' : 'USD 3,087.50';
+                $price = $currency === 'IDR' ? 'Rp 1.235,000' : 'USD 1,235.000';
+                $total = $currency === 'IDR' ? 'Rp 3.087,500' : 'USD 3,087.500';
                 $response->assertSee($price)->assertSee($total);
                 $this->assertSame(3, substr_count($response->getContent(), $total));
                 $response->assertDontSee($currency === 'IDR' ? 'USD ' : 'Rp ');

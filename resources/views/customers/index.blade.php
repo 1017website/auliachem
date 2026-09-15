@@ -114,7 +114,7 @@
                                     <div style="display:flex;flex-wrap:wrap;gap:3px">
                                         @foreach($cust->productItems as $p)
                                             <span style="background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:.65rem;white-space:nowrap">
-                                                {{ $p->product_name }}{{ $p->qty > 0 ? ' '.number_format($p->qty, 0, ',', '.').' '.$p->unit : ($p->unit ? ' ('.$p->unit.')' : '') }}
+                                                {{ $p->product_name }}{{ $p->qty > 0 ? ' '.number_format($p->qty, 3, ',', '.').' '.$p->unit : ($p->unit ? ' ('.$p->unit.')' : '') }}
                                             </span>
                                         @endforeach
                                     </div>
@@ -215,7 +215,7 @@
                         @foreach($selectedCustomer->productItems as $cp)
                         <div style="font-size:.78rem">
                             • {{ $cp->product_name }}
-                            <span style="color:var(--text-muted);font-size:.7rem">{{ number_format($cp->qty, 0, ',', '.') }} {{ $cp->unit }}</span>
+                            <span style="color:var(--text-muted);font-size:.7rem">{{ number_format($cp->qty, 3, ',', '.') }} {{ $cp->unit }}</span>
                         </div>
                         @endforeach
                     </div>
@@ -224,7 +224,7 @@
                     <div class="row g-2 mt-3 mb-3 text-center">
                         <div class="col-6">
                             <div style="background:var(--primary-soft);border-radius:8px;padding:10px">
-                                <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedCustomer->total_revenue > 0 ? idrm($selectedCustomer->total_revenue) : 'Rp 0' }}</div>
+                                <div style="font-size:1rem;font-weight:800;color:var(--primary)">{{ $selectedCustomer->total_revenue > 0 ? idrm($selectedCustomer->total_revenue) : 'Rp 0,000' }}</div>
                                 <div style="font-size:.65rem;color:var(--text-muted)">Total Revenue</div>
                             </div>
                         </div>
@@ -628,7 +628,7 @@ function addCustProductRow(containerId, data = {}) {
     const i = custProdIdx++;
     const html = `<div class="row g-2 mb-2 align-items-center" id="custProd_${i}">
         <div class="col-5"><input type="text" name="products_list[${i}][product_name]" class="form-control form-control-sm" placeholder="Nama Produk *" value="${escapeHtml(safeValue(data.product_name))}" required></div>
-        <div class="col-3"><input type="number" name="products_list[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.01" value="${escapeHtml(safeValue(data.qty))}"></div>
+        <div class="col-3"><input type="number" name="products_list[${i}][qty]" class="form-control form-control-sm" placeholder="Qty" min="0" step="0.001" value="${escapeHtml(safeValue(data.qty))}"></div>
         <div class="col-3"><input type="text" name="products_list[${i}][unit]" class="form-control form-control-sm" placeholder="Satuan (ton, kg...)" value="${escapeHtml(safeValue(data.unit))}"></div>
         <div class="col-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger p-1" onclick="document.getElementById('custProd_${i}').remove()"><i class="fas fa-times"></i></button></div>
     </div>`;
